@@ -1,0 +1,111 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.14']
+    runs-on: ${{ matrix.os }}
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-python@v5.6.0
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -r requirements-lock.txt
+      - run: python -m pip install --no-deps -e .
+      - run: borethm-workbench prepare
+      - run: borethm-workbench contracts
+      - run: git diff --exit-code -- contracts
+      - run: python -m pytest -q
+
+  histories:
+    runs-on: ubuntu-latest
+    env:
+      MODEL_COMMIT: ${{ vars.BORETHM_HISTORY_COMMIT }}
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - name: Explain unavailable model revision
+        if: env.MODEL_COMMIT == ''
+        run: echo 'History tests skipped. Set BORETHM_HISTORY_COMMIT after the model branch is available.'
+      - uses: actions/checkout@v4.2.2
+        if: env.MODEL_COMMIT != ''
+      - uses: actions/setup-python@v5.6.0
+        if: env.MODEL_COMMIT != ''
+        with:
+          python-version: '3.14'
+      - name: Install model observations and application
+        if: env.MODEL_COMMIT != ''
+        run: |
+          [[ "$MODEL_COMMIT" =~ ^[a-f0-9]{40}$ ]]
+          python -m pip install -r requirements-lock.txt
+          python -m pip install --no-deps "borethm @ git+https://github.com/ldocallaghan/BoreTHM.git@$MODEL_COMMIT"
+          python -m pip install --no-deps -e .
+          borethm-workbench prepare
+          python -m pytest -q tests/test_histories.py tests/test_interventions.py tests/test_static_state.py tests/test_radial_grid.py tests/test_replay_policy.py
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-node@v4.4.0
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - run: npm run types
+        working-directory: frontend
+      - run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+        working-directory: frontend
+      - run: git diff --exit-code -- frontend/src/api.generated.ts frontend/package-lock.json
+      - run: npm run typecheck
+        working-directory: frontend
+      - run: npm test
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend
+
+  release:
+    if: github.event_name == 'workflow_dispatch'
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      BORETHM_CACHE_DIR: ${{ runner.temp }}/water-cache
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-python@v5.6.0
+        with:
+          python-version: '3.14'
+      - uses: actions/setup-node@v4.4.0
+        with:
+          node-version: '24'
+      - run: python -m pip install -r requirements-lock.txt
+      - run: npm --prefix frontend ci
+      - run: python deploy/build_release.py
+      - name: Check wheel and generate release examples
+        shell: bash
+        run: |
+          python -m venv "$RUNNER_TEMP/installed"
+          "$RUNNER_TEMP/installed/bin/python" -m pip install -r requirements-lock.txt dist/*.whl
+          cd "$RUNNER_TEMP"
+          "$RUNNER_TEMP/installed/bin/python" "$GITHUB_WORKSPACE/deploy/verify_release.py" --data-dir "$RUNNER_TEMP/run-data" --output "$RUNNER_TEMP/installation.json"
+          "$RUNNER_TEMP/installed/bin/python" "$GITHUB_WORKSPACE/deploy/generate_examples.py" --output "$GITHUB_WORKSPACE/dist/examples"
+      - uses: actions/upload-artifact@v4.6.2
+        with:
+          name: distributions-and-examples
+          path: dist/

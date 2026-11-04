@@ -1,0 +1,8 @@
+include requirements-lock.txt
+include CHANGELOG.md CITATION.cff CONTRIBUTING.md SUPPORT.md
+recursive-include docs *.md
+recursive-include deploy *.py
+recursive-include frontend *.json *.ts *.tsx *.html *.css
+prune frontend/node_modules
+recursive-include contracts *.json
+recursive-include tests *.py *.json

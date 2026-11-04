@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "borethm-workbench"
+version = "0.3.0.dev0"
+description = "Local browser application for BoreTHM calculations"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+requires-python = ">=3.11,<3.15"
+authors = [{name = "Liam O'Callaghan"}]
+dependencies = ["borethm>=1.6.0,<2", "fastapi>=0.162.0", "uvicorn>=0.54.0", "pydantic>=2.14.2"]
+
+[project.scripts]
+borethm-workbench = "borethm_workbench.cli:main"
+
+[project.urls]
+Repository = "https://github.com/ldocallaghan/BoreTHM-Workbench"
+
+[project.optional-dependencies]
+test = ["pytest==9.1.1", "httpx==0.28.1", "httpx2==2.16.0"]
+build = ["build", "setuptools>=77", "wheel"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+borethm_workbench = ["presets/*.json", "static/**/*", "static/*", "_distribution/*"]
+
+[tool.ruff]
+target-version = "py311"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

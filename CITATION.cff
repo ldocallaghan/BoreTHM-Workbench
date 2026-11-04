@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "Please cite the application and the BoreTHM model when using these calculations."
+type: software
+title: BoreTHM Workbench
+version: 0.3.0.dev0
+authors:
+  - family-names: O'Callaghan
+    given-names: Liam
+    orcid: https://orcid.org/0009-0003-3943-7330
+license: Apache-2.0
+repository-code: https://github.com/ldocallaghan/BoreTHM-Workbench
+references:
+  - type: software
+    title: "BoreTHM: models of circulating temperature and borehole stability for drilling into superhot rock"
+    authors:
+      - family-names: O'Callaghan
+        given-names: Liam
+        orcid: https://orcid.org/0009-0003-3943-7330
+    doi: 10.5281/zenodo.23549104

@@ -1,0 +1,21 @@
+BoreTHM Workbench
+Copyright 2026 Liam O'Callaghan
+
+The code in this repository is licensed under the Apache License, Version 2.0.
+See LICENSE for the full text.
+
+The Newberry NWG 55-29 preset uses reference inputs distributed by BoreTHM.
+The source attribution recorded by BoreTHM is:
+Newberry EGS Demonstration: Well 55-29 Stimulation Data. Cladouhos, T.T.
+(AltaRock Energy). Geothermal Data Repository, submission 271.
+https://doi.org/10.15121/1357916. CC BY 4.0.
+The preset represents model inputs derived from those data.
+
+Built browser packages include React, React DOM, Lucide, Plotly and Three.js.
+The build generates THIRD-PARTY-LICENCES.txt in the installed package from
+the npm dependencies' licence files. Their licences continue to apply.
+
+BoreTHM is a separate dependency:
+O'Callaghan, L. (2026). BoreTHM: models of circulating temperature and
+borehole stability for drilling into superhot rock [Computer software].
+https://doi.org/10.5281/zenodo.23549104
