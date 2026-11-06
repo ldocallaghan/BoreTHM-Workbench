@@ -99,6 +99,12 @@ def validate_checkpoint(scenario, cp, require_future=True):
         {k: v for k, v in cp.items() if k != "sha256"}
     ):
         fail("checkpoint checksum mismatch")
+    if cp.get("build", {}).get("core_version") == "1.6.0":
+        fail(
+            'BoreTHM 1.6.0 checkpoints are unsupported. Re-run the scenario with physics="v1.7.0" on the current release.'
+        )
+    if cp.get("physics") != scenario.model.physics:
+        fail("checkpoint physics differs from the requested physics")
     end = cp.get("next_event_index")
     if (
         type(end) is not int
@@ -360,7 +366,7 @@ def run_intervention(scenario, identity, notify=lambda *_: None, stored_grids=No
                 "time_s": "s",
                 "md_m": "m MD",
                 "radius_m": "m",
-                "temperature_C": "°C",
+                "temperature_C": "Â°C",
                 "wall_flux_W_m": "W/m into rock",
                 "energy": "J/m",
             },
@@ -499,6 +505,7 @@ def run_intervention(scenario, identity, notify=lambda *_: None, stored_grids=No
                 mem["last_circulating_temperature_C"] = state.T_fluid
         t = sum(s.duration_s for s in scenario.definition.states[: event_index + 1])
         checkpoint = dict(
+            physics=scenario.model.physics,
             schema_version="wall-checkpoint-1",
             id="event-" + str(event_index + 1),
             build={k: identity.get(k) for k in BUILD_KEYS},
@@ -632,7 +639,7 @@ def continuation_scenario(
     elif future_states is not None:
         fail("resume cannot change the physical schedule")
     scenario["title"] = title or manifest["title"] + (
-        " · branch" if action == "branch" else " · resume"
+        " Â· branch" if action == "branch" else " Â· resume"
     )
     scenario["intervention"].update(
         stop_after_event_id=None,

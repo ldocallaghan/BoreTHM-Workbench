@@ -8,6 +8,12 @@ A survey defines measured depth and vertical depth, with positions where suffici
 
 Wall histories solve independent radial columns under prescribed circulating or static boundaries. They omit axial rock conduction and feedback to a circulating well. Tool histories use a prescribed surrounding temperature column with lumped steel and fluid heat capacities. They omit coolant transport delay and feedback to that column. Scheduled wall interventions support a fixed radial domain. Checkpoints record full physical state at completed event boundaries. Display frames alone cannot restart an integration.
 
+Each scenario selects a named set of physical assumptions. New scenarios use `physics="v1.8.0"`: the model uses its Herschel-Bulkley annulus treatment with the Erge flow-transition band, Colebrook pipe friction and zero wall roughness. Herschel-Bulkley describes fluid shear stress as a yield stress plus a power of the shear rate. Colebrook relates pipe resistance to the flow and wall roughness. `physics="v1.7.0"` restores the previous annulus treatment and Blasius pipe friction. The installed model reports the settings used; manifests and exports record them.
+
+Schema 1.0 scenarios load as schema 1.1 with `physics="v1.7.0"`. A visible qualification explains that choice. New scenarios use schema 1.1. Existing results retain their recorded environment requirements. Archives and checkpoints made with BoreTHM 1.6.0 cannot be reproduced; their scenarios can be re-run with previous physics on the current model.
+
+Prescribed thermal histories do not solve hydraulic equations. Their records identify the selected physics and state that its hydraulic settings are unused.
+
 Histories and checkpoints use the observations provided by BoreTHM 1.8.0. The service reports the installed version and checks its function signatures.
 
 Reproduction compares installed model and application versions, the model commit for a Git installation, and installed versions of dependencies named by the lock. It also compares the saved request. Property-array fingerprint differences are reported; they do not by themselves reject reproduction across platforms. The numerical checks still apply. Checkpoint continuation requires matching build fields and the saved radial grid, with the model's eight-unit limit on differences in the last representable place.

@@ -85,6 +85,10 @@ def compare_results(original, current):
             "libraries",
         )
     }
+    identities["physics"] = original.get("physics") == current.get("physics")
+    identities["physics_settings"] = original.get("physics_settings") == current.get(
+        "physics_settings"
+    )
     identities["property_table"] = (
         original["property_table"]["sha256"] == current["property_table"]["sha256"]
     )

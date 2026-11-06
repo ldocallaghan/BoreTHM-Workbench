@@ -42,6 +42,13 @@ def publish(store, rid, payload):
     summary += "\n\nQualifications:\n" + "\n".join(
         f"- {w['code']}: {w['message']}" for w in payload["warnings"]
     )
+    summary += (
+        "\n\nPhysics: "
+        + payload["physics"]
+        + "\n\n```json\n"
+        + json.dumps(payload["physics_settings"], indent=2)
+        + "\n```\n"
+    )
     files = {
         "scenario.json": (canonical_bytes(scenario), "application/json"),
         "profile.json": (canonical_bytes(profile), "application/json"),
@@ -85,6 +92,12 @@ def publish(store, rid, payload):
             canonical_bytes(payload["trajectory"]),
             "application/json",
         )
+    files["physics.json"] = (
+        canonical_bytes(
+            {"physics": payload["physics"], "settings": payload["physics_settings"]}
+        ),
+        "application/json",
+    )
     files = {
         name: (data.replace(b"\r\n", b"\n").replace(b"\r", b"\n"), media)
         for name, (data, media) in files.items()
@@ -150,6 +163,13 @@ def publish_history(store, rid, payload):
     summary += "\n".join(
         "- " + w["code"] + ": " + w["message"] for w in payload["warnings"]
     )
+    summary += (
+        "\n\nPhysics: "
+        + payload["physics"]
+        + "\n\n```json\n"
+        + json.dumps(payload["physics_settings"], indent=2)
+        + "\n```\n"
+    )
     continuation = (
         "thermal history event-boundary checkpoints; fixed domain and prescribed local boundaries. Results have not been compared with field measurements."
         if payload.get("intervention")
@@ -163,6 +183,12 @@ def publish_history(store, rid, payload):
             + "\n\nUse borethm-workbench reproduce <bundle.zip> in the declared environment.\n"
         ).encode("utf-8"),
         "text/markdown",
+    )
+    files["physics.json"] = (
+        canonical_bytes(
+            {"physics": payload["physics"], "settings": payload["physics_settings"]}
+        ),
+        "application/json",
     )
     files = {
         name: (data.replace(b"\r\n", b"\n").replace(b"\r", b"\n"), media)

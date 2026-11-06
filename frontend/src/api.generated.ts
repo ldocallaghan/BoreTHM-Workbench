@@ -695,7 +695,7 @@ export interface components {
              * Schema Version
              * @constant
              */
-            schema_version: "1.0";
+            schema_version: "1.1";
             /** Title */
             title: string;
         };
@@ -805,6 +805,15 @@ export interface components {
             numerical_profile_hash: string;
             /** Physical Request Hash */
             physical_request_hash: string;
+            /**
+             * Physics
+             * @enum {string}
+             */
+            physics: "v1.8.0" | "v1.7.0";
+            /** Physics Settings */
+            physics_settings: {
+                [key: string]: unknown;
+            };
             /** Pressure Reference */
             pressure_reference: {
                 [key: string]: unknown;
@@ -1182,6 +1191,15 @@ export interface components {
             numerical_profile_hash: string;
             /** Physical Request Hash */
             physical_request_hash: string;
+            /**
+             * Physics
+             * @enum {string}
+             */
+            physics: "v1.8.0" | "v1.7.0";
+            /** Physics Settings */
+            physics_settings: {
+                [key: string]: unknown;
+            };
             /** Pressure Reference */
             pressure_reference: {
                 [key: string]: unknown;
@@ -1514,6 +1532,12 @@ export interface components {
              */
             hydraulics_model: "v1.6.0";
             /**
+             * Physics
+             * @default v1.8.0
+             * @enum {string}
+             */
+            physics: "v1.8.0" | "v1.7.0";
+            /**
              * Rock Response
              * @default cylinder
              * @enum {string}
@@ -1521,10 +1545,10 @@ export interface components {
             rock_response: "cylinder" | "logarithmic";
             /**
              * Supported Release
-             * @default 1.6.0
+             * @default 1.8.0
              * @constant
              */
-            supported_release: "1.6.0";
+            supported_release: "1.8.0";
         };
         /** Mud */
         Mud: {
@@ -1759,7 +1783,7 @@ export interface components {
              * Schema Version
              * @constant
              */
-            schema_version: "1.0";
+            schema_version: "1.1";
             /** Title */
             title: string;
         };
@@ -1974,7 +1998,7 @@ export interface components {
              * Schema Version
              * @constant
              */
-            schema_version: "1.0";
+            schema_version: "1.1";
             /** Title */
             title: string;
         };
@@ -2158,7 +2182,7 @@ export interface components {
              * Schema Version
              * @constant
              */
-            schema_version: "1.0";
+            schema_version: "1.1";
             /** Title */
             title: string;
         };

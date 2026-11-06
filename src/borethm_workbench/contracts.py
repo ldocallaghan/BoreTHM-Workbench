@@ -21,7 +21,8 @@ class Data(BaseModel):
 
 class Model(Data):
     core_family: Literal["borethm"] = "borethm"
-    supported_release: Literal["1.6.0"] = "1.6.0"
+    supported_release: Literal["1.8.0"] = "1.8.0"
+    physics: Literal["v1.8.0", "v1.7.0"] = "v1.8.0"
     hydraulics_model: Literal["v1.6.0"] = "v1.6.0"
     rock_response: Literal["cylinder", "logarithmic"] = "cylinder"
 
@@ -440,8 +441,26 @@ class Provenance(Data):
     source: str
 
 
-class Scenario(Data):
-    schema_version: Literal["1.0"]
+class ScenarioData(Data):
+    @model_validator(mode="before")
+    @classmethod
+    def previous_schema(cls, value):
+        if isinstance(value, dict) and value.get("schema_version") == "1.0":
+            value = dict(value)
+            model = dict(value.get("model", {}))
+            if model.get("physics", "v1.7.0") != "v1.7.0":
+                raise ValueError("Schema 1.0 requires previous physics v1.7.0")
+            model.update(supported_release="1.8.0", physics="v1.7.0")
+            value.update(schema_version="1.1", model=model)
+            value["metadata"] = {
+                **value.get("metadata", {}),
+                "schema_loading": "Schema 1.0 loaded with physics v1.7.0 to preserve the previous defaults.",
+            }
+        return value
+
+
+class Scenario(ScenarioData):
+    schema_version: Literal["1.1"]
     title: Annotated[str, Field(min_length=1, max_length=200)]
     mode: Literal["circulation_state"]
     model: Model
@@ -479,8 +498,8 @@ class AssessmentNumerics(Data):
     initialisation: Literal["core-evaluator-policy-v160"] = "core-evaluator-policy-v160"
 
 
-class AssessmentScenario(Data):
-    schema_version: Literal["1.0"]
+class AssessmentScenario(ScenarioData):
+    schema_version: Literal["1.1"]
     title: Annotated[str, Field(min_length=1, max_length=200)]
     mode: Literal["site_assessment"]
     model: Model
@@ -585,8 +604,8 @@ class InterventionPolicy(Data):
     continuation: dict | None = None
 
 
-class WallHistoryScenario(Data):
-    schema_version: Literal["1.0"]
+class WallHistoryScenario(ScenarioData):
+    schema_version: Literal["1.1"]
     title: Annotated[str, Field(min_length=1, max_length=200)]
     mode: Literal["wall_history"]
     model: Model
@@ -746,8 +765,8 @@ class ToolHistoryDefinition(Data):
     )
 
 
-class ToolHistoryScenario(Data):
-    schema_version: Literal["1.0"]
+class ToolHistoryScenario(ScenarioData):
+    schema_version: Literal["1.1"]
     title: Annotated[str, Field(min_length=1, max_length=200)]
     mode: Literal["tool_history"]
     model: Model
@@ -980,6 +999,8 @@ class CompletedRunManifest(BaseModel):
     resolved_scenario_hash: str
     resolved_scenario: AnyScenario
     build: dict
+    physics: Literal["v1.8.0", "v1.7.0"]
+    physics_settings: dict
     property_table: dict
     numerical_profile: dict
     numerical_profile_hash: str
@@ -1150,6 +1171,8 @@ class HistoryRunManifest(BaseModel):
     resolved_scenario_hash: str
     resolved_scenario: WallHistoryScenario | ToolHistoryScenario
     build: dict
+    physics: Literal["v1.8.0", "v1.7.0"]
+    physics_settings: dict
     property_table: dict
     numerical_profile: dict
     numerical_profile_hash: str

@@ -1,6 +1,6 @@
 import React,{useEffect,useState} from 'react';
 import {formatApiError} from './apiErrors';
-type SavedRun={id:string;state:string;mode?:string;created_at:string;manifest?:{title?:string;mode?:string}|null};
+type SavedRun={id:string;state:string;mode?:string;created_at:string;manifest?:{title?:string;mode?:string;physics?:string;physics_settings?:unknown}|null};
 export function RunBrowser({onOpen,onClose}:{onOpen:(id:string)=>Promise<void>;onClose:()=>void}){
   const [items,setItems]=useState<SavedRun[]>([]),[offset,setOffset]=useState(0),[more,setMore]=useState(false);
   const [lookup,setLookup]=useState(''),[error,setError]=useState('');
@@ -26,8 +26,8 @@ export function RunBrowser({onOpen,onClose}:{onOpen:(id:string)=>Promise<void>;o
     <label>Run ID<input aria-label="Find run by ID" value={lookup} onChange={e=>setLookup(e.target.value)}/></label>
     <button className="secondary-button" disabled={!lookup.trim()} onClick={()=>void find()}>Open run ID</button>
     {error&&<p role="alert">{error}</p>}
-    <div className="data-scroll"><table><thead><tr><th>Saved result</th><th>State</th><th>Run ID</th></tr></thead><tbody>{items.map(item=><tr key={item.id}>
-      <td><button className="text-button" onClick={()=>void onOpen(item.id)}>{item.manifest?.title||item.id}</button></td><td>{item.state}</td><td>{item.id}</td>
+    <div className="data-scroll"><table><thead><tr><th>Saved result</th><th>Physics</th><th>State</th><th>Run ID</th></tr></thead><tbody>{items.map(item=><tr key={item.id}>
+      <td><button className="text-button" onClick={()=>void onOpen(item.id)}>{item.manifest?.title||item.id}</button></td><td><details><summary>{item.manifest?.physics||'Unavailable'}</summary><pre>{JSON.stringify(item.manifest?.physics_settings,null,2)}</pre></details></td><td>{item.state}</td><td>{item.id}</td>
     </tr>)}</tbody></table></div>
     <div className="modal-actions"><button className="secondary-button" disabled={offset===0} onClick={()=>setOffset(Math.max(0,offset-pageSize))}>Previous page</button>
     <span>Page {1+offset/pageSize}</span><button className="secondary-button" disabled={!more} onClick={()=>setOffset(offset+pageSize)}>Next page</button></div>

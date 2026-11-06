@@ -432,6 +432,7 @@ class Store:
                 manifest.setdefault("mode", frozen["mode"])
                 manifest.setdefault("title", frozen["title"])
                 manifest.setdefault("resolved_scenario", frozen)
+                manifest.setdefault("physics", parsed.model.physics)
                 manifest.setdefault("physical_request_hash", physical_hash(parsed))
                 manifest.setdefault("resolved_scenario_hash", digest(frozen))
                 if "build" not in manifest:

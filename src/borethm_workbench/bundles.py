@@ -71,6 +71,10 @@ def inspect_bundle(data):
             raise ValueError(
                 "ARTIFACT_INVALID: archives from other application versions are unsupported"
             )
+        if manifest.get("build", {}).get("core_version") == "1.6.0":
+            raise ValueError(
+                'ARTIFACT_INVALID: BoreTHM 1.6.0 archives cannot be reproduced. Re-run the scenario with physics="v1.7.0" on the current release.'
+            )
         validate_completed_manifest(manifest)
         if (
             manifest.get("schema_version") != "1.0"
@@ -102,6 +106,11 @@ def inspect_bundle(data):
             or digest(scenario.model_dump()) != manifest["resolved_scenario_hash"]
         ):
             raise ValueError("ARTIFACT_INVALID: scenario identity mismatch")
+        if (
+            manifest["physics"] != scenario.model.physics
+            or manifest["physics_settings"].get("physics") != scenario.model.physics
+        ):
+            raise ValueError("ARTIFACT_INVALID: scenario and recorded physics differ")
         if digest(scenario.model_dump()) != digest(manifest["resolved_scenario"]):
             raise ValueError(
                 "ARTIFACT_INVALID: manifest scenario differs from artifact"

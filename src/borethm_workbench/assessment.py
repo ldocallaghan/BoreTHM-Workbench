@@ -15,7 +15,15 @@ import tomllib
 
 import numpy as np
 
-from .adapter import CalculationError, cache_status, engine_identity, to_json, warning
+from .adapter import (
+    CalculationError,
+    cache_status,
+    engine_identity,
+    to_json,
+    warning,
+    physics_record,
+    loading_warnings,
+)
 from .contracts import canonical_bytes, digest, physical_hash
 
 
@@ -110,7 +118,7 @@ def run_assessment(scenario, stage=lambda *_: None):
     from borethm import model1_coupled as m1
     from borethm.pressure import column
 
-    warnings = validate_assessment(scenario)
+    warnings = loading_warnings(scenario) + validate_assessment(scenario)
     identity, cache = engine_identity(), cache_status()
     if not identity["adapter_compatible"]:
         raise CalculationError(
@@ -138,7 +146,7 @@ def run_assessment(scenario, stage=lambda *_: None):
         circulation=options.calculation_mode,
         coupled=coupled,
         programme=None,
-        hydraulics_model="v1.6.0",
+        physics=scenario.model.physics,
         surface=None,
     )
     duration = time.perf_counter() - started
@@ -317,6 +325,8 @@ def run_assessment(scenario, stage=lambda *_: None):
         resolved_scenario_hash=digest(scenario.model_dump()),
         resolved_scenario=scenario.model_dump(),
         build=identity,
+        physics=scenario.model.physics,
+        physics_settings=physics_record(scenario, main, geometry, raw["physics"]),
         property_table=cache,
         numerical_profile=numerical_profile,
         numerical_profile_hash=digest(numerical_profile),

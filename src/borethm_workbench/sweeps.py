@@ -7,7 +7,7 @@ import itertools
 import json
 import zipfile
 
-from .adapter import CalculationError, validate
+from .adapter import CalculationError, validate, physics_record, make_geometry
 from .contracts import Scenario, canonical_bytes, digest, physical_hash
 from .store import Conflict, TERMINAL, new_id, now
 
@@ -81,6 +81,10 @@ def plan(request):
         )
     return dict(
         schema_version="sweep-plan-1",
+        physics=request.scenario.model.physics,
+        physics_settings=physics_record(
+            request.scenario, geometry=make_geometry(request.scenario)
+        ),
         title=request.title,
         axes=[
             dict(
@@ -245,6 +249,8 @@ def read(store, sid, baseline_index=0):
                 acceptance=m.get("acceptance"),
                 validity=m.get("validity"),
                 integrity=integrity,
+                physics=m.get("physics"),
+                physics_settings=m.get("physics_settings"),
                 summary=m.get("summary") if accepted else None,
                 warnings=m.get("warnings", []),
                 failure=m.get("failure") if not accepted else None,
@@ -294,6 +300,8 @@ def read(store, sid, baseline_index=0):
         seed_strategy=definition["seed_strategy"],
         admission=definition["admission"],
         interpretation=definition["interpretation"],
+        physics=definition["physics"],
+        physics_settings=definition["physics_settings"],
         build=definition["build"],
         property_table_sha256=definition["property_table_sha256"],
         request_hash=row["request_hash"],

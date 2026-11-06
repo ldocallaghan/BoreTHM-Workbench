@@ -208,7 +208,7 @@ def create_app(data_dir=None, start_jobs=True, deadline=30, policy=None):
             engine=app.state.engine,
             physics_values=app.state.engine["physics_values"],
             property_cache=app.state.cache,
-            schema_versions=["1.0"],
+            schema_versions=["1.0", "1.1"],
             modes=["circulation_state", "site_assessment"]
             + [
                 mode

@@ -26,9 +26,7 @@ from .contracts import (
 )
 
 POLICY = "component-acceptance-v1"
-HISTORY_MESSAGE = (
-    "The installed model lacks required history arguments. Install BoreTHM 1.8.0 or later."
-)
+HISTORY_MESSAGE = "The installed model lacks required history arguments. Install BoreTHM 1.8.0 or later."
 
 
 class CalculationError(Exception):
@@ -137,7 +135,7 @@ def engine_identity():
         "history_capabilities": history_capabilities(),
         "history_message": HISTORY_MESSAGE,
         "physics_values": ["v1.8.0", "v1.7.0"],
-        "schema_version": "1.0",
+        "schema_version": "1.1",
         "python": platform.python_version(),
         "platform": platform.platform(),
         "libraries": dependency_versions(),
@@ -213,10 +211,82 @@ def make_geometry(scenario):
         ],
         survey=core_survey(d.well.survey, d.well.bit_md_m),
     )
-    LossModel(
-        geometry, transitions=d.hydraulics.transitions
-    )  # stricter joint/tool span checks
+    LossModel(geometry, **loss_settings(scenario))  # stricter joint/tool span checks
     return geometry
+
+
+def loading_warnings(scenario):
+    message = scenario.metadata.get("schema_loading")
+    return (
+        [warning("PREVIOUS_SCHEMA_PHYSICS", message, path="/model/physics")]
+        if message
+        else []
+    )
+
+
+def loss_settings(scenario):
+    from borethm.physics import resolve
+
+    settings = resolve(scenario.model.physics)
+    current = settings["annulus_model"] == "herschel-bulkley-erge"
+    return dict(
+        physics=scenario.model.physics,
+        friction=settings["friction"],
+        roughness=settings["roughness"],
+        transitions=scenario.definition.hydraulics.transitions,
+        regime="herschel-bulkley" if current else "apparent-viscosity",
+        band="erge" if current else "founargiotakis",
+    )
+
+
+def physics_record(scenario, result=None, geometry=None, reported=None):
+    from dataclasses import asdict
+    from borethm.physics import resolve
+
+    settings = dict(
+        reported
+        or (result or {}).get("physics_settings")
+        or resolve(scenario.model.physics)
+    )
+    if settings.get("physics") != scenario.model.physics:
+        raise CalculationError(
+            "PHYSICS_INCONSISTENT", "The model reported a different physics choice."
+        )
+    if result:
+        for key in ("physics", "annulus_model", "friction", "roughness"):
+            if key in result and result[key] != settings[key]:
+                raise CalculationError(
+                    "PHYSICS_INCONSISTENT",
+                    f"The model reported inconsistent {key} settings.",
+                )
+    settings["hydraulics_model"] = (result or {}).get("hydraulics_model")
+    settings["scope"] = (
+        "thermal and hydraulic calculation"
+        if geometry
+        else "prescribed thermal boundaries; hydraulic settings are recorded but unused"
+    )
+    settings["joints"] = [
+        {
+            "segment": i,
+            **asdict(segment.pipe.hydraulic_joint.resolved(scenario.model.physics)),
+        }
+        for i, segment in enumerate(geometry.string if geometry else [])
+        if segment.pipe.hydraulic_joint is not None
+    ]
+    settings["tools"] = [
+        {
+            "segment": i,
+            "tool_class": tool.tool_class,
+            "collar_in": tool.collar_in,
+            "resolved_loss": asdict(tool.resolved(scenario.model.physics))
+            if tool.resolved(scenario.model.physics)
+            else None,
+            "warning": tool.warning(scenario.model.physics),
+        }
+        for i, segment in enumerate(geometry.string if geometry else [])
+        for tool in segment.tools
+    ]
+    return settings
 
 
 def make_fluid(definition):
@@ -301,7 +371,7 @@ def make_settings(scenario):
         breaks=tuple(sorted(set(breaks))),
         init=None,
         P_surface=d.operating.surface_pressure.pressure_absolute_Pa,
-        hydraulics_model=scenario.model.hydraulics_model,
+        physics=scenario.model.physics,
         surface=surface,
         transitions=d.hydraulics.transitions,
         rock_response=scenario.model.rock_response,
@@ -339,12 +409,12 @@ def validate(scenario):
     if scenario.mode == "site_assessment":
         from .assessment import validate_assessment
 
-        return validate_assessment(scenario)
+        return loading_warnings(scenario) + validate_assessment(scenario)
     try:
         make_geometry(scenario)
     except (ValueError, TypeError) as error:
         raise CalculationError("GEOMETRY_INVALID", str(error)) from error
-    warnings = []
+    warnings = loading_warnings(scenario)
     from .trajectories import manifest_trajectory
 
     trajectory = manifest_trajectory(scenario, [])
@@ -508,7 +578,7 @@ def run_circulation(
         {"name": "Validate, reconstruct pressure and publish artifacts"},
     )
     # Include accepted adaptive nodes and every physical breakpoint in audit.
-    model = LossModel(geometry, transitions=d.hydraulics.transitions)
+    model = LossModel(geometry, **loss_settings(scenario))
     hz, _ = model.integration_grid(result)
     audit_z = np.unique(
         np.r_[sol.x, result["z"], hz, model.top, model.bottom, settings["breaks"]]
@@ -544,10 +614,9 @@ def run_circulation(
         result=result,
         fluid=fluid,
         tfa=settings["tfa"],
-        friction="blasius",
         bit=True,
         P_surface=settings["P_surface"],
-        hydraulics_model="v1.6.0",
+        physics=scenario.model.physics,
         surface=settings["surface"],
         transitions=settings["transitions"],
     )
@@ -743,6 +812,8 @@ def run_circulation(
         physical_request_hash=physical_hash(scenario),
         resolved_scenario_hash=digest(scenario.model_dump()),
         build=identity,
+        physics=scenario.model.physics,
+        physics_settings=physics_record(scenario, result, geometry),
         property_table=cache,
         resolved_scenario=scenario.model_dump(),
         numerical_profile=effective_numerics,

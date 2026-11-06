@@ -3,7 +3,13 @@ import time
 
 import numpy as np
 
-from .adapter import CalculationError, engine_identity, warning
+from .adapter import (
+    CalculationError,
+    engine_identity,
+    warning,
+    physics_record,
+    loading_warnings,
+)
 from .contracts import HistoryDataset, canonical_bytes, digest, physical_hash
 
 MAX_SAMPLES = 20000
@@ -61,7 +67,7 @@ def validate_history(scenario):
             raise CalculationError(
                 "RESOURCE_LIMIT", "Tool history exceeds 20,000 numerical samples"
             )
-    return [
+    return loading_warnings(scenario) + [
         warning(
             "HISTORY_BOUNDARY_SCOPE",
             "Prescribed thermal histories; results have not been compared with field measurements.",
@@ -577,6 +583,8 @@ def run_history(
         physical_request_hash=physical_hash(scenario),
         resolved_scenario_hash=digest(scenario.model_dump()),
         build=identity,
+        physics=scenario.model.physics,
+        physics_settings=physics_record(scenario),
         property_table=cache,
         numerical_profile=numerical,
         numerical_profile_hash=digest(numerical),
@@ -785,6 +793,8 @@ def compare_history_results(original, datasets, current, checkpoints=None):
             key: original.get(key) == current.get(key)
             for key in (
                 "mode",
+                "physics",
+                "physics_settings",
                 "physical_request_hash",
                 "resolved_scenario_hash",
                 "numerical_profile_hash",
