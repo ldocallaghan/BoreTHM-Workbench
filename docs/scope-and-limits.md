@@ -10,6 +10,8 @@ Wall histories solve independent radial columns under prescribed circulating or 
 
 Each scenario selects a named set of physical assumptions. New scenarios use `physics="v1.8.0"`: the model uses its Herschel-Bulkley annulus treatment with the Erge flow-transition band, Colebrook pipe friction and zero wall roughness. Herschel-Bulkley describes fluid shear stress as a yield stress plus a power of the shear rate. Colebrook relates pipe resistance to the flow and wall roughness. `physics="v1.7.0"` restores the previous annulus treatment and Blasius pipe friction. The installed model reports the settings used; manifests and exports record them.
 
+The high-temperature preset completes under previous physics (`v1.7.0`), with a bit bore delivery temperature of about 229.6 °C. Under current physics (`v1.8.0`), its converged numerical profile exceeds the water-property table's 479 °C temperature limit. The application returns `PROPERTY_DOMAIN_OUTSIDE` and publishes no accepted profile.
+
 Schema 1.0 scenarios load as schema 1.1 with `physics="v1.7.0"`. A visible qualification explains that choice. New scenarios use schema 1.1. Existing results retain their recorded environment requirements. Archives and checkpoints made with BoreTHM 1.6.0 cannot be reproduced; their scenarios can be re-run with previous physics on the current model.
 
 Prescribed thermal histories do not solve hydraulic equations. Their records identify the selected physics and state that its hydraulic settings are unused.
