@@ -1,3 +1,5 @@
+from scenario_inputs import preset_bytes
+
 """Filter saved jobs before pagination so results remain discoverable."""
 
 from fastapi.testclient import TestClient
@@ -14,7 +16,7 @@ def test_older_circulation_runs_survive_newer_jobs_in_other_modes(
     root = Path(__file__).resolve().parents[1]
     history = parse_scenario(
         json.loads(
-            (root / "src/borethm_workbench/presets/open-hole-history.json").read_bytes()
+            preset_bytes(root / "src/borethm_workbench/presets/open-hole-history.json")
         )
     )
     with TestClient(create_app(tmp_path, start_jobs=False)) as client:

@@ -24,7 +24,7 @@ def publish(store, rid, payload):
     buffer = io.StringIO(newline="")
     fields = list(profile)
     writer = csv.writer(buffer)
-    writer.writerow(fields)
+    writer.writerow([*fields, "physics", "physics_settings"])
     for values in zip(*(profile[field] for field in fields)):
         writer.writerow(
             [
@@ -32,6 +32,10 @@ def publish(store, rid, payload):
                 if isinstance(v, str)
                 else v
                 for v in values
+            ]
+            + [
+                payload["physics"],
+                json.dumps(payload["physics_settings"], ensure_ascii=False),
             ]
         )
     summary = f"# {scenario['title'].replace(chr(10), ' ')}\n\nRun {rid}. {payload['acceptance']}.\n\n"

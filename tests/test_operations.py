@@ -1,3 +1,5 @@
+from scenario_inputs import fixture_path
+
 """Failure injection and real subprocess coverage for local operational policy."""
 
 import copy
@@ -629,7 +631,7 @@ def test_actual_interpreter_pid_and_environment_are_preserved():
 def test_repeated_real_bvp_cancellation_does_not_stop_coordinator(tmp_path):
     from borethm_workbench.contracts import Scenario
 
-    fixture = Path(__file__).parent / "fixtures/hot-short-exposure.json"
+    fixture = fixture_path("hot-short-exposure.json")
     scenario = Scenario.model_validate_json(fixture.read_bytes())
     store = Store(tmp_path)
     coordinator = Coordinator(store)

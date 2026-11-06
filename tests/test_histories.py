@@ -1,3 +1,4 @@
+from scenario_inputs import preset_bytes
 import copy
 import json
 from pathlib import Path
@@ -27,10 +28,10 @@ PRESETS = Path(__file__).resolve().parents[1] / "src/borethm_workbench/presets"
 
 
 def preset(name):
-    return parse_scenario(json.loads((PRESETS / (name + ".json")).read_bytes()))
+    return parse_scenario(json.loads(preset_bytes(PRESETS / (name + ".json"))))
 
 
-def test_t23_wall_observation_matches_unobserved_core_and_columns():
+def test_wall_observation_matches_unobserved_core_and_columns():
     from borethm import wall_thermal as core
 
     scenario = preset("open-hole-history")

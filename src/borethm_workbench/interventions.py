@@ -366,7 +366,7 @@ def run_intervention(scenario, identity, notify=lambda *_: None, stored_grids=No
                 "time_s": "s",
                 "md_m": "m MD",
                 "radius_m": "m",
-                "temperature_C": "Â°C",
+                "temperature_C": "°C",
                 "wall_flux_W_m": "W/m into rock",
                 "energy": "J/m",
             },
@@ -639,7 +639,7 @@ def continuation_scenario(
     elif future_states is not None:
         fail("resume cannot change the physical schedule")
     scenario["title"] = title or manifest["title"] + (
-        " Â· branch" if action == "branch" else " Â· resume"
+        " · branch" if action == "branch" else " · resume"
     )
     scenario["intervention"].update(
         stop_after_event_id=None,

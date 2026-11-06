@@ -30,6 +30,8 @@ def reference_case(base):
                 restriction_length_m=j.restriction_length,
                 spacing_m=j.spacing,
                 transition=j.transition,
+                kind=j.kind,
+                taper_angle_deg=j.taper_angle_deg,
                 source=j.source,
             )
         )
@@ -62,6 +64,10 @@ def reference_case(base):
                 ),
                 local_loss=None,
                 tool_loss=tool,
+                tool_class=s.tools[0].tool_class if s.tools else None,
+                collar_in=s.tools[0].collar_in if s.tools else None,
+                tool_basis=s.tools[0].basis if s.tools else "additional",
+                tool_span_segments=s.tools[0].span_segments if s.tools else 1,
             )
         )
     data["definition"]["well"].update(
@@ -85,7 +91,7 @@ def reference_case(base):
         dict(
             path="/definition/well",
             basis="reference_scenario",
-            source="BoreTHM 1.6.0 HydraulicProgramme.reference_programme / Wu geometry; supplied catalogue allowances are not verified field hardware",
+            source="BoreTHM 1.8.0 HydraulicProgramme.reference_programme / Wu geometry; supplied catalogue allowances are not verified field hardware",
         )
     ]
     return data
@@ -142,6 +148,23 @@ def main():
 
     folder = ROOT / "tests/fixtures"
     folder.mkdir(exist_ok=True)
+    presets = ROOT / "src/borethm_workbench/presets"
+    for path in presets.glob("*.json"):
+        data = json.loads(path.read_bytes())
+        data["schema_version"] = "1.1"
+        data["model"].update(supported_release="1.8.0", physics="v1.8.0")
+        data.get("metadata", {}).pop("schema_loading", None)
+        if data["mode"] == "circulation_state":
+            for segment in data["definition"]["well"]["string"]:
+                joint = segment["pipe"].get("hydraulic_joint")
+                if joint:
+                    joint.setdefault("kind", "ordinary")
+                    joint["transition"] = None
+        path.write_bytes(canonical_bytes(data))
+    for name, data in cases().items():
+        (presets / (name + ".json")).write_bytes(
+            canonical_bytes(Scenario.model_validate(data).model_dump())
+        )
     records = {}
     for name, data in cases().items():
         if name == "high-temperature":
@@ -185,7 +208,7 @@ def main():
         circulation=scenario.definition.options.calculation_mode,
         coupled=None,
         programme=None,
-        hydraulics_model="v1.6.0",
+        physics=scenario.model.physics,
         surface=None,
     )
     (folder / "assessment-reference.json").write_bytes(

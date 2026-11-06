@@ -51,30 +51,55 @@ def main():
                 raise RuntimeError("Installed service did not become ready")
             assert client.get("/").status_code == 200
             capabilities = client.get("/api/v1/capabilities").json()
-            scenario = client.get("/api/v1/presets/constant-properties").json()
-            response = client.post("/api/v1/runs", json={"scenario": scenario})
-            response.raise_for_status()
-            rid = response.json()["id"]
-            for _ in range(300):
-                run = client.get("/api/v1/runs/" + rid).json()
-                if run["state"] in {"completed", "failed", "timed_out", "cancelled"}:
-                    break
-                time.sleep(0.1)
-            assert run["state"] == "completed", run
-            bundle = args.data_dir / "result.zip"
-            bundle.write_bytes(client.get("/api/v1/runs/" + rid + "/export").content)
-            replay = subprocess.run(
-                command + ["reproduce", str(bundle), "--data-dir", str(args.data_dir)],
-                capture_output=True,
-                text=True,
-                timeout=60,
-            )
-            assert replay.returncode == 0, replay.stdout + replay.stderr
+            runs = []
+            for name in (
+                "constant-properties",
+                "newberry-assessment",
+                "scheduled-intervention",
+            ):
+                scenario = client.get("/api/v1/presets/" + name).json()
+                response = client.post("/api/v1/runs", json={"scenario": scenario})
+                response.raise_for_status()
+                rid = response.json()["id"]
+                deadline = time.monotonic() + 1800
+                while time.monotonic() < deadline:
+                    run = client.get("/api/v1/runs/" + rid).json()
+                    if run["state"] in {
+                        "completed",
+                        "failed",
+                        "timed_out",
+                        "cancelled",
+                    }:
+                        break
+                    time.sleep(0.1)
+                assert run["state"] == "completed", run
+                assert run["manifest"]["physics"] == "v1.8.0"
+                bundle = args.data_dir / (name + "-result.zip")
+                exported = client.get("/api/v1/runs/" + rid + "/export")
+                exported.raise_for_status()
+                bundle.write_bytes(exported.content)
+                replay = subprocess.run(
+                    command
+                    + ["reproduce", str(bundle), "--data-dir", str(args.data_dir)],
+                    capture_output=True,
+                    text=True,
+                    timeout=1800,
+                )
+                assert replay.returncode == 0, replay.stdout + replay.stderr
+                runs.append(
+                    {
+                        "preset": name,
+                        "mode": scenario["mode"],
+                        "physics": run["manifest"]["physics"],
+                        "settings": run["manifest"]["physics_settings"],
+                        "reproduction": json.loads(replay.stdout),
+                    }
+                )
             report = {
                 "passed": True,
                 "app_version": borethm_workbench.__version__,
                 "capabilities": capabilities["engine"]["history_capabilities"],
-                "reproduction": json.loads(replay.stdout),
+                "runs": runs,
                 "duration_s": time.perf_counter() - started,
             }
             args.output.write_text(

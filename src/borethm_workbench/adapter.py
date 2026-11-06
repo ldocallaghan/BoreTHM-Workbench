@@ -381,7 +381,7 @@ def make_settings(scenario):
         Q_face=d.heat.face_heat_W,
         t_years=years,
         k_rock=d.formation.conductivity_W_m_K,
-        n_nodes=160,
+        n_nodes=numerical_profile(scenario)["initial_nodes"],
         verbose=False,
         geotherm=geotherm,
         exposure=exposure,
@@ -506,7 +506,7 @@ def validate_thermal(scenario, geometry, result, settings):
     sol = result["sol"]
     if not sol.success:
         raise CalculationError("SOLVER_NOT_CONVERGED", str(sol.message))
-    model = LossModel(geometry, transitions=scenario.definition.hydraulics.transitions)
+    model = LossModel(geometry, **loss_settings(scenario))
     hz, _ = model.integration_grid(result)
     audit_z = np.unique(
         np.r_[sol.x, result["z"], hz, model.top, model.bottom, settings["breaks"]]
@@ -869,7 +869,7 @@ def run_circulation(
         },
         property_audit=property_audit,
         sampling=dict(
-            solver_initial_nodes=160,
+            solver_initial_nodes=settings["n_nodes"],
             returned_core_samples=len(result["z"]),
             display_samples=len(md),
             physical_breakpoints_md_m=np.unique(

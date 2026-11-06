@@ -2,6 +2,8 @@ import os
 from pathlib import Path
 
 import pytest
+from scenario_inputs import preset_bytes
+import scenario_inputs
 
 ROOT = Path(__file__).resolve().parents[1]
 os.environ.setdefault("BORETHM_CACHE_DIR", str(ROOT / ".workbench-data/cache"))
@@ -12,7 +14,7 @@ def scenario():
     from borethm_workbench.contracts import Scenario
 
     return Scenario.model_validate_json(
-        (ROOT / "src/borethm_workbench/presets/synthetic-water.json").read_bytes()
+        preset_bytes(ROOT / "src/borethm_workbench/presets/synthetic-water.json")
     )
 
 
@@ -22,27 +24,14 @@ def physical_result():
     from borethm_workbench.adapter import run_circulation
 
     scenario = Scenario.model_validate_json(
-        (ROOT / "src/borethm_workbench/presets/synthetic-water.json").read_bytes()
+        preset_bytes(ROOT / "src/borethm_workbench/presets/synthetic-water.json")
     )
     return run_circulation(scenario)
 
 
-def pytest_collection_modifyitems(items):
-    from borethm_workbench.adapter import history_capabilities, HISTORY_MESSAGE
+def pytest_addoption(parser):
+    parser.addoption("--physics", choices=["v1.8.0", "v1.7.0"], default="v1.8.0")
 
-    if all(history_capabilities().values()):
-        return
-    modules = {
-        "test_histories.py",
-        "test_interventions.py",
-        "test_static_state.py",
-        "test_radial_grid.py",
-        "test_run_browsing.py",
-    }
-    history_tests = {
-        "test_failed_physical_balance_remains_a_replay_failure",
-        "test_prescribed_wall_archive_replays_without_property_table",
-    }
-    for item in items:
-        if item.path.name in modules or item.originalname in history_tests:
-            item.add_marker(pytest.mark.skip(reason=HISTORY_MESSAGE))
+
+def pytest_configure(config):
+    scenario_inputs.PHYSICS = config.getoption("--physics")

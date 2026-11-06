@@ -21,3 +21,5 @@ The application supports circulation calculations, site assessment and bounded p
 Windows and Ubuntu are the supported desktop platforms. See [scope and limits](docs/scope-and-limits.md) for the test evidence and numerical comparison tolerances. Results have not been compared with field measurements by this application. The service listens on the local machine and is intended for one user.
 
 The code is licensed under Apache-2.0. [NOTICE](NOTICE) records data attribution and frontend library licences. Cite this application using [CITATION.cff](CITATION.cff), and cite the underlying model as BoreTHM, DOI [10.5281/zenodo.23549104](https://doi.org/10.5281/zenodo.23549104).
+
+New scenarios use schema 1.1 and current physics (`v1.8.0`). The physics selector also offers previous defaults (`v1.7.0`). Schema 1.0 scenarios load with previous physics and an explanation. Run details and exports record the model's resolved settings. Named tool classes can use generic pressure-loss allowances; enter the maker's figure where known.

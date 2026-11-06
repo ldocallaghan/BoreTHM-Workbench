@@ -1,3 +1,4 @@
+from scenario_inputs import preset_bytes
 import copy
 import json
 from pathlib import Path
@@ -251,7 +252,7 @@ def test_upgoing_station_direction_is_geometry_only_even_if_chord_descends(scena
 
 def test_real_inclined_job_export_import_and_preview(tmp_path):
     s = parse_scenario_json(
-        (ROOT / "src/borethm_workbench/presets/inclined-water.json").read_bytes()
+        preset_bytes(ROOT / "src/borethm_workbench/presets/inclined-water.json")
     )
     with TestClient(create_app(tmp_path)) as client:
         preview = client.post(

@@ -1,3 +1,4 @@
+from scenario_inputs import preset_bytes
 import copy
 import json
 import os
@@ -29,9 +30,7 @@ IDENTITY = {key: "test-" + key for key in BUILD_KEYS}
 
 def scenario(paused=False):
     s = json.loads(
-        (
-            ROOT / "src/borethm_workbench/presets/scheduled-intervention.json"
-        ).read_bytes()
+        preset_bytes(ROOT / "src/borethm_workbench/presets/scheduled-intervention.json")
     )
     s["numerics"]["radial_nodes"] = 32
     s["intervention"]["stop_after_event_id"] = "connection" if paused else None
@@ -232,7 +231,7 @@ def test_changed_future_branch_continuity_and_distinct_result():
 
 def test_old_scenario_serialization_omits_intervention_and_origin():
     value = json.loads(
-        (ROOT / "src/borethm_workbench/presets/open-hole-history.json").read_bytes()
+        preset_bytes(ROOT / "src/borethm_workbench/presets/open-hole-history.json")
     )
     s = parse_scenario(value)
     assert "intervention" not in s.model_dump()
@@ -241,7 +240,7 @@ def test_old_scenario_serialization_omits_intervention_and_origin():
     )
 
 
-def test_t36_actual_workers_branch_export_public_reproduction_and_tamper(tmp_path):
+def test_actual_workers_branch_export_public_reproduction_and_tamper(tmp_path):
     app = create_app(tmp_path)
     with TestClient(app) as client:
         s = scenario(True)

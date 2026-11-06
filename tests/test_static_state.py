@@ -1,3 +1,4 @@
+from scenario_inputs import preset_bytes
 import copy
 import json
 from pathlib import Path
@@ -14,7 +15,7 @@ PRESETS = ROOT / "src/borethm_workbench/presets"
 
 
 def preset(name):
-    return json.loads((PRESETS / (name + ".json")).read_bytes())
+    return json.loads(preset_bytes(PRESETS / (name + ".json")))
 
 
 def split_hold():

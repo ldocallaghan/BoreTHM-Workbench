@@ -117,12 +117,29 @@ def solve(
         }
         result = None
         try:
+            rate = options.pop("_mass_rate")
             result = borethm.circulating_temperatures(
-                m_dot=options.pop("_mass_rate"),
+                m_dot=rate,
                 geometry=geometry,
                 fluid=fluid,
                 **{**options, "init": initial},
             )
+            record["model_solves"] = 1
+            if (
+                bounded
+                and scenario.model.physics == "v1.8.0"
+                and role == "target"
+                and result["sol"].success
+            ):
+                validate_thermal(result, options)
+                refined_from = {key: result[key] for key in ("z", "Td", "Tu")}
+                result = borethm.circulating_temperatures(
+                    m_dot=rate,
+                    geometry=geometry,
+                    fluid=fluid,
+                    **{**options, "init": refined_from},
+                )
+                record.update(model_solves=2, refinement="accepted-profile-v1")
             sol = result["sol"]
             record.update(
                 solver_status=int(sol.status), solver_message=str(sol.message)

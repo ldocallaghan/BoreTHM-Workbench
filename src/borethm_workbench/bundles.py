@@ -67,13 +67,13 @@ def inspect_bundle(data):
         manifest = json.loads(files["manifest.json"])
         from . import __version__
 
-        if manifest.get("build", {}).get("app_version") != __version__:
-            raise ValueError(
-                "ARTIFACT_INVALID: archives from other application versions are unsupported"
-            )
         if manifest.get("build", {}).get("core_version") == "1.6.0":
             raise ValueError(
                 'ARTIFACT_INVALID: BoreTHM 1.6.0 archives cannot be reproduced. Re-run the scenario with physics="v1.7.0" on the current release.'
+            )
+        if manifest.get("build", {}).get("app_version") != __version__:
+            raise ValueError(
+                "ARTIFACT_INVALID: archives from other application versions are unsupported"
             )
         validate_completed_manifest(manifest)
         if (

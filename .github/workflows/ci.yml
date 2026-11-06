@@ -12,7 +12,8 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python: ['3.11', '3.14']
+        python: ['3.11', '3.12', '3.13', '3.14']
+        physics: ['v1.8.0', 'v1.7.0']
     runs-on: ${{ matrix.os }}
     env:
       OPENBLAS_NUM_THREADS: '1'
@@ -27,7 +28,7 @@ jobs:
       - run: borethm-workbench prepare
       - run: borethm-workbench contracts
       - run: git diff --exit-code -- contracts
-      - run: python -m pytest -q
+      - run: python -m pytest -q --physics=${{ matrix.physics }}
 
   frontend:
     runs-on: ubuntu-latest

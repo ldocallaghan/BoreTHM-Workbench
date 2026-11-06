@@ -1,3 +1,5 @@
+from scenario_inputs import preset_bytes
+
 """Scenario physics is explicit and checkpoint compatibility includes it."""
 
 import copy
@@ -20,8 +22,23 @@ def test_new_model_uses_current_physics():
     assert Model().physics == "v1.8.0"
 
 
+def test_old_model_archive_explains_how_to_rerun():
+    import io
+    import zipfile
+    from borethm_workbench.bundles import inspect_bundle
+
+    stream = io.BytesIO()
+    with zipfile.ZipFile(stream, "w") as archive:
+        archive.writestr(
+            "manifest.json",
+            json.dumps({"build": {"core_version": "1.6.0", "app_version": "0.2.0rc2"}}),
+        )
+    with pytest.raises(ValueError, match='Re-run the scenario with physics="v1.7.0"'):
+        inspect_bundle(stream.getvalue())
+
+
 def test_previous_schema_loads_with_visible_explanation(tmp_path):
-    raw = json.loads((PRESETS / "synthetic-water.json").read_bytes())
+    raw = json.loads(preset_bytes(PRESETS / "synthetic-water.json"))
     raw["schema_version"] = "1.0"
     raw["model"] = {"supported_release": "1.6.0", "hydraulics_model": "v1.6.0"}
     with TestClient(create_app(tmp_path, start_jobs=False)) as client:
@@ -36,7 +53,7 @@ def test_previous_schema_loads_with_visible_explanation(tmp_path):
 @pytest.mark.parametrize("physics", ["v1.8.0", "v1.7.0"])
 def test_checkpoint_reproduction_and_physics_rejection(physics):
     scenario = parse_scenario(
-        json.loads((PRESETS / "scheduled-intervention.json").read_bytes())
+        json.loads(preset_bytes(PRESETS / "scheduled-intervention.json"))
     )
     scenario.model.physics = physics
     result = run_history(scenario)

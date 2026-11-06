@@ -1,4 +1,6 @@
+from scenario_inputs import preset_bytes
 import json
+from scenario_inputs import fixture_path
 import time
 from pathlib import Path
 
@@ -17,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 @pytest.fixture
 def assessment():
     return parse_scenario_json(
-        (ROOT / "src/borethm_workbench/presets/newberry-assessment.json").read_bytes()
+        preset_bytes(ROOT / "src/borethm_workbench/presets/newberry-assessment.json")
     )
 
 
@@ -27,7 +29,7 @@ def test_manual_circulation_fields_are_rejected(assessment):
     with pytest.raises(ValidationError):
         parse_scenario(data)
     assert assessment.definition.options.calculation_mode == "v1.3.4"
-    assert assessment.model.supported_release == "1.6.0"
+    assert assessment.model.supported_release == "1.8.0"
 
 
 def test_site_inputs_are_frozen_and_validated(assessment):
@@ -59,9 +61,7 @@ def test_complete_assessment_matches_existing_golden(tmp_path, assessment):
             time.sleep(0.2)
         assert run["state"] == "completed", run
         manifest = run["manifest"]
-        pin = json.loads(
-            (ROOT / "tests/fixtures/assessment-reference.json").read_bytes()
-        )
+        pin = json.loads(fixture_path("assessment-reference.json").read_bytes())
         from borethm_workbench.reproduction import _reference_errors
 
         assert not _reference_errors(reference_row(manifest["assessment"]), pin)

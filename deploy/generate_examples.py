@@ -20,19 +20,18 @@ def main():
         tempfile.TemporaryDirectory() as directory,
         TestClient(create_app(directory, deadline=240)) as client,
     ):
-        available = client.get("/api/v1/capabilities").json()["modes"]
         names = [
             "synthetic-water",
             "constant-properties",
             "inclined-water",
             "newberry-assessment",
         ]
-        if "wall_history" in available:
-            names.extend(["open-hole-history", "scheduled-intervention"])
-        if "tool_history" in available:
-            names.append("tool-trip-history")
+        names.extend(
+            ["open-hole-history", "scheduled-intervention", "tool-trip-history"]
+        )
         for name in names:
             scenario = client.get("/api/v1/presets/" + name).json()
+            assert scenario["model"]["physics"] == "v1.8.0"
             response = client.post("/api/v1/runs", json={"scenario": scenario})
             response.raise_for_status()
             rid = response.json()["id"]

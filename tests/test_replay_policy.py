@@ -1,3 +1,5 @@
+from scenario_inputs import preset_bytes
+
 """Units, mandatory balance checks and mode-specific replay dependencies."""
 
 import copy
@@ -44,7 +46,7 @@ def test_unknown_numeric_replay_field_fails_closed():
 def test_failed_physical_balance_remains_a_replay_failure():
     scenario = parse_scenario(
         json.loads(
-            (ROOT / "src/borethm_workbench/presets/open-hole-history.json").read_bytes()
+            preset_bytes(ROOT / "src/borethm_workbench/presets/open-hole-history.json")
         )
     )
     original = run_history(scenario)
@@ -62,7 +64,7 @@ def test_prescribed_wall_archive_replays_without_property_table(tmp_path, monkey
     monkeypatch.setattr(wt, "_CACHE", absent)
     monkeypatch.setenv("BORETHM_CACHE_DIR", str(absent.parent))
     scenario = json.loads(
-        (ROOT / "src/borethm_workbench/presets/open-hole-history.json").read_bytes()
+        preset_bytes(ROOT / "src/borethm_workbench/presets/open-hole-history.json")
     )
     with TestClient(create_app(tmp_path)) as client:
         response = client.post("/api/v1/runs", json={"scenario": scenario})

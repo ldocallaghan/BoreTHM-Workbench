@@ -454,6 +454,10 @@ def numerical_profile(scenario):
         return dict(NUMERICAL_PROFILE)
     return {
         **NUMERICAL_PROFILE,
+        "maximum_model_solves_per_target": 2
+        if scenario.model.physics == "v1.8.0"
+        else 1,
+        "accepted_profile_refinement": scenario.model.physics == "v1.8.0",
         "initialisation": "interactive-bounded-v1",
         "maximum_target_attempts": 3,
         "maximum_continuation_solves": 2,

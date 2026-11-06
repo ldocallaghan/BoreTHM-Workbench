@@ -8,11 +8,18 @@ from borethm_workbench.contracts import Scenario
 def test_direct_core_parity(scenario, physical_result):
     import borethm
 
-    direct = borethm.circulating_temperatures(
+    options = dict(
         m_dot=30.0,
         geometry=adapter.make_geometry(scenario),
         **adapter.make_settings(scenario),
     )
+    direct = borethm.circulating_temperatures(**options)
+    from borethm_workbench.contracts import numerical_profile
+
+    if numerical_profile(scenario).get("accepted_profile_refinement"):
+        direct = borethm.circulating_temperatures(
+            **{**options, "init": {k: direct[k] for k in ("z", "Td", "Tu")}}
+        )
     assert direct["success"]
     for key, original in (
         ("bore_temperature_C", "Td"),
@@ -29,7 +36,7 @@ def test_direct_core_parity(scenario, physical_result):
         P_surface=1e6,
         surface=direct["surface"],
         transitions="abrupt",
-        hydraulics_model="v1.6.0",
+        physics=scenario.model.physics,
     )
     for key in (
         "spp",

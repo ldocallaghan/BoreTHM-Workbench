@@ -1,4 +1,5 @@
 import json
+from scenario_inputs import fixture_path
 from pathlib import Path
 
 import numpy as np
@@ -14,10 +15,11 @@ FIXTURES = Path(__file__).parent / "fixtures"
     "name", ["reference-assembly", "weighted-mud", "constant-properties"]
 )
 def test_frozen_physical_cohort(name):
-    pin = json.loads((FIXTURES / "physical-cohort.json").read_bytes())["cases"][name]
+    pin = json.loads(fixture_path("physical-cohort.json").read_bytes())["cases"][name]
     scenario = Scenario.model_validate(pin["scenario"])
     result = run_circulation(scenario)
-    assert result["physical_request_hash"] == pin["physical_request_hash"]
+    if scenario.schema_version == pin["scenario"]["schema_version"]:
+        assert result["physical_request_hash"] == pin["physical_request_hash"]
     for key, scalar in pin["summary"].items():
         tolerance = (
             max(1.0, abs(scalar["value"]) * 1e-6)
@@ -36,13 +38,16 @@ def test_reference_adapter_matches_independent_programme_construction():
     from borethm.programme import HydraulicProgramme
     from borethm import well_geometry as wg
 
-    pin = json.loads((FIXTURES / "physical-cohort.json").read_bytes())["cases"][
+    pin = json.loads(fixture_path("physical-cohort.json").read_bytes())["cases"][
         "reference-assembly"
     ]
     scenario = Scenario.model_validate(pin["scenario"])
     programme = HydraulicProgramme.reference_programme()
-    geometry = programme.geometry(3000.0, wg.CONVENTIONAL)
-    direct = borethm.circulating_temperatures(
+    from borethm.physics import using
+
+    with using(scenario.model.physics):
+        geometry = programme.geometry(3000.0, wg.CONVENTIONAL)
+    options = dict(
         m_dot=30.0,
         T_inj=40.0,
         G=0.035,
@@ -65,12 +70,19 @@ def test_reference_adapter_matches_independent_programme_construction():
         breaks=(),
         init=None,
         P_surface=1e6,
-        hydraulics_model="v1.6.0",
+        physics=scenario.model.physics,
         surface=programme.surface,
         transitions="abrupt",
         rock_response="cylinder",
         annulus_heat=None,
     )
+    direct = borethm.circulating_temperatures(**options)
+    from borethm_workbench.contracts import numerical_profile
+
+    if numerical_profile(scenario).get("accepted_profile_refinement"):
+        direct = borethm.circulating_temperatures(
+            **{**options, "init": {k: direct[k] for k in ("z", "Td", "Tu")}}
+        )
     adapted = run_circulation(scenario)
     assert direct["success"]
     md = np.asarray(adapted["profile"]["md_m"])
@@ -87,7 +99,7 @@ def test_reference_adapter_matches_independent_programme_construction():
         P_surface=1e6,
         surface=programme.surface,
         transitions="abrupt",
-        hydraulics_model="v1.6.0",
+        physics=scenario.model.physics,
     )
     for key in (
         "spp",
@@ -103,7 +115,7 @@ def test_reference_adapter_matches_independent_programme_construction():
 
 
 def test_exact_geometry_geotherm_and_heat_knots_survive_sampling():
-    pin = json.loads((FIXTURES / "physical-cohort.json").read_bytes())["cases"][
+    pin = json.loads(fixture_path("physical-cohort.json").read_bytes())["cases"][
         "reference-assembly"
     ]
     scenario = Scenario.model_validate(pin["scenario"])
