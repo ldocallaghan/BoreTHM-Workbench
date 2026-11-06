@@ -1,4 +1,5 @@
 import {RunBrowser} from './RunBrowser';
+import {GeometryEditor} from './GeometryEditor';
 import {api} from './apiClient';
 import {PhysicsChoice, PhysicsRecord} from './PhysicsChoice';
 import {formatApiError} from './apiErrors';
@@ -439,7 +440,7 @@ function App() {
                 </>}
               </div>}
             </section>)}
-            <button className="json-button" onClick={() => { setJsonText(JSON.stringify(scenario, null, 2)); setJsonEditor(true); }}><FileJson size={15} />Scenario JSON<ArrowUpRight size={13} /></button>
+            <GeometryEditor scenario={scenario} change={edit}/><button className="json-button" onClick={() => { setJsonText(JSON.stringify(scenario, null, 2)); setJsonEditor(true); }}><FileJson size={15} />Scenario JSON<ArrowUpRight size={13} /></button>
           </div>
           <div className="control-footer">
             <label className="check-row auto"><input type="checkbox" checked={auto} onChange={e => setAuto(e.target.checked)} /><span>Auto-run after edits</span><span className="muted">400 ms</span></label>

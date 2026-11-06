@@ -6,6 +6,14 @@ import os
 from pathlib import Path
 import zipfile
 
+
+def tool_allowances():
+    from dataclasses import asdict
+    from borethm.tool_losses import defaults
+
+    return [asdict(value) for value in defaults().values()]
+
+
 from fastapi import FastAPI, Header, HTTPException, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.utils import get_openapi
@@ -207,6 +215,7 @@ def create_app(data_dir=None, start_jobs=True, deadline=30, policy=None):
         return dict(
             engine=app.state.engine,
             physics_values=app.state.engine["physics_values"],
+            tool_allowances=tool_allowances(),
             property_cache=app.state.cache,
             schema_versions=["1.0", "1.1"],
             modes=["circulation_state", "site_assessment"]

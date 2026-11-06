@@ -44,8 +44,23 @@ class Joint(Data):
     bore_diameter_m: Positive
     restriction_length_m: Nonnegative
     spacing_m: Positive
-    transition: Literal["abrupt", "gradual"] = "abrupt"
+    transition: Literal["abrupt", "gradual", "tapered"] | None = None
+    kind: Literal["ordinary", "insulated", "heavy-weight", "bha"] = "ordinary"
+    taper_angle_deg: Annotated[float, Field(gt=0, le=180, strict=True)] | None = None
     source: str
+
+    @model_validator(mode="after")
+    def taper(self):
+        if self.transition == "tapered" and self.taper_angle_deg is None:
+            raise ValueError("A tapered joint requires an included angle in degrees")
+        if self.taper_angle_deg is not None and self.transition not in (
+            None,
+            "tapered",
+        ):
+            raise ValueError(
+                "A taper angle requires a tapered or physics-selected transition"
+            )
+        return self
 
 
 class LocalLoss(Data):
@@ -96,6 +111,21 @@ class Segment(Data):
     pipe: Pipe
     local_loss: LocalLoss | None = None
     tool_loss: ToolLoss | None = None
+    tool_class: (
+        Literal[
+            "mwd_pulser", "rotary_steerable", "mud_motor", "filter_sub", "float_sub"
+        ]
+        | None
+    ) = None
+    collar_in: Positive | None = None
+    tool_basis: Literal["additional", "total_internal"] = "additional"
+    tool_span_segments: Annotated[int, Field(ge=1, strict=True)] = 1
+
+    @model_validator(mode="after")
+    def tool_size(self):
+        if (self.tool_class is None) != (self.collar_in is None):
+            raise ValueError("A tool class requires its collar size in inches")
+        return self
 
 
 class Hole(Data):

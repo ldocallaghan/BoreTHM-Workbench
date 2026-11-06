@@ -1449,6 +1449,12 @@ export interface components {
         Joint: {
             /** Bore Diameter M */
             bore_diameter_m: number;
+            /**
+             * Kind
+             * @default ordinary
+             * @enum {string}
+             */
+            kind: "ordinary" | "insulated" | "heavy-weight" | "bha";
             /** Outer Diameter M */
             outer_diameter_m: number;
             /** Restriction Length M */
@@ -1457,12 +1463,10 @@ export interface components {
             source: string;
             /** Spacing M */
             spacing_m: number;
-            /**
-             * Transition
-             * @default abrupt
-             * @enum {string}
-             */
-            transition: "abrupt" | "gradual";
+            /** Taper Angle Deg */
+            taper_angle_deg?: number | null;
+            /** Transition */
+            transition?: ("abrupt" | "gradual" | "tapered") | null;
         };
         /** Layer */
         Layer: {
@@ -1799,13 +1803,28 @@ export interface components {
         };
         /** Segment */
         Segment: {
+            /** Collar In */
+            collar_in?: number | null;
             /** Id */
             id: string;
             /** Length M */
             length_m: number;
             local_loss?: components["schemas"]["LocalLoss"] | null;
             pipe: components["schemas"]["Pipe"];
+            /**
+             * Tool Basis
+             * @default additional
+             * @enum {string}
+             */
+            tool_basis: "additional" | "total_internal";
+            /** Tool Class */
+            tool_class?: ("mwd_pulser" | "rotary_steerable" | "mud_motor" | "filter_sub" | "float_sub") | null;
             tool_loss?: components["schemas"]["ToolLoss"] | null;
+            /**
+             * Tool Span Segments
+             * @default 1
+             */
+            tool_span_segments: number;
         };
         /** SiteSource */
         SiteSource: {

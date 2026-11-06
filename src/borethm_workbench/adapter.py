@@ -168,6 +168,8 @@ def make_geometry(scenario):
                 j.spacing_m,
                 j.transition,
                 j.source,
+                taper_angle_deg=j.taper_angle_deg,
+                kind=j.kind,
             )
         )
         ll = (
@@ -200,7 +202,21 @@ def make_geometry(scenario):
         pipe = core.PipeType(
             p.name, layers(p.layers), p.thermal_joint_fraction, p.source, joint
         )
-        segments.append(core.StringSegment(segment.length_m, pipe, ll, tl))
+        from borethm.hydraulic_losses import DownholeTool
+
+        tools = (
+            ()
+            if segment.tool_class is None or tl is not None
+            else (
+                DownholeTool(
+                    segment.tool_class,
+                    segment.collar_in,
+                    basis=segment.tool_basis,
+                    span_segments=segment.tool_span_segments,
+                ),
+            )
+        )
+        segments.append(core.StringSegment(segment.length_m, pipe, ll, tl, tools))
     from .trajectories import core_survey
 
     geometry = core.WellGeometry(
@@ -285,6 +301,11 @@ def physics_record(scenario, result=None, geometry=None, reported=None):
         }
         for i, segment in enumerate(geometry.string if geometry else [])
         for tool in segment.tools
+    ]
+    settings["supplied_tool_losses"] = [
+        {"segment": i, **asdict(segment.tool_loss)}
+        for i, segment in enumerate(geometry.string if geometry else [])
+        if segment.tool_loss is not None
     ]
     return settings
 
