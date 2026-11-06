@@ -79,7 +79,7 @@ def create_app(data_dir=None, start_jobs=True, deadline=30, policy=None):
     app = FastAPI(
         title="BoreTHM Workbench",
         version="0.3.0.dev0",
-        description="History modes and checkpoints require optional observations from a model release after 1.6.0. Availability is reported by /api/v1/capabilities.",
+        description="BoreTHM 1.8 supports circulation, assessment and prescribed thermal histories. Installed capabilities are reported by /api/v1/capabilities.",
         lifespan=lifespan,
         responses={
             code: {"model": ErrorEnvelope, "description": description}
@@ -206,6 +206,7 @@ def create_app(data_dir=None, start_jobs=True, deadline=30, policy=None):
         app.state.cache = cache_status()
         return dict(
             engine=app.state.engine,
+            physics_values=app.state.engine["physics_values"],
             property_cache=app.state.cache,
             schema_versions=["1.0"],
             modes=["circulation_state", "site_assessment"]

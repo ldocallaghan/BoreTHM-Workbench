@@ -8,7 +8,7 @@ Install Python 3.11 to 3.14 and Node.js 24. Run the commands in README from the 
 
 Use `--data-dir selected-data` on prepare and serve to select a directory. The command-line argument takes precedence over `BORETHM_WORKBENCH_DATA`; the default is `.workbench-data` relative to the current directory. `data-info` prints the selection without creating a database. `BORETHM_CACHE_DIR` can independently select a shared water-table directory. Keep data directories outside the checkout when using a packaged installation.
 
-The readiness endpoint is `/api/v1/health/ready`. `/api/v1/capabilities` reports available modes and the installed model version. With BoreTHM 1.6.0, a history request returns a capability error explaining that the next model release is needed. Circulation, site assessment and sweeps remain available.
+The readiness endpoint is `/api/v1/health/ready`. `/api/v1/capabilities` reports available modes and the installed model version. BoreTHM 1.8.0 supports the history modes and event checkpoints. Circulation, site assessment and sweeps use the same installed model.
 
 For a local model checkout containing the optional observations, install that checkout into the same environment with `python -m pip --python .venv install --no-deps -e ../BoreTHM`. Restart the service to update the reported capabilities. The saved result records the checkout's commit identifier. Commit changes before generating results intended for later reproduction.
 

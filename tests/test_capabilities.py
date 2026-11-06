@@ -31,7 +31,7 @@ def test_missing_history_does_not_disable_standard_modes(tmp_path, monkeypatch):
         denied = client.post("/api/v1/runs", json={"scenario": scenario})
         assert denied.status_code == 422
         assert denied.json()["detail"][0]["code"] == "CAPABILITY_UNSUPPORTED"
-        assert "next BoreTHM release after 1.6.0" in denied.text
+        assert "Install BoreTHM 1.8.0 or later" in denied.text
         standard = client.get("/api/v1/presets/constant-properties").json()
         assert (
             client.post("/api/v1/runs", json={"scenario": standard}).status_code == 202

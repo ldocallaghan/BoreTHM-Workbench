@@ -27,8 +27,7 @@ from .contracts import (
 
 POLICY = "component-acceptance-v1"
 HISTORY_MESSAGE = (
-    "Requires the next BoreTHM release after 1.6.0, which will "
-    "provide optional history observations. No release number has been assigned."
+    "The installed model lacks required history arguments. Install BoreTHM 1.8.0 or later."
 )
 
 
@@ -137,6 +136,7 @@ def engine_identity():
         "adapter_compatible": version.split(".")[0] == "1",
         "history_capabilities": history_capabilities(),
         "history_message": HISTORY_MESSAGE,
+        "physics_values": ["v1.8.0", "v1.7.0"],
         "schema_version": "1.0",
         "python": platform.python_version(),
         "platform": platform.platform(),

@@ -16,7 +16,7 @@ npm --prefix frontend run build
 
 On Linux use `.venv/bin/borethm-workbench` for the last two commands. Open the local address printed at start-up. Preparation generates the model's water-property table and can take several minutes. Use `--data-dir` on both commands to select a persistent data directory. See [getting started](docs/getting-started.md) for the installation checks and data selection.
 
-The application supports circulation calculations, site assessment and bounded parameter sweeps. A well survey describes the path through the ground. Thermal history modes use prescribed local boundary conditions and require optional model observations that are absent from the published BoreTHM 1.6.0 package. They become available with the next model release containing those arguments; its version number has not been assigned.
+The application supports circulation calculations, site assessment and bounded parameter sweeps. A well survey describes the path through the ground. Thermal history modes use prescribed local boundary conditions. BoreTHM 1.8.0 provides the required observations and event checkpoints.
 
 Windows and Ubuntu are the supported desktop platforms. See [scope and limits](docs/scope-and-limits.md) for the test evidence and numerical comparison tolerances. Results have not been compared with field measurements by this application. The service listens on the local machine and is intended for one user.
 
