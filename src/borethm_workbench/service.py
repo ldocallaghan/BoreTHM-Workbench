@@ -758,6 +758,27 @@ def create_app(data_dir=None, start_jobs=True, deadline=30, policy=None):
             "pressure_reference": a["pressure_reference"],
         }
 
+    from typing import Literal
+
+    from pydantic import BaseModel, ConfigDict, Field
+
+    from .settings import Settings, load_settings, save_settings
+    from .units import units_table
+
+    UnitChoice = Literal["SI", "oilfield"]
+
+    @app.get("/api/v1/units")
+    def unit_table():
+        return units_table()
+
+    @app.get("/api/v1/settings", response_model=Settings)
+    def settings():
+        return load_settings(root)
+
+    @app.put("/api/v1/settings", response_model=Settings)
+    def update_settings(request: Settings):
+        return save_settings(root, request)
+
     if (PACKAGE / "static" / "index.html").is_file():
         app.mount(
             "/", StaticFiles(directory=PACKAGE / "static", html=True), name="frontend"

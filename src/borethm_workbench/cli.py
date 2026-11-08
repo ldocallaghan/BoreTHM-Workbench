@@ -120,7 +120,13 @@ def main():
         (directory / "openapi.json").write_bytes(
             canonical_bytes(create_app(root, start_jobs=False).openapi())
         )
-        print("Wrote scenario, event, error JSON Schemas and OpenAPI to", directory)
+        from .units import units_table
+
+        (directory / "units.json").write_bytes(canonical_bytes(units_table()))
+        print(
+            "Wrote scenario, event, error JSON Schemas, OpenAPI and units to",
+            directory,
+        )
     elif args.command == "reproduce":
         if not args.bundle:
             parser.error("reproduce requires a bundle path")
