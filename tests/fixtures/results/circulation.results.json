@@ -56,6 +56,7 @@
    },
    "message": "Hydraulic liquid-property pressure floor of 5 MPa absolute is active.",
    "path": "/definition",
+   "plain": "Where the pressure is below 5 MPa absolute, the hydraulic calculation takes water properties at 5 MPa.",
    "severity": "warning"
   },
   {
@@ -63,6 +64,7 @@
    "evidence": {},
    "message": "Accepted adaptive nodes, output depths, breakpoints and hydraulic grid audited. Internal trial lookups are not instrumented; wall-column intermediate passes use the baseline guards.",
    "path": "/definition",
+   "plain": "Water properties were checked for the published profile; intermediate states inside the calculation were not all checked.",
    "severity": "warning"
   }
  ],

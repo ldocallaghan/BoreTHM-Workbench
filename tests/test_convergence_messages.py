@@ -37,16 +37,39 @@ def test_same_preset_converges_without_friction_heating():
     assert 200 < result["summary"]["bit_bore_delivery_temperature"]["value"] < 250
 
 
-def test_formation_outside_the_table_is_rejected_before_solving(monkeypatch):
+def superhot(physics, flow):
+    """A vertical water well with 500 °C rock at the bit and a 20 °C inlet."""
+    data = preset("synthetic-water", physics)
+    data["definition"]["formation"]["geotherm"]["points_tvd_m_temperature_C"][-1][1] = 500.0
+    data["definition"]["operating"]["flow"] = {"kind": "mass", "mass_rate_kg_s": flow}
+    data["definition"]["operating"]["inlet_temperature_C"] = 20.0
+    return parse_scenario(data)
+
+
+@pytest.mark.parametrize("physics", ["v1.8.0", "v1.7.0"])
+def test_superhot_formation_with_cold_circulation_reaches_the_solver(physics, monkeypatch):
     import borethm
 
-    def solve(*args, **kwargs):
-        raise AssertionError("no solve expected")
+    calls = []
+    original = borethm.circulating_temperatures
 
-    monkeypatch.setattr(borethm, "circulating_temperatures", solve)
-    data = preset("synthetic-water", "v1.8.0")
-    data["definition"]["formation"]["geotherm"]["points_tvd_m_temperature_C"][-1][1] = 520.0
+    def counted(*args, **kwargs):
+        calls.append(1)
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(borethm, "circulating_temperatures", counted)
+    result = run_circulation(superhot(physics, 30.0))
+    profile = result["profile"]
+    assert calls
+    assert profile["formation_temperature_C"][-1] == pytest.approx(500.0)
+    fluid = profile["bore_temperature_C"] + profile["annulus_temperature_C"]
+    assert max(fluid) < 479
+    assert 230 < result["summary"]["bit_bore_delivery_temperature"]["value"] < 255
+
+
+@pytest.mark.parametrize("physics", ["v1.8.0", "v1.7.0"])
+def test_superhot_formation_that_does_not_converge_reports_non_convergence(physics):
     with pytest.raises(CalculationError) as caught:
-        run_circulation(parse_scenario(data))
-    assert caught.value.code == "PROPERTY_DOMAIN_OUTSIDE"
-    assert "formation temperature at the bit" in str(caught.value)
+        run_circulation(superhot(physics, 60.0))
+    assert caught.value.code == "SOLVER_NOT_CONVERGED"
+    assert str(caught.value) == NOT_CONVERGED

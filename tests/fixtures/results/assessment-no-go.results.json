@@ -53,6 +53,7 @@
    "evidence": {},
    "message": "The core's model assumptions, evidence limits, status reasons and equipment qualifications are retained.",
    "path": "/definition",
+   "plain": "The verdict carries the model's own assumptions, evidence limits and equipment qualifications.",
    "severity": "warning"
   },
   {
@@ -60,6 +61,7 @@
    "evidence": {},
    "message": "Selected accepted circulation is audited; all internal evaluator trial states/history property lookups are not comprehensively instrumented.",
    "path": "/definition",
+   "plain": "Water properties were checked for the published profile; intermediate states inside the calculation were not all checked.",
    "severity": "warning"
   },
   {
@@ -67,6 +69,7 @@
    "evidence": {},
    "message": "Baseline hydraulic liquid-property floor: 5 MPa absolute.",
    "path": "/definition",
+   "plain": "Where the pressure is below 5 MPa absolute, the hydraulic calculation takes water properties at 5 MPa.",
    "severity": "warning"
   },
   {
@@ -74,6 +77,7 @@
    "evidence": {},
    "message": "hydraulic_geometry_blend",
    "path": "/definition",
+   "plain": "Pressure losses are blended over a short distance where the pipe or hole size changes.",
    "severity": "warning"
   },
   {
@@ -81,6 +85,7 @@
    "evidence": {},
    "message": "joint_local_annular_or_Bingham_approximation",
    "path": "/definition",
+   "plain": "Pressure losses at pipe joints in the annulus, or with mud, use an approximation.",
    "severity": "warning"
   },
   {
@@ -88,6 +93,7 @@
    "evidence": {},
    "message": "joint_taper_no_stated_Reynolds_range",
    "path": "/definition",
+   "plain": "The loss formula for tapered joints states no range of flow conditions.",
    "severity": "warning"
   },
   {
@@ -95,6 +101,7 @@
    "evidence": {},
    "message": "local_change_annular_or_Bingham_approximation",
    "path": "/definition",
+   "plain": "Pressure losses at changes of size in the annulus, or with mud, use an approximation.",
    "severity": "warning"
   },
   {
@@ -102,6 +109,7 @@
    "evidence": {},
    "message": "supplied_tool_loss_treated_as_dissipation",
    "path": "/definition",
+   "plain": "A supplied tool pressure loss is counted as heat added to the fluid.",
    "severity": "warning"
   },
   {
@@ -109,6 +117,7 @@
    "evidence": {},
    "message": "tool_allowance_generic",
    "path": "/definition",
+   "plain": "A named tool uses the generic pressure-loss allowance for its class; enter the maker's figure where known.",
    "severity": "warning"
   }
  ],

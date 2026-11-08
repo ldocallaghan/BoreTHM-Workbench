@@ -7,6 +7,7 @@ in the requested display units.
 """
 
 from . import evidence, svg, units
+from .qualifications import with_sentences
 
 STATES = ("drilling", "connection", "connection, fresh rock", "trip")
 STATE_LABELS = {
@@ -316,7 +317,7 @@ def results(manifest, system="SI"):
         "run_id": manifest["run_id"],
         "title": manifest.get("title"),
         "flags": evidence.run_flags(manifest, system),
-        "qualifications": manifest.get("warnings") or [],
+        "qualifications": with_sentences(manifest.get("warnings") or []),
     }
     if mode == "site_assessment":
         summary = assessment_summary(manifest)

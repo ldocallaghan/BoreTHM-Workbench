@@ -32,6 +32,7 @@ figure{margin:8px 0 14px;break-inside:avoid;page-break-inside:avoid}
 figcaption{color:#5b6873;font-size:12px}
 section{break-inside:auto}
 code{font-family:Consolas,Menlo,monospace;font-size:12px;word-break:break-all}
+blockquote{margin:4px 0 8px;padding:4px 10px;border-left:3px solid #cfd8dc;color:#3d4a55}
 @page{margin:14mm}
 @media print{main{padding:0;max-width:none}h2{break-after:avoid;page-break-after:avoid}tr{break-inside:avoid}}
 """
@@ -131,14 +132,15 @@ def _verdict(summary, system):
     status = verdict["status"] or "NOT EVALUATED"
     html = [
         f'<p><span class="verdict {escape(status)}">{escape(status)}</span></p>',
-        f"<p><strong>Controlling constraint:</strong> {_t(verdict['controlling_constraint'])}</p>",
+        f"<p><strong>Controlling constraint, in the model's wording:</strong> {_t(verdict['controlling_constraint'])}</p>",
     ]
     if verdict["reasons"]:
         html.append("<p><strong>Reasons given by the evaluator:</strong></p>" + _list(verdict["reasons"]))
     reading = verdict.get("reading") or {}
-    for key in ("calculation", "scenarios_at_target", "whole_programme", "equipment"):
-        if reading.get(key):
-            html.append(f"<p>{_t(reading[key])}</p>")
+    lines = [reading[k] for k in ("calculation", "scenarios_at_target", "whole_programme", "equipment") if reading.get(k)]
+    if lines:
+        html.append("<p><strong>The model's summary, in its own wording and units:</strong></p>")
+        html.append("<blockquote>" + "".join(f"<p>{_t(line)}</p>" for line in lines) + "</blockquote>")
     return "".join(html)
 
 
@@ -246,9 +248,9 @@ def _qualifications(items):
     if not items:
         return "<p>None.</p>"
     return (
-        "<table><tr><th>Code</th><th>Message</th></tr>"
+        "<table><tr><th>Qualification</th><th>Code</th></tr>"
         + "".join(
-            f"<tr><td><code>{_t(w.get('code'))}</code></td><td>{_t(w.get('message'))}</td></tr>"
+            f"<tr><td>{_t(w.get('plain') or w.get('message'))}</td><td class=meta><code>{_t(w.get('code'))}</code></td></tr>"
             for w in items
         )
         + "</table>"

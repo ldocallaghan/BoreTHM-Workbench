@@ -28,6 +28,17 @@ for (const [name, status] of [['go', 'GO'], ['conditional', 'CONDITIONAL'], ['no
   });
 }
 
+test('qualifications show plain sentences and the verdict text is labelled as the model\'s', () => {
+  const {payload, html} = render('go');
+  const list = html.slice(html.indexOf('qualification-list'), html.indexOf('</ul>', html.indexOf('qualification-list')));
+  for (const q of payload.qualifications) {
+    assert.ok(q.plain && list.includes(escape(q.plain)), q.code);
+    assert.ok(!list.includes(`>${q.code}<`), q.code);
+  }
+  assert.ok(html.includes('Controlling constraint, in the model&#x27;s wording: '));
+  assert.ok(html.includes('The model&#x27;s summary, in its own wording and units: '));
+});
+
 test('closed window and failing case are marked in the NO-GO result', () => {
   const {html} = render('no-go');
   assert.ok(html.includes('class="fail">Closed</td>'));

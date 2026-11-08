@@ -19,7 +19,7 @@ export type AssessmentSummary = {
   input_warnings: string[];
 };
 export type Flags = {outside: {input: string; message: string}[]; notes: {input: string; message: string}[]} | null;
-export type Qualification = {code: string; message: string; path?: string};
+export type Qualification = {code: string; message: string; plain?: string; path?: string};
 export type ResultsPayload = {mode: string; units: UnitSystem; run_id: string; title: string; flags: Flags; qualifications: Qualification[]; summary: AssessmentSummary | Record<string, unknown>; figures: Record<string, string>};
 export type DetailSection = 'windows' | 'cases' | 'equipment' | 'profile' | 'overview' | 'qualifications';
 
@@ -53,7 +53,8 @@ export function FlagsPanel({flags, qualifications, inputWarnings}: {flags: Flags
       flags && flags.notes.length ? h('details', null, h('summary', null, 'Notes on the field comparisons'), h('ul', null, flags.notes.map((n, i) => h('li', {key: i}, n.message)))) : null),
     inputWarnings && inputWarnings.length ? h('div', {className: 'flags-panel'}, h('h3', null, 'Site input warnings'), h('ul', null, inputWarnings.map((w, i) => h('li', {key: i}, w)))) : null,
     h('div', {className: 'flags-panel'}, h('h3', null, `Qualifications (${qualifications.length})`),
-      qualifications.length ? h('ul', {className: 'qualification-list'}, qualifications.map((q, i) => h('li', {key: i}, h('code', null, q.code), ' ', q.message))) : h('p', null, 'None.')));
+      qualifications.length ? h('ul', {className: 'qualification-list'}, qualifications.map((q, i) => h('li', {key: i, title: q.code}, q.plain || q.message))) : h('p', null, 'None.'),
+      qualifications.length ? h('p', {className: 'small muted'}, 'The qualification codes are listed in the run details.') : null));
 }
 
 export function ResultsPage({payload, system, onDetails, reportHref}: {payload: ResultsPayload; system: UnitSystem; onDetails?: (section: DetailSection) => void; reportHref?: string}) {
@@ -65,9 +66,9 @@ export function ResultsPage({payload, system, onDetails, reportHref}: {payload: 
     h('section', {className: `verdict-panel ${verdictClass(v.status)}`, 'aria-label': 'Verdict'},
       h('div', {className: 'verdict-badge'}, v.status || 'Not evaluated'),
       h('div', null,
-        h('p', {className: 'verdict-constraint'}, h('strong', null, 'Controlling constraint: '), v.controlling_constraint || 'Not returned'),
+        h('p', {className: 'verdict-constraint'}, h('strong', null, "Controlling constraint, in the model's wording: "), v.controlling_constraint || 'Not returned'),
         v.reasons.length ? h('ul', {className: 'verdict-reasons'}, v.reasons.map((r, i) => h('li', {key: i}, r))) : null,
-        h('p', {className: 'verdict-reading'}, [v.reading.calculation, v.reading.whole_programme].filter(Boolean).join(' ')),
+        h('p', {className: 'verdict-reading'}, h('span', {className: 'verdict-label'}, "The model's summary, in its own wording and units: "), [v.reading.calculation, v.reading.whole_programme].filter(Boolean).join(' ')),
         reportHref ? h('a', {className: 'secondary-button', href: reportHref, download: true}, 'Export report') : null)),
     h(Section, {id: 'results-range', title: 'Field-tested range and qualifications', detail: 'qualifications', onDetails},
       h(FlagsPanel, {flags: payload.flags, qualifications: payload.qualifications, inputWarnings: s.input_warnings})),

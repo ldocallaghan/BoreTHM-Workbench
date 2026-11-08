@@ -590,15 +590,6 @@ def run_circulation(
         make_settings(scenario),
     )
     rate = mass_rate(scenario, fluid)
-    if d.fluid.kind != "constant_properties" and not (
-        1 <= settings["target_rock_T"] <= 479
-    ):
-        raise CalculationError(
-            "PROPERTY_DOMAIN_OUTSIDE",
-            f"The formation temperature at the bit, {settings['target_rock_T']:.1f} °C, "
-            "is outside the water-property table's 1–479 °C range.",
-            {"formation_temperature_at_bit_C": settings["target_rock_T"]},
-        )
     started = time.perf_counter()
     stage("running", {"name": "Solving circulation temperatures", "attempt": 1})
     from .initialisation import compatibility_key, solve
