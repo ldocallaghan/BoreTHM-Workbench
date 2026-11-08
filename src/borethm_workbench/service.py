@@ -762,10 +762,27 @@ def create_app(data_dir=None, start_jobs=True, deadline=30, policy=None):
 
     from pydantic import BaseModel, ConfigDict, Field
 
+    from . import sites as site_files
     from .settings import Settings, load_settings, save_settings
     from .units import units_table
 
     UnitChoice = Literal["SI", "oilfield"]
+
+    class SiteDocument(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        document: dict
+
+    class SiteText(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        toml: str = Field(max_length=5 * 1024 * 1024)
+
+    class GeothermPreview(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        points_tvd_m_temperature_C: list[tuple[float, float]] = Field(
+            min_length=1, max_length=5000
+        )
+        gradient_below_K_m: float
+        depth_m: float = Field(gt=0, le=20000)
 
     @app.get("/api/v1/units")
     def unit_table():
@@ -778,6 +795,63 @@ def create_app(data_dir=None, start_jobs=True, deadline=30, policy=None):
     @app.put("/api/v1/settings", response_model=Settings)
     def update_settings(request: Settings):
         return save_settings(root, request)
+
+    @app.get("/api/v1/sites/templates")
+    def site_templates():
+        return {"templates": site_files.templates(), "bases": site_files.bases()}
+
+    @app.get("/api/v1/sites/templates/{key}")
+    def site_template(key: str):
+        if key not in site_files.BUILT_IN:
+            raise KeyError(key)
+        text = site_files.template_text(key)
+        document = site_files.document_from_toml(text)
+        return {"key": key, "document": document, "check": site_files.check(document)}
+
+    @app.post("/api/v1/sites/check")
+    def site_check(request: SiteDocument):
+        return site_files.check(request.document)
+
+    @app.post("/api/v1/sites/import")
+    def site_import(request: SiteText):
+        try:
+            document = site_files.document_from_toml(request.toml)
+        except ValueError as error:
+            raise CalculationError("SCHEMA_INVALID", str(error)) from error
+        return {"document": document, "check": site_files.check(document)}
+
+    @app.post("/api/v1/sites/export")
+    def site_export(request: SiteDocument):
+        try:
+            text = site_files.document_to_toml(request.document)
+        except (ValueError, TypeError) as error:
+            raise CalculationError("SCHEMA_INVALID", str(error)) from error
+        return Response(text, media_type="application/toml; charset=utf-8")
+
+    @app.post("/api/v1/geotherm/preview")
+    def geotherm_preview(request: GeothermPreview):
+        import numpy as np
+        import borethm as core
+
+        try:
+            geotherm = core.layered_geotherm(
+                request.points_tvd_m_temperature_C, request.gradient_below_K_m
+            )
+        except (ValueError, TypeError, IndexError) as error:
+            raise CalculationError("SCHEMA_INVALID", str(error)) from error
+        deepest = max(
+            request.depth_m, max(z for z, _ in request.points_tvd_m_temperature_C)
+        )
+        depth = np.unique(
+            np.r_[
+                np.linspace(0.0, deepest, 201),
+                [z for z, _ in request.points_tvd_m_temperature_C if 0 <= z <= deepest],
+            ]
+        )
+        return {
+            "depth_m": depth.tolist(),
+            "temperature_C": np.asarray(geotherm(depth), dtype=float).tolist(),
+        }
 
     if (PACKAGE / "static" / "index.html").is_file():
         app.mount(
