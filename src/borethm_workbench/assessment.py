@@ -135,7 +135,7 @@ def run_assessment(scenario, stage=lambda *_: None):
     stage(
         "running",
         {
-            "name": "Complete site evaluation: programme, wall histories, whole-hole windows and equipment"
+            "name": "Assessing the programme, mud-weight window and equipment"
         },
     )
     started = time.perf_counter()
@@ -152,7 +152,7 @@ def run_assessment(scenario, stage=lambda *_: None):
     duration = time.perf_counter() - started
     stage(
         "postprocessing",
-        {"name": "Preserve evaluator status, selected programme and full profiles"},
+        {"name": "Saving the verdict, programme and profiles"},
     )
     optional_quality = []
     report = finite_data(core.result_dict(raw), qualifications=optional_quality)
@@ -161,7 +161,7 @@ def run_assessment(scenario, stage=lambda *_: None):
     if not solver_ok or not main["sol"].success or not main["success"]:
         raise CalculationError(
             "SOLVER_NOT_CONVERGED",
-            "The complete evaluator reported an unsuccessful numerical prerequisite.",
+            "The site assessment calculation did not converge for these inputs.",
             {"assessment": report, "solver_converged": False},
         )
     geometry, fluid = main["geometry"], raw.get("fluid")
