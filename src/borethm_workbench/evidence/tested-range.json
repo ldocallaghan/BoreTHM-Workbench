@@ -1,0 +1,129 @@
+{
+ "conditions": "Circulating conditions only. No run-in, trip or connection temperatures were compared.",
+ "pipe_rule": "A string counts as insulated when any of its pipe layers has a thermal conductivity below 10 W/(m K); otherwise it counts as steel.",
+ "rows": [
+  {
+   "basis": {
+    "forge16a": "bit depth of the 135 compared samples",
+    "forge16b": "bit depth of the 109 samples"
+   },
+   "input": "depth_m",
+   "label": "Bit depth (measured depth)",
+   "quantity": "length",
+   "range": [
+    1264.7185024864868,
+    3338.98815564
+   ],
+   "sources": [
+    "forge16a",
+    "forge16b"
+   ]
+  },
+  {
+   "basis": {
+    "forge16a": "216-day formation log by measured depth at each sample's bit depth, with the log's deepest value held below it, as in the primary case",
+    "forge16b": "not recorded in the S1 comparison tables"
+   },
+   "input": "formation_C",
+   "label": "Bottom-hole formation temperature",
+   "quantity": "temperature",
+   "range": [
+    157.03882003822218,
+    219.43813821666666
+   ],
+   "sources": [
+    "forge16a"
+   ]
+  },
+  {
+   "basis": {
+    "forge16a": "drilling flow range of the nine compared runs",
+    "forge16b": "measured flow of the 109 samples"
+   },
+   "input": "volume_flow_m3_s",
+   "label": "Volume flow",
+   "quantity": "volume_flow",
+   "range": [
+    0.025728966933963215,
+    0.07251894213171814
+   ],
+   "sources": [
+    "forge16a",
+    "forge16b"
+   ]
+  },
+  {
+   "basis": {
+    "forge16a": "not recorded in the 16A comparison tables",
+    "forge16b": "modelled mass rate of the primary mud and water cases"
+   },
+   "input": "mass_flow_kg_s",
+   "label": "Mass flow",
+   "quantity": "mass_flow",
+   "range": [
+    34.101820550415994,
+    77.23700479818088
+   ],
+   "sources": [
+    "forge16b"
+   ]
+  },
+  {
+   "basis": {
+    "forge16a": "logged inlet range of the compared samples",
+    "forge16b": "measured inlet temperature of the 109 samples"
+   },
+   "input": "inlet_C",
+   "label": "Inlet temperature",
+   "quantity": "temperature",
+   "range": [
+    26.415185185185187,
+    64.44444444444444
+   ],
+   "sources": [
+    "forge16a",
+    "forge16b"
+   ]
+  },
+  {
+   "input": "fluid",
+   "label": "Fluid type",
+   "notes": {
+    "water": "as a sensitivity case in a well drilled with mud"
+   },
+   "sources": {
+    "mud": [
+     "forge16a",
+     "forge16b"
+    ],
+    "water": [
+     "forge16b"
+    ]
+   },
+   "values": [
+    "mud",
+    "water"
+   ]
+  },
+  {
+   "input": "pipe",
+   "label": "Pipe type",
+   "notes": {
+    "insulated": "in trial assemblies whose data supplied the fitted pipe conductivity"
+   },
+   "sources": {
+    "insulated": [
+     "forge16b"
+    ],
+    "steel": [
+     "forge16a",
+     "forge16b"
+    ]
+   },
+   "values": [
+    "insulated",
+    "steel"
+   ]
+  }
+ ]
+}

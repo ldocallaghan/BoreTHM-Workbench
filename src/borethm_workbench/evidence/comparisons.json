@@ -1,0 +1,2812 @@
+{
+ "comparisons": [
+  {
+   "covers": [
+    "Circulating temperatures while drilling on bottom: 135 half-hour samples from nine bottom-hole assemblies.",
+    "Water-based drilling mud in steel drill pipe.",
+    "Bit depths from 1,800 m to 3,339 m measured depth.",
+    "Surface return temperature at the same sample depths."
+   ],
+   "does_not_cover": [
+    "Run-in, trip, connection or pumps-off temperatures.",
+    "Insulated drill pipe.",
+    "Recovery of the wall temperature during trips: the calculation counts accumulated circulating exposure only.",
+    "Formation temperatures above the 216-day log's deepest value."
+   ],
+   "id": "forge16a",
+   "measurement": "Bit-box temperature from the bottom-hole sensor while drilling on bottom",
+   "model": "BoreTHM v1.5.0 at b9a8a93, nothing fitted to the 16A temperatures",
+   "modelled_range_note": "Each modelled value is the range over four fixed readings: bore and annulus fluid, at the bit and 40 ft above it. The sensor position and medium are unresolved. The range is not a confidence interval.",
+   "pooled": {
+    "bias_C": [
+     -5.650483364455985,
+     -4.463413045417901
+    ],
+    "rmse_C": [
+     8.934158043830015,
+     9.598985009949997
+    ],
+    "samples": 135
+   },
+   "range": {
+    "depth_m": [
+     1799.9071057919998,
+     3338.98815564
+    ],
+    "fluids": [
+     "mud"
+    ],
+    "formation_C": [
+     157.03882003822218,
+     219.43813821666666
+    ],
+    "inlet_C": [
+     28.065416666667158,
+     64.44444444444444
+    ],
+    "mud_density_kg_m3": [
+     1066.4552003,
+     1090.4204857
+    ],
+    "pipes": [
+     "steel"
+    ],
+    "volume_flow_m3_s": [
+     0.025728966933963215,
+     0.05923508774041339
+    ]
+   },
+   "range_basis": {
+    "depth_m": "bit depth of the 135 compared samples",
+    "formation_C": "216-day formation log by measured depth at each sample's bit depth, with the log's deepest value held below it, as in the primary case",
+    "inlet_C": "logged inlet range of the compared samples",
+    "mass_flow_kg_s": "not recorded in the 16A comparison tables",
+    "volume_flow_m3_s": "drilling flow range of the nine compared runs"
+   },
+   "return": {
+    "bias_C": -6.002853798351251,
+    "rmse_C": 6.428255458034988,
+    "samples": 135
+   },
+   "runs": [
+    {
+     "bias_C": [
+      -4.163595925211533,
+      -3.03403198288243
+     ],
+     "measured_mean_C": 80.07201239869617,
+     "model_mean_C": [
+      75.90841647348465,
+      77.03798041581375
+     ],
+     "rmse_C": [
+      3.278850378725214,
+      4.3408225265803635
+     ],
+     "run": "BHA 18",
+     "samples": 15
+    },
+    {
+     "bias_C": [
+      -0.24137028351915019,
+      0.8968683165432327
+     ],
+     "measured_mean_C": 82.04340383818803,
+     "model_mean_C": [
+      81.8020335546689,
+      82.94027215473126
+     ],
+     "rmse_C": [
+      1.4409761990021666,
+      1.660589337459861
+     ],
+     "run": "BHA 23",
+     "samples": 13
+    },
+    {
+     "bias_C": [
+      2.322796803274048,
+      3.3803488716613153
+     ],
+     "measured_mean_C": 82.41766484656526,
+     "model_mean_C": [
+      84.7404616498393,
+      85.79801371822658
+     ],
+     "rmse_C": [
+      3.85893657508409,
+      4.620376374677202
+     ],
+     "run": "BHA 30",
+     "samples": 29
+    },
+    {
+     "bias_C": [
+      -0.8110714403179932,
+      0.35669198722714335
+     ],
+     "measured_mean_C": 86.1420269719138,
+     "model_mean_C": [
+      85.33095553159579,
+      86.49871895914094
+     ],
+     "rmse_C": [
+      6.590250050729667,
+      6.6707670170296804
+     ],
+     "run": "BHA 34",
+     "samples": 9
+    },
+    {
+     "bias_C": [
+      -3.1909841463374193,
+      -2.0559476302247957
+     ],
+     "measured_mean_C": 92.50797248056763,
+     "model_mean_C": [
+      89.31698833423022,
+      90.45202485034284
+     ],
+     "rmse_C": [
+      6.559142132378103,
+      6.94523375247366
+     ],
+     "run": "BHA 35r1",
+     "samples": 5
+    },
+    {
+     "bias_C": [
+      -8.981808122558775,
+      -7.542887137988913
+     ],
+     "measured_mean_C": 101.41198897496125,
+     "model_mean_C": [
+      92.43018085240247,
+      93.86910183697233
+     ],
+     "rmse_C": [
+      9.00535941762722,
+      10.160660074267971
+     ],
+     "run": "BHA 35r2",
+     "samples": 4
+    },
+    {
+     "bias_C": [
+      -8.18491873348305,
+      -6.846675855281836
+     ],
+     "measured_mean_C": 90.23979654631589,
+     "model_mean_C": [
+      82.05487781283287,
+      83.39312069103407
+     ],
+     "rmse_C": [
+      7.581599992923175,
+      8.775543032075744
+     ],
+     "run": "BHA 38",
+     "samples": 20
+    },
+    {
+     "bias_C": [
+      -9.745573624959615,
+      -8.487079919370395
+     ],
+     "measured_mean_C": 93.28341012819926,
+     "model_mean_C": [
+      83.53783650323963,
+      84.79633020882886
+     ],
+     "rmse_C": [
+      9.53941980544008,
+      10.653171007826419
+     ],
+     "run": "BHA 39",
+     "samples": 25
+    },
+    {
+     "bias_C": [
+      -19.871006496943192,
+      -18.692540858232555
+     ],
+     "measured_mean_C": 114.61391817423255,
+     "model_mean_C": [
+      94.74291167728937,
+      95.92137731600002
+     ],
+     "rmse_C": [
+      19.313558869557944,
+      20.451565203760598
+     ],
+     "run": "BHA 42",
+     "samples": 15
+    }
+   ],
+   "sample_values": [
+    {
+     "depth_m": 1799.9071057919998,
+     "measured_C": 72.91458837772397,
+     "modelled_C": [
+      66.10206048096809,
+      67.3592516148528
+     ],
+     "run": "BHA 18"
+    },
+    {
+     "depth_m": 1810.70451168,
+     "measured_C": 73.70461627236007,
+     "modelled_C": [
+      69.66283841357578,
+      70.92830357024084
+     ],
+     "run": "BHA 18"
+    },
+    {
+     "depth_m": 1818.0241008,
+     "measured_C": 74.56480220791168,
+     "modelled_C": [
+      68.82862943842018,
+      69.78403884765528
+     ],
+     "run": "BHA 18"
+    },
+    {
+     "depth_m": 1820.646563424,
+     "measured_C": 75.75818791946308,
+     "modelled_C": [
+      69.72405664843633,
+      70.78075490877134
+     ],
+     "run": "BHA 18"
+    },
+    {
+     "depth_m": 1827.072244248,
+     "measured_C": 76.75086739780657,
+     "modelled_C": [
+      71.60355992251,
+      72.89081096256484
+     ],
+     "run": "BHA 18"
+    },
+    {
+     "depth_m": 1832.4170219760001,
+     "measured_C": 76.53795115332429,
+     "modelled_C": [
+      72.41439673229954,
+      73.65562035614654
+     ],
+     "run": "BHA 18"
+    },
+    {
+     "depth_m": 1839.2804718000002,
+     "measured_C": 77.02282517482517,
+     "modelled_C": [
+      73.16922976922105,
+      74.39809721763423
+     ],
+     "run": "BHA 18"
+    },
+    {
+     "depth_m": 1852.9859470560002,
+     "measured_C": 79.16780036968576,
+     "modelled_C": [
+      76.45859917387008,
+      77.76376738440868
+     ],
+     "run": "BHA 18"
+    },
+    {
+     "depth_m": 1858.7720995680002,
+     "measured_C": 80.37782645324347,
+     "modelled_C": [
+      77.39386830064271,
+      78.72121637399327
+     ],
+     "run": "BHA 18"
+    },
+    {
+     "depth_m": 1871.41038468,
+     "measured_C": 82.31280353200883,
+     "modelled_C": [
+      79.48101389326636,
+      80.73819772214078
+     ],
+     "run": "BHA 18"
+    },
+    {
+     "depth_m": 1897.9281523200002,
+     "measured_C": 85.33138178096212,
+     "modelled_C": [
+      80.99198043917731,
+      82.02428246797959
+     ],
+     "run": "BHA 18"
+    },
+    {
+     "depth_m": 1910.5742067840001,
+     "measured_C": 85.87274529236869,
+     "modelled_C": [
+      81.55184751070875,
+      82.50300244717886
+     ],
+     "run": "BHA 18"
+    },
+    {
+     "depth_m": 1920.047881512,
+     "measured_C": 86.46932994062765,
+     "modelled_C": [
+      82.93665804327684,
+      83.83119917017983
+     ],
+     "run": "BHA 18"
+    },
+    {
+     "depth_m": 1924.75277736,
+     "measured_C": 86.77358870967741,
+     "modelled_C": [
+      83.59767196358644,
+      84.49806663611182
+     ],
+     "run": "BHA 18"
+    },
+    {
+     "depth_m": 1931.972538384,
+     "measured_C": 87.52087139845396,
+     "modelled_C": [
+      84.70983637231028,
+      85.69309655734759
+     ],
+     "run": "BHA 18"
+    },
+    {
+     "depth_m": 2122.8887214480005,
+     "measured_C": 81.6953553038105,
+     "modelled_C": [
+      79.69885420557837,
+      80.87583619546021
+     ],
+     "run": "BHA 23"
+    },
+    {
+     "depth_m": 2129.684170392,
+     "measured_C": 82.59616379310344,
+     "modelled_C": [
+      83.17135264772119,
+      84.23435676426595
+     ],
+     "run": "BHA 23"
+    },
+    {
+     "depth_m": 2152.470317352,
+     "measured_C": 83.38531881804043,
+     "modelled_C": [
+      81.76139530492802,
+      82.98333322389426
+     ],
+     "run": "BHA 23"
+    },
+    {
+     "depth_m": 2159.856273624,
+     "measured_C": 83.76882483370288,
+     "modelled_C": [
+      82.2447763376407,
+      83.46790405182279
+     ],
+     "run": "BHA 23"
+    },
+    {
+     "depth_m": 2172.9149907120004,
+     "measured_C": 83.94582408198121,
+     "modelled_C": [
+      80.95263087276096,
+      82.1923154887356
+     ],
+     "run": "BHA 23"
+    },
+    {
+     "depth_m": 2177.6781426792,
+     "measured_C": 80.69084070796461,
+     "modelled_C": [
+      81.23869099986271,
+      82.27684570350411
+     ],
+     "run": "BHA 23"
+    },
+    {
+     "depth_m": 2179.738594032,
+     "measured_C": 81.008,
+     "modelled_C": [
+      81.33368131845188,
+      82.38605144601381
+     ],
+     "run": "BHA 23"
+    },
+    {
+     "depth_m": 2185.2921152592003,
+     "measured_C": 81.99911894273127,
+     "modelled_C": [
+      80.94272545948262,
+      81.93968985393889
+     ],
+     "run": "BHA 23"
+    },
+    {
+     "depth_m": 2191.7211842399997,
+     "measured_C": 82.47347305389222,
+     "modelled_C": [
+      82.36454688279775,
+      83.56376208428316
+     ],
+     "run": "BHA 23"
+    },
+    {
+     "depth_m": 2206.728759,
+     "measured_C": 80.17574958813839,
+     "modelled_C": [
+      82.3590185096944,
+      83.46469782784753
+     ],
+     "run": "BHA 23"
+    },
+    {
+     "depth_m": 2211.8872307760003,
+     "measured_C": 81.36771338250792,
+     "modelled_C": [
+      81.8928950832205,
+      83.03447588294226
+     ],
+     "run": "BHA 23"
+    },
+    {
+     "depth_m": 2219.3905563840003,
+     "measured_C": 81.40642324888226,
+     "modelled_C": [
+      81.89485408576722,
+      83.07049197602883
+     ],
+     "run": "BHA 23"
+    },
+    {
+     "depth_m": 2225.99894652,
+     "measured_C": 82.05144414168937,
+     "modelled_C": [
+      83.57101450278924,
+      84.73377751276914
+     ],
+     "run": "BHA 23"
+    },
+    {
+     "depth_m": 2289.4011656640005,
+     "measured_C": 86.15906191369606,
+     "modelled_C": [
+      82.02203513285048,
+      82.93555613098697
+     ],
+     "run": "BHA 30"
+    },
+    {
+     "depth_m": 2293.87868376,
+     "measured_C": 85.20632373113855,
+     "modelled_C": [
+      82.36183658738956,
+      83.4208607158073
+     ],
+     "run": "BHA 30"
+    },
+    {
+     "depth_m": 2298.50157012,
+     "measured_C": 84.34259717314488,
+     "modelled_C": [
+      81.1900976188497,
+      82.10063001291749
+     ],
+     "run": "BHA 30"
+    },
+    {
+     "depth_m": 2304.754642704,
+     "measured_C": 85.15369969040248,
+     "modelled_C": [
+      81.57545273332849,
+      82.50603186402176
+     ],
+     "run": "BHA 30"
+    },
+    {
+     "depth_m": 2311.3121938933336,
+     "measured_C": 85.39734463276835,
+     "modelled_C": [
+      81.36028279923484,
+      82.30804678729807
+     ],
+     "run": "BHA 30"
+    },
+    {
+     "depth_m": 2321.008852512,
+     "measured_C": 80.89560649474689,
+     "modelled_C": [
+      81.93606865988778,
+      83.01724186825538
+     ],
+     "run": "BHA 30"
+    },
+    {
+     "depth_m": 2324.482255776,
+     "measured_C": 80.421,
+     "modelled_C": [
+      82.60527805518063,
+      83.700669166841
+     ],
+     "run": "BHA 30"
+    },
+    {
+     "depth_m": 2336.128340688,
+     "measured_C": 81.6378276481149,
+     "modelled_C": [
+      81.6571221629086,
+      82.39014012259449
+     ],
+     "run": "BHA 30"
+    },
+    {
+     "depth_m": 2339.671649832,
+     "measured_C": 80.11364044943821,
+     "modelled_C": [
+      82.16879369606963,
+      82.9191428068155
+     ],
+     "run": "BHA 30"
+    },
+    {
+     "depth_m": 2343.724840608,
+     "measured_C": 79.6806578026592,
+     "modelled_C": [
+      83.74557539194521,
+      84.83526977293684
+     ],
+     "run": "BHA 30"
+    },
+    {
+     "depth_m": 2348.138368992,
+     "measured_C": 79.46991228070175,
+     "modelled_C": [
+      84.08042673348004,
+      85.21703360530813
+     ],
+     "run": "BHA 30"
+    },
+    {
+     "depth_m": 2351.373604584,
+     "measured_C": 78.60441031941032,
+     "modelled_C": [
+      84.9198809847719,
+      86.07445652058843
+     ],
+     "run": "BHA 30"
+    },
+    {
+     "depth_m": 2354.362817808,
+     "measured_C": 79.31885990338165,
+     "modelled_C": [
+      86.08983155495503,
+      87.31336263839803
+     ],
+     "run": "BHA 30"
+    },
+    {
+     "depth_m": 2359.960463712,
+     "measured_C": 81.00049011857708,
+     "modelled_C": [
+      86.4264339566267,
+      87.6893036922626
+     ],
+     "run": "BHA 30"
+    },
+    {
+     "depth_m": 2363.214764544,
+     "measured_C": 79.55143192488264,
+     "modelled_C": [
+      85.33502452650272,
+      86.34928545775064
+     ],
+     "run": "BHA 30"
+    },
+    {
+     "depth_m": 2366.546185872,
+     "measured_C": 80.46058596761759,
+     "modelled_C": [
+      85.72454686100042,
+      86.75555565110679
+     ],
+     "run": "BHA 30"
+    },
+    {
+     "depth_m": 2372.2969053840006,
+     "measured_C": 83.15181411974979,
+     "modelled_C": [
+      85.48238436431991,
+      86.53301986772739
+     ],
+     "run": "BHA 30"
+    },
+    {
+     "depth_m": 2379.9050974320003,
+     "measured_C": 84.22056541019955,
+     "modelled_C": [
+      86.41295872584428,
+      87.60223230140966
+     ],
+     "run": "BHA 30"
+    },
+    {
+     "depth_m": 2390.58600876,
+     "measured_C": 85.08108448928121,
+     "modelled_C": [
+      86.89371918936824,
+      88.11860994246062
+     ],
+     "run": "BHA 30"
+    },
+    {
+     "depth_m": 2398.0095377280004,
+     "measured_C": 83.59783649876135,
+     "modelled_C": [
+      86.02115998276022,
+      86.83363666412258
+     ],
+     "run": "BHA 30"
+    },
+    {
+     "depth_m": 2401.6947038400003,
+     "measured_C": 82.24707317073171,
+     "modelled_C": [
+      85.53506975437712,
+      86.67612379447883
+     ],
+     "run": "BHA 30"
+    },
+    {
+     "depth_m": 2404.524165288,
+     "measured_C": 83.3922891566265,
+     "modelled_C": [
+      85.94704453732915,
+      87.1973430531771
+     ],
+     "run": "BHA 30"
+    },
+    {
+     "depth_m": 2408.096292933333,
+     "measured_C": 81.83194085027726,
+     "modelled_C": [
+      85.91773260968156,
+      86.97454638925123
+     ],
+     "run": "BHA 30"
+    },
+    {
+     "depth_m": 2411.70482352,
+     "measured_C": 82.00651327433629,
+     "modelled_C": [
+      86.18833370911601,
+      87.19143878025885
+     ],
+     "run": "BHA 30"
+    },
+    {
+     "depth_m": 2417.521468224,
+     "measured_C": 84.98060648801129,
+     "modelled_C": [
+      87.48352526396495,
+      88.73491479896508
+     ],
+     "run": "BHA 30"
+    },
+    {
+     "depth_m": 2422.358430864,
+     "measured_C": 82.897576499388,
+     "modelled_C": [
+      86.44631971483673,
+      87.4379239192482
+     ],
+     "run": "BHA 30"
+    },
+    {
+     "depth_m": 2426.061217464,
+     "measured_C": 82.40751565762005,
+     "modelled_C": [
+      87.01640396318548,
+      88.00455032757655
+     ],
+     "run": "BHA 30"
+    },
+    {
+     "depth_m": 2435.6280878400003,
+     "measured_C": 83.63792383292383,
+     "modelled_C": [
+      87.53797321797943,
+      88.76381804731389
+     ],
+     "run": "BHA 30"
+    },
+    {
+     "depth_m": 2440.49315304,
+     "measured_C": 83.24609105180534,
+     "modelled_C": [
+      87.39207535759529,
+      88.54165312869146
+     ],
+     "run": "BHA 30"
+    },
+    {
+     "depth_m": 2452.513721328,
+     "measured_C": 88.78758620689655,
+     "modelled_C": [
+      69.58087157845176,
+      70.41889718402774
+     ],
+     "run": "BHA 34"
+    },
+    {
+     "depth_m": 2462.9578122000003,
+     "measured_C": 84.38843269821758,
+     "modelled_C": [
+      84.83909337542806,
+      86.33826412014385
+     ],
+     "run": "BHA 34"
+    },
+    {
+     "depth_m": 2467.918395624,
+     "measured_C": 84.45470529470529,
+     "modelled_C": [
+      86.00331224146782,
+      87.13074983757252
+     ],
+     "run": "BHA 34"
+    },
+    {
+     "depth_m": 2476.952798688,
+     "measured_C": 85.93799345692476,
+     "modelled_C": [
+      86.9634188519431,
+      88.09904364214259
+     ],
+     "run": "BHA 34"
+    },
+    {
+     "depth_m": 2481.141869304,
+     "measured_C": 84.2476587677725,
+     "modelled_C": [
+      87.39341368793943,
+      88.46465323038917
+     ],
+     "run": "BHA 34"
+    },
+    {
+     "depth_m": 2486.051081736,
+     "measured_C": 85.74858479532163,
+     "modelled_C": [
+      86.47061456693842,
+      87.5411872127842
+     ],
+     "run": "BHA 34"
+    },
+    {
+     "depth_m": 2490.69226524,
+     "measured_C": 86.95217642805495,
+     "modelled_C": [
+      88.94237075336144,
+      90.31293899056006
+     ],
+     "run": "BHA 34"
+    },
+    {
+     "depth_m": 2498.2965985200003,
+     "measured_C": 87.22648480124708,
+     "modelled_C": [
+      88.85265070750702,
+      90.06388101487397
+     ],
+     "run": "BHA 34"
+    },
+    {
+     "depth_m": 2505.2546491200005,
+     "measured_C": 87.53462029808375,
+     "modelled_C": [
+      88.9328540213251,
+      90.1188553997743
+     ],
+     "run": "BHA 34"
+    },
+    {
+     "depth_m": 2519.01932568,
+     "measured_C": 95.02245247148288,
+     "modelled_C": [
+      80.95941668493003,
+      81.9324467704228
+     ],
+     "run": "BHA 35r1"
+    },
+    {
+     "depth_m": 2524.605822,
+     "measured_C": 92.56139001349528,
+     "modelled_C": [
+      86.76687971912091,
+      87.927008965029
+     ],
+     "run": "BHA 35r1"
+    },
+    {
+     "depth_m": 2534.22671208,
+     "measured_C": 93.44052361980648,
+     "modelled_C": [
+      93.41506679812609,
+      94.83375128658011
+     ],
+     "run": "BHA 35r1"
+    },
+    {
+     "depth_m": 2548.5932162400004,
+     "measured_C": 91.19942622950819,
+     "modelled_C": [
+      92.13378982261993,
+      93.21640986654825
+     ],
+     "run": "BHA 35r1"
+    },
+    {
+     "depth_m": 2553.73080312,
+     "measured_C": 90.31607006854532,
+     "modelled_C": [
+      93.3097886463541,
+      94.35050736313401
+     ],
+     "run": "BHA 35r1"
+    },
+    {
+     "depth_m": 2570.93502576,
+     "measured_C": 103.8523592085236,
+     "modelled_C": [
+      87.71418387743834,
+      88.92238796278193
+     ],
+     "run": "BHA 35r2"
+    },
+    {
+     "depth_m": 2578.0974752399998,
+     "measured_C": 100.72216216216215,
+     "modelled_C": [
+      90.40296845318866,
+      91.73641310729346
+     ],
+     "run": "BHA 35r2"
+    },
+    {
+     "depth_m": 2587.0502589600005,
+     "measured_C": 100.40813924050632,
+     "modelled_C": [
+      94.90170447698172,
+      96.51518526891792
+     ],
+     "run": "BHA 35r2"
+    },
+    {
+     "depth_m": 2598.49150608,
+     "measured_C": 100.66529528865296,
+     "modelled_C": [
+      96.70186660200119,
+      98.30242100889606
+     ],
+     "run": "BHA 35r2"
+    },
+    {
+     "depth_m": 2612.0098128,
+     "measured_C": 97.07783595113438,
+     "modelled_C": [
+      81.19742878980198,
+      82.19316320395276
+     ],
+     "run": "BHA 38"
+    },
+    {
+     "depth_m": 2619.4190131200003,
+     "measured_C": 95.13553956834532,
+     "modelled_C": [
+      84.57590821682864,
+      86.26859305320698
+     ],
+     "run": "BHA 38"
+    },
+    {
+     "depth_m": 2624.20795452,
+     "measured_C": 92.96094958968347,
+     "modelled_C": [
+      81.00490725703573,
+      82.08833777997968
+     ],
+     "run": "BHA 38"
+    },
+    {
+     "depth_m": 2630.11959624,
+     "measured_C": 91.86452234881682,
+     "modelled_C": [
+      80.61567757577426,
+      81.79488413470709
+     ],
+     "run": "BHA 38"
+    },
+    {
+     "depth_m": 2642.57748852,
+     "measured_C": 89.12297055057617,
+     "modelled_C": [
+      81.64100999098947,
+      82.94147203187784
+     ],
+     "run": "BHA 38"
+    },
+    {
+     "depth_m": 2647.87884444,
+     "measured_C": 88.43888440860215,
+     "modelled_C": [
+      83.32527307178216,
+      84.88674758312283
+     ],
+     "run": "BHA 38"
+    },
+    {
+     "depth_m": 2658.1757504400002,
+     "measured_C": 89.7064332247557,
+     "modelled_C": [
+      83.76464543103842,
+      85.32911640310355
+     ],
+     "run": "BHA 38"
+    },
+    {
+     "depth_m": 2665.80673848,
+     "measured_C": 90.9569118982743,
+     "modelled_C": [
+      84.18169121526687,
+      85.84191737986411
+     ],
+     "run": "BHA 38"
+    },
+    {
+     "depth_m": 2677.08860568,
+     "measured_C": 91.74365175332527,
+     "modelled_C": [
+      84.14229502265474,
+      85.64165262802915
+     ],
+     "run": "BHA 38"
+    },
+    {
+     "depth_m": 2684.9964283199997,
+     "measured_C": 91.87668679896463,
+     "modelled_C": [
+      81.55159953285272,
+      82.9120137299752
+     ],
+     "run": "BHA 38"
+    },
+    {
+     "depth_m": 2693.9552775600005,
+     "measured_C": 92.35392340425533,
+     "modelled_C": [
+      80.12146251166119,
+      81.37470430961345
+     ],
+     "run": "BHA 38"
+    },
+    {
+     "depth_m": 2702.9203752000003,
+     "measured_C": 91.96242443729903,
+     "modelled_C": [
+      81.06185244019268,
+      82.41849585964793
+     ],
+     "run": "BHA 38"
+    },
+    {
+     "depth_m": 2711.9225212799997,
+     "measured_C": 87.99312162162163,
+     "modelled_C": [
+      80.3975224317734,
+      81.59188092296024
+     ],
+     "run": "BHA 38"
+    },
+    {
+     "depth_m": 2718.7062415200003,
+     "measured_C": 88.12022988505747,
+     "modelled_C": [
+      80.3092718802196,
+      81.59396507264456
+     ],
+     "run": "BHA 38"
+    },
+    {
+     "depth_m": 2724.6063618000003,
+     "measured_C": 87.92538645418327,
+     "modelled_C": [
+      79.16633555714004,
+      80.25784373292954
+     ],
+     "run": "BHA 38"
+    },
+    {
+     "depth_m": 2729.16956832,
+     "measured_C": 86.10796361091673,
+     "modelled_C": [
+      81.7864453207282,
+      83.12868420644972
+     ],
+     "run": "BHA 38"
+    },
+    {
+     "depth_m": 2732.86124496,
+     "measured_C": 86.00166939443535,
+     "modelled_C": [
+      82.62434996304316,
+      83.98531340436368
+     ],
+     "run": "BHA 38"
+    },
+    {
+     "depth_m": 2742.9194925600004,
+     "measured_C": 87.74526840066409,
+     "modelled_C": [
+      83.42062551056813,
+      84.84678957025417
+     ],
+     "run": "BHA 38"
+    },
+    {
+     "depth_m": 2750.60356152,
+     "measured_C": 88.78997867803838,
+     "modelled_C": [
+      83.59139071892366,
+      84.96549898199535
+     ],
+     "run": "BHA 38"
+    },
+    {
+     "depth_m": 2757.91518012,
+     "measured_C": 88.91157894736843,
+     "modelled_C": [
+      82.61786381838186,
+      83.80133983200331
+     ],
+     "run": "BHA 38"
+    },
+    {
+     "depth_m": 2773.225848,
+     "measured_C": 100.6452691680261,
+     "modelled_C": [
+      75.96386519010099,
+      77.13726026587923
+     ],
+     "run": "BHA 39"
+    },
+    {
+     "depth_m": 2786.44706616,
+     "measured_C": 95.26355040701316,
+     "modelled_C": [
+      79.20923749665576,
+      80.37690631720747
+     ],
+     "run": "BHA 39"
+    },
+    {
+     "depth_m": 2791.63640808,
+     "measured_C": 94.62460100647017,
+     "modelled_C": [
+      81.16952104909431,
+      82.46661825834497
+     ],
+     "run": "BHA 39"
+    },
+    {
+     "depth_m": 2807.3774688000003,
+     "measured_C": 95.8859287338893,
+     "modelled_C": [
+      81.95838634869233,
+      83.19313184603342
+     ],
+     "run": "BHA 39"
+    },
+    {
+     "depth_m": 2814.09783636,
+     "measured_C": 93.72339819318971,
+     "modelled_C": [
+      79.75573417748758,
+      80.84947582881904
+     ],
+     "run": "BHA 39"
+    },
+    {
+     "depth_m": 2818.2196315200003,
+     "measured_C": 91.99129053606883,
+     "modelled_C": [
+      81.04558885272789,
+      82.17497837874143
+     ],
+     "run": "BHA 39"
+    },
+    {
+     "depth_m": 2822.5689141600005,
+     "measured_C": 92.17925291828793,
+     "modelled_C": [
+      83.34408415510067,
+      84.7234947554951
+     ],
+     "run": "BHA 39"
+    },
+    {
+     "depth_m": 2832.0693472800003,
+     "measured_C": 93.31913558318531,
+     "modelled_C": [
+      83.42931513790023,
+      84.72451448493823
+     ],
+     "run": "BHA 39"
+    },
+    {
+     "depth_m": 2846.09298192,
+     "measured_C": 92.34066098081023,
+     "modelled_C": [
+      80.76581609746808,
+      81.87055667061526
+     ],
+     "run": "BHA 39"
+    },
+    {
+     "depth_m": 2850.2053130400004,
+     "measured_C": 91.77838014369694,
+     "modelled_C": [
+      83.24137216374311,
+      84.62184594309127
+     ],
+     "run": "BHA 39"
+    },
+    {
+     "depth_m": 2858.6601297600005,
+     "measured_C": 92.38998862343573,
+     "modelled_C": [
+      84.02626069392208,
+      85.39945291058575
+     ],
+     "run": "BHA 39"
+    },
+    {
+     "depth_m": 2866.3168581600003,
+     "measured_C": 92.87551652892562,
+     "modelled_C": [
+      83.25844003161546,
+      84.30315605333189
+     ],
+     "run": "BHA 39"
+    },
+    {
+     "depth_m": 2870.77371996,
+     "measured_C": 90.64087779690189,
+     "modelled_C": [
+      82.96521478797344,
+      84.06812219535921
+     ],
+     "run": "BHA 39"
+    },
+    {
+     "depth_m": 2881.7867383200005,
+     "measured_C": 89.67740863787375,
+     "modelled_C": [
+      85.7084026260964,
+      87.05193019430071
+     ],
+     "run": "BHA 39"
+    },
+    {
+     "depth_m": 2891.60701332,
+     "measured_C": 91.368322147651,
+     "modelled_C": [
+      85.37936259573037,
+      86.60285173096851
+     ],
+     "run": "BHA 39"
+    },
+    {
+     "depth_m": 2897.36040288,
+     "measured_C": 92.13587278106509,
+     "modelled_C": [
+      85.33313900742128,
+      86.69611182906641
+     ],
+     "run": "BHA 39"
+    },
+    {
+     "depth_m": 2905.32147408,
+     "measured_C": 92.52445247359644,
+     "modelled_C": [
+      86.23124530849311,
+      87.61635020782965
+     ],
+     "run": "BHA 39"
+    },
+    {
+     "depth_m": 2913.26693952,
+     "measured_C": 92.81465605457647,
+     "modelled_C": [
+      86.59550748814311,
+      87.99312923578822
+     ],
+     "run": "BHA 39"
+    },
+    {
+     "depth_m": 2921.82112104,
+     "measured_C": 93.21711936662606,
+     "modelled_C": [
+      86.7965210187394,
+      88.17563737717037
+     ],
+     "run": "BHA 39"
+    },
+    {
+     "depth_m": 2929.28990976,
+     "measured_C": 94.48817647058824,
+     "modelled_C": [
+      81.40882637274726,
+      82.5424908845031
+     ],
+     "run": "BHA 39"
+    },
+    {
+     "depth_m": 2933.08959228,
+     "measured_C": 93.13576403695807,
+     "modelled_C": [
+      84.45444680804839,
+      85.74349814856073
+     ],
+     "run": "BHA 39"
+    },
+    {
+     "depth_m": 2942.0268312,
+     "measured_C": 94.24334073251943,
+     "modelled_C": [
+      86.01639588914755,
+      87.34335728606791
+     ],
+     "run": "BHA 39"
+    },
+    {
+     "depth_m": 2952.07904376,
+     "measured_C": 95.1974274509804,
+     "modelled_C": [
+      86.85506366149046,
+      88.2650911340036
+     ],
+     "run": "BHA 39"
+    },
+    {
+     "depth_m": 2961.84815808,
+     "measured_C": 92.05764449291166,
+     "modelled_C": [
+      87.04375864855757,
+      88.30649252342053
+     ],
+     "run": "BHA 39"
+    },
+    {
+     "depth_m": 2966.5141888800003,
+     "measured_C": 93.56721793973372,
+     "modelled_C": [
+      86.49040697389405,
+      87.66180076059939
+     ],
+     "run": "BHA 39"
+    },
+    {
+     "depth_m": 3202.3866102000006,
+     "measured_C": 119.43012175324675,
+     "modelled_C": [
+      87.47701287942306,
+      88.62736414690731
+     ],
+     "run": "BHA 42"
+    },
+    {
+     "depth_m": 3213.5248708800004,
+     "measured_C": 118.74453688297282,
+     "modelled_C": [
+      90.7079029559325,
+      91.99795890831204
+     ],
+     "run": "BHA 42"
+    },
+    {
+     "depth_m": 3227.8189850400004,
+     "measured_C": 115.6777104874446,
+     "modelled_C": [
+      91.81182310768926,
+      92.94199071171325
+     ],
+     "run": "BHA 42"
+    },
+    {
+     "depth_m": 3233.2935892800006,
+     "measured_C": 114.53904323175053,
+     "modelled_C": [
+      93.78406676653027,
+      94.91438552874813
+     ],
+     "run": "BHA 42"
+    },
+    {
+     "depth_m": 3243.80452584,
+     "measured_C": 115.53991995425957,
+     "modelled_C": [
+      94.98257927056733,
+      96.15080166258437
+     ],
+     "run": "BHA 42"
+    },
+    {
+     "depth_m": 3257.14769448,
+     "measured_C": 115.27186360031722,
+     "modelled_C": [
+      93.18286697389597,
+      94.27445457636821
+     ],
+     "run": "BHA 42"
+    },
+    {
+     "depth_m": 3262.4667288,
+     "measured_C": 114.69119860627177,
+     "modelled_C": [
+      94.10430750970797,
+      95.08328562221139
+     ],
+     "run": "BHA 42"
+    },
+    {
+     "depth_m": 3273.3821654400003,
+     "measured_C": 115.58002038735984,
+     "modelled_C": [
+      96.32061397436323,
+      97.54845632873497
+     ],
+     "run": "BHA 42"
+    },
+    {
+     "depth_m": 3286.3269604800003,
+     "measured_C": 110.76669255663431,
+     "modelled_C": [
+      95.13335904119198,
+      96.34079681641931
+     ],
+     "run": "BHA 42"
+    },
+    {
+     "depth_m": 3291.7807164,
+     "measured_C": 111.31227142857142,
+     "modelled_C": [
+      96.14934076522847,
+      97.38453567680197
+     ],
+     "run": "BHA 42"
+    },
+    {
+     "depth_m": 3302.64921384,
+     "measured_C": 112.05345352112677,
+     "modelled_C": [
+      96.10483369315902,
+      97.27706242246235
+     ],
+     "run": "BHA 42"
+    },
+    {
+     "depth_m": 3309.97812984,
+     "measured_C": 112.86172955974843,
+     "modelled_C": [
+      95.70734617444931,
+      96.73512415243377
+     ],
+     "run": "BHA 42"
+    },
+    {
+     "depth_m": 3320.0114143200003,
+     "measured_C": 113.66168526130359,
+     "modelled_C": [
+      97.97968367469232,
+      99.24191867363838
+     ],
+     "run": "BHA 42"
+    },
+    {
+     "depth_m": 3329.3640803999997,
+     "measured_C": 114.28977765108323,
+     "modelled_C": [
+      98.79770446246465,
+      100.1030651623711
+     ],
+     "run": "BHA 42"
+    },
+    {
+     "depth_m": 3338.98815564,
+     "measured_C": 114.78874773139745,
+     "modelled_C": [
+      98.90023391004509,
+      100.1994593502934
+     ],
+     "run": "BHA 42"
+    }
+   ],
+   "samples": 135,
+   "title": "FORGE 16A: blind circulation comparison",
+   "well": "Utah FORGE well 16A(78)-32"
+  },
+  {
+   "covers": [
+    "Circulating temperatures: 109 half-hour samples from 13 bottom-hole assemblies.",
+    "Recorded drilling mud. Water was run as a sensitivity case on the same samples.",
+    "Regular steel drill pipe and, in the four trial assemblies, insulated drill pipe.",
+    "Bit depths from 1,265 m to 3,303 m measured depth."
+   ],
+   "does_not_cover": [
+    "Run-in, trip, connection or pumps-off temperatures.",
+    "An independent test of insulated pipe: its conductivity was fitted on EOW 18, and EOW 17 and 20 supplied the earlier film fit.",
+    "A resolved sensor position for EOW 3 and 4.",
+    "Recovery of the wall temperature during trips: the primary calculation counts accumulated circulating exposure."
+   ],
+   "id": "forge16b",
+   "measurement": "MWD EYE temperature channel while circulating",
+   "model": "BoreTHM v1.5.0 at 85f23db, nothing fitted in this comparison",
+   "modelled_range_note": "Each modelled value is the bore-fluid temperature at the stated sensor position; where the position is unresolved, the range covers every requested position. The range is not a confidence interval.",
+   "pooled": [
+    {
+     "bias_C": -8.770171551367001,
+     "group": "independent regular pipe",
+     "rmse_C": 12.593538311868672,
+     "samples": 59
+    },
+    {
+     "bias_C": 2.4353110979484867,
+     "group": "trial film-fit runs",
+     "rmse_C": 7.392715526034369,
+     "samples": 25
+    },
+    {
+     "bias_C": 1.6932548234648572,
+     "group": "trial IDP-fit run",
+     "rmse_C": 2.3753327166967724,
+     "samples": 10
+    },
+    {
+     "bias_C": 1.1783505172245312,
+     "group": "trial held-out IDP run, fitted conductivity",
+     "rmse_C": 3.584999176826146,
+     "samples": 10
+    }
+   ],
+   "range": {
+    "depth_m": [
+     1264.7185024864868,
+     3303.1644235862072
+    ],
+    "fluids": [
+     "mud",
+     "water"
+    ],
+    "inlet_C": [
+     26.415185185185187,
+     55.29401234567902
+    ],
+    "mass_flow_kg_s": [
+     34.101820550415994,
+     77.23700479818088
+    ],
+    "mud_density_kg_m3": [
+     994.5593441000001,
+     1090.4204857
+    ],
+    "pipes": [
+     "steel",
+     "insulated"
+    ],
+    "volume_flow_m3_s": [
+     0.034344785751151345,
+     0.07251894213171814
+    ]
+   },
+   "range_basis": {
+    "depth_m": "bit depth of the 109 samples",
+    "formation_C": "not recorded in the S1 comparison tables",
+    "inlet_C": "measured inlet temperature of the 109 samples",
+    "mass_flow_kg_s": "modelled mass rate of the primary mud and water cases",
+    "volume_flow_m3_s": "measured flow of the 109 samples"
+   },
+   "revision_note": "A later mud-protocol revision (version 2) changed five run means; its biases are shown beside the original version 1 values. RMSE is published for version 1 only.",
+   "runs": [
+    {
+     "bias_C": -4.803387058110474,
+     "measured_mean_C": 65.02302125041706,
+     "model_mean_C": 60.21963419230658,
+     "position_ft": 22,
+     "revised_bias_C": null,
+     "rmse_C": 5.058436309610655,
+     "run": "EOW 3",
+     "samples": 3
+    },
+    {
+     "bias_C": -4.871270313570508,
+     "measured_mean_C": 65.02302125041706,
+     "model_mean_C": 60.15175093684655,
+     "position_ft": 69,
+     "revised_bias_C": null,
+     "rmse_C": 5.123127280439586,
+     "run": "EOW 3",
+     "samples": 3
+    },
+    {
+     "bias_C": -4.893257299839969,
+     "measured_mean_C": 65.02302125041706,
+     "model_mean_C": 60.129763950577086,
+     "position_ft": 84,
+     "revised_bias_C": null,
+     "rmse_C": 5.144099706446272,
+     "run": "EOW 3",
+     "samples": 3
+    },
+    {
+     "bias_C": -24.173604539277132,
+     "measured_mean_C": 76.28780719972309,
+     "model_mean_C": 52.114202660445955,
+     "position_ft": 22,
+     "revised_bias_C": null,
+     "rmse_C": 30.353918120291816,
+     "run": "EOW 4",
+     "samples": 2
+    },
+    {
+     "bias_C": -24.265088498926076,
+     "measured_mean_C": 76.28780719972309,
+     "model_mean_C": 52.022718700797014,
+     "position_ft": 84,
+     "revised_bias_C": null,
+     "rmse_C": 30.427556969198353,
+     "run": "EOW 4",
+     "samples": 2
+    },
+    {
+     "bias_C": -16.175195683667837,
+     "measured_mean_C": 62.9724286515953,
+     "model_mean_C": 46.79723296792747,
+     "position_ft": 22,
+     "revised_bias_C": -8.49,
+     "rmse_C": 16.951337547202122,
+     "run": "EOW 11",
+     "samples": 4
+    },
+    {
+     "bias_C": -18.27393866578549,
+     "measured_mean_C": 68.75052787272989,
+     "model_mean_C": 50.4765892069444,
+     "position_ft": 22,
+     "revised_bias_C": -9.8,
+     "rmse_C": 19.33904343317505,
+     "run": "EOW 12",
+     "samples": 12
+    },
+    {
+     "bias_C": -8.415682700568455,
+     "measured_mean_C": 64.3438018477609,
+     "model_mean_C": 55.928119147192454,
+     "position_ft": 22,
+     "revised_bias_C": null,
+     "rmse_C": 10.793631067012514,
+     "run": "EOW 13",
+     "samples": 14
+    },
+    {
+     "bias_C": -4.208806860867769,
+     "measured_mean_C": 63.03879369962774,
+     "model_mean_C": 58.82998683875997,
+     "position_ft": 22,
+     "revised_bias_C": null,
+     "rmse_C": 5.241985589452429,
+     "run": "EOW 15",
+     "samples": 4
+    },
+    {
+     "bias_C": -4.7985238252475595,
+     "measured_mean_C": 73.8477589560712,
+     "model_mean_C": 69.04923513082365,
+     "position_ft": 22,
+     "revised_bias_C": 0.14,
+     "rmse_C": 8.027870566916704,
+     "run": "EOW 16",
+     "samples": 15
+    },
+    {
+     "bias_C": 3.1805769328726856,
+     "measured_mean_C": 81.3631951184673,
+     "model_mean_C": 84.54377205133999,
+     "position_ft": 84,
+     "revised_bias_C": 8.74,
+     "rmse_C": 5.427223709753314,
+     "run": "EOW 17",
+     "samples": 14
+    },
+    {
+     "bias_C": 1.6932548234648572,
+     "measured_mean_C": 65.4674331913765,
+     "model_mean_C": 67.16068801484136,
+     "position_ft": 84,
+     "revised_bias_C": 2.08,
+     "rmse_C": 2.3753327166967724,
+     "run": "EOW 18",
+     "samples": 10
+    },
+    {
+     "bias_C": 1.1783505172245312,
+     "measured_mean_C": 71.28909431521889,
+     "model_mean_C": 72.46744483244342,
+     "position_ft": 84,
+     "revised_bias_C": null,
+     "rmse_C": 3.584999176826146,
+     "run": "EOW 19",
+     "samples": 10
+    },
+    {
+     "bias_C": 1.4867909444085967,
+     "measured_mean_C": 105.5735909230647,
+     "model_mean_C": 107.0603818674733,
+     "position_ft": 84,
+     "revised_bias_C": null,
+     "rmse_C": 9.312452418337607,
+     "run": "EOW 20",
+     "samples": 11
+    },
+    {
+     "bias_C": -3.731236065403283,
+     "measured_mean_C": 113.27150653823944,
+     "model_mean_C": 109.54027047283616,
+     "position_ft": 22,
+     "revised_bias_C": null,
+     "rmse_C": 12.988379525258546,
+     "run": "EOW 27",
+     "samples": 5
+    },
+    {
+     "bias_C": -3.8000433220139227,
+     "measured_mean_C": 113.27150653823944,
+     "model_mean_C": 109.47146321622552,
+     "position_ft": 84,
+     "revised_bias_C": null,
+     "rmse_C": 13.002458758335319,
+     "run": "EOW 27",
+     "samples": 5
+    },
+    {
+     "bias_C": -1.4931129872795623,
+     "measured_mean_C": 121.01291840644302,
+     "model_mean_C": 119.51980541916346,
+     "position_ft": 22,
+     "revised_bias_C": null,
+     "rmse_C": 5.76778333737061,
+     "run": "EOW 38",
+     "samples": 5
+    },
+    {
+     "bias_C": -1.5638431132686748,
+     "measured_mean_C": 121.01291840644302,
+     "model_mean_C": 119.44907529317435,
+     "position_ft": 84,
+     "revised_bias_C": null,
+     "rmse_C": 5.777406432451604,
+     "run": "EOW 38",
+     "samples": 5
+    }
+   ],
+   "sample_values": [
+    {
+     "depth_m": 1264.7185024864868,
+     "measured_C": 64.63134384384381,
+     "modelled_C": [
+      60.50404347958513,
+      60.58837521185834
+     ],
+     "pipe": "steel",
+     "run": "EOW 3"
+    },
+    {
+     "depth_m": 1306.3326425999999,
+     "measured_C": 65.11559027777776,
+     "modelled_C": [
+      58.01269782079323,
+      58.10464651216001
+     ],
+     "pipe": "steel",
+     "run": "EOW 3"
+    },
+    {
+     "depth_m": 1316.2343838666666,
+     "measured_C": 65.3221296296296,
+     "modelled_C": [
+      61.8725505513529,
+      61.96588085290139
+     ],
+     "pipe": "steel",
+     "run": "EOW 3"
+    },
+    {
+     "depth_m": 1356.4560262429907,
+     "measured_C": 56.81635514018693,
+     "modelled_C": [
+      50.90996221728413,
+      51.00023378439712
+     ],
+     "pipe": "steel",
+     "run": "EOW 4"
+    },
+    {
+     "depth_m": 1365.9114815483872,
+     "measured_C": 95.75925925925925,
+     "modelled_C": [
+      53.1354751843099,
+      53.2281715364948
+     ],
+     "pipe": "steel",
+     "run": "EOW 4"
+    },
+    {
+     "depth_m": 1526.4712476428574,
+     "measured_C": 64.28253968253966,
+     "modelled_C": [
+      39.43956606744494,
+      39.43956606744494
+     ],
+     "pipe": "steel",
+     "run": "EOW 11"
+    },
+    {
+     "depth_m": 1540.8677243636366,
+     "measured_C": 61.09747474747473,
+     "modelled_C": [
+      46.59466197230701,
+      46.59466197230701
+     ],
+     "pipe": "steel",
+     "run": "EOW 11"
+    },
+    {
+     "depth_m": 1561.433741066667,
+     "measured_C": 63.19197530864195,
+     "modelled_C": [
+      50.98804989345734,
+      50.98804989345734
+     ],
+     "pipe": "steel",
+     "run": "EOW 11"
+    },
+    {
+     "depth_m": 1582.2795259047623,
+     "measured_C": 63.31772486772487,
+     "modelled_C": [
+      50.16665393850058,
+      50.16665393850058
+     ],
+     "pipe": "steel",
+     "run": "EOW 11"
+    },
+    {
+     "depth_m": 1620.8391401142856,
+     "measured_C": 72.63968253968254,
+     "modelled_C": [
+      52.19629230920862,
+      52.19629230920862
+     ],
+     "pipe": "steel",
+     "run": "EOW 12"
+    },
+    {
+     "depth_m": 1649.5538344347829,
+     "measured_C": 71.50579710144928,
+     "modelled_C": [
+      53.96443114919473,
+      53.96443114919473
+     ],
+     "pipe": "steel",
+     "run": "EOW 12"
+    },
+    {
+     "depth_m": 1663.8014233043477,
+     "measured_C": 70.51739130434781,
+     "modelled_C": [
+      55.17449991429764,
+      55.17449991429764
+     ],
+     "pipe": "steel",
+     "run": "EOW 12"
+    },
+    {
+     "depth_m": 1676.5246421132076,
+     "measured_C": 69.75786163522014,
+     "modelled_C": [
+      57.01162010713844,
+      57.01162010713844
+     ],
+     "pipe": "steel",
+     "run": "EOW 12"
+    },
+    {
+     "depth_m": 1683.7029486233766,
+     "measured_C": 69.1862914862915,
+     "modelled_C": [
+      57.59368533212943,
+      57.59368533212943
+     ],
+     "pipe": "steel",
+     "run": "EOW 12"
+    },
+    {
+     "depth_m": 1694.088814,
+     "measured_C": 76.40123456790124,
+     "modelled_C": [
+      39.310698413037045,
+      39.310698413037045
+     ],
+     "pipe": "steel",
+     "run": "EOW 12"
+    },
+    {
+     "depth_m": 1704.7662526400002,
+     "measured_C": 67.4211851851852,
+     "modelled_C": [
+      45.86327906806583,
+      45.86327906806583
+     ],
+     "pipe": "steel",
+     "run": "EOW 12"
+    },
+    {
+     "depth_m": 1712.127597221053,
+     "measured_C": 66.28947368421049,
+     "modelled_C": [
+      47.530308394596474,
+      47.530308394596474
+     ],
+     "pipe": "steel",
+     "run": "EOW 12"
+    },
+    {
+     "depth_m": 1759.474022972477,
+     "measured_C": 65.7637104994903,
+     "modelled_C": [
+      49.44288104067883,
+      49.44288104067883
+     ],
+     "pipe": "steel",
+     "run": "EOW 12"
+    },
+    {
+     "depth_m": 1766.0804808175183,
+     "measured_C": 65.78094079480938,
+     "modelled_C": [
+      49.840843631347575,
+      49.840843631347575
+     ],
+     "pipe": "steel",
+     "run": "EOW 12"
+    },
+    {
+     "depth_m": 1773.4788,
+     "measured_C": 65.33885620915031,
+     "modelled_C": [
+      47.51805852408166,
+      47.51805852408166
+     ],
+     "pipe": "steel",
+     "run": "EOW 12"
+    },
+    {
+     "depth_m": 1779.7757986666668,
+     "measured_C": 64.40390946502055,
+     "modelled_C": [
+      50.27247259955656,
+      50.27247259955656
+     ],
+     "pipe": "steel",
+     "run": "EOW 12"
+    },
+    {
+     "depth_m": 1824.9665304,
+     "measured_C": 78.85444444444447,
+     "modelled_C": [
+      52.48219267436375,
+      52.48219267436375
+     ],
+     "pipe": "steel",
+     "run": "EOW 13"
+    },
+    {
+     "depth_m": 1832.9068752,
+     "measured_C": 72.7007662835249,
+     "modelled_C": [
+      53.91591151901065,
+      53.91591151901065
+     ],
+     "pipe": "steel",
+     "run": "EOW 13"
+    },
+    {
+     "depth_m": 1846.3092048979593,
+     "measured_C": 69.36863189720333,
+     "modelled_C": [
+      55.7473428151127,
+      55.7473428151127
+     ],
+     "pipe": "steel",
+     "run": "EOW 13"
+    },
+    {
+     "depth_m": 1849.0826775510204,
+     "measured_C": 62.661640211640226,
+     "modelled_C": [
+      55.01481779943512,
+      55.01481779943512
+     ],
+     "pipe": "steel",
+     "run": "EOW 13"
+    },
+    {
+     "depth_m": 1874.0215183157898,
+     "measured_C": 65.29473684210525,
+     "modelled_C": [
+      53.58821246463744,
+      53.58821246463744
+     ],
+     "pipe": "steel",
+     "run": "EOW 13"
+    },
+    {
+     "depth_m": 1880.7612554880006,
+     "measured_C": 62.501555555555605,
+     "modelled_C": [
+      56.832416612478355,
+      56.832416612478355
+     ],
+     "pipe": "steel",
+     "run": "EOW 13"
+    },
+    {
+     "depth_m": 1888.4527200000002,
+     "measured_C": 62.3310148731409,
+     "modelled_C": [
+      55.092190590124645,
+      55.092190590124645
+     ],
+     "pipe": "steel",
+     "run": "EOW 13"
+    },
+    {
+     "depth_m": 1895.210991319149,
+     "measured_C": 61.25315208825845,
+     "modelled_C": [
+      54.87531918213513,
+      54.87531918213513
+     ],
+     "pipe": "steel",
+     "run": "EOW 13"
+    },
+    {
+     "depth_m": 1901.5295318319331,
+     "measured_C": 60.70882352941178,
+     "modelled_C": [
+      55.08752170995786,
+      55.08752170995786
+     ],
+     "pipe": "steel",
+     "run": "EOW 13"
+    },
+    {
+     "depth_m": 1957.7660826206898,
+     "measured_C": 61.281034482758656,
+     "modelled_C": [
+      57.607846100601535,
+      57.607846100601535
+     ],
+     "pipe": "steel",
+     "run": "EOW 13"
+    },
+    {
+     "depth_m": 1964.2099552095808,
+     "measured_C": 60.768030605455735,
+     "modelled_C": [
+      57.454382836992885,
+      57.454382836992885
+     ],
+     "pipe": "steel",
+     "run": "EOW 13"
+    },
+    {
+     "depth_m": 1970.905155534884,
+     "measured_C": 60.67049956933677,
+     "modelled_C": [
+      57.85757822457604,
+      57.85757822457604
+     ],
+     "pipe": "steel",
+     "run": "EOW 13"
+    },
+    {
+     "depth_m": 1976.6155753282446,
+     "measured_C": 60.796055979643754,
+     "modelled_C": [
+      58.248715163737444,
+      58.248715163737444
+     ],
+     "pipe": "steel",
+     "run": "EOW 13"
+    },
+    {
+     "depth_m": 1988.1545623333336,
+     "measured_C": 61.62283950617286,
+     "modelled_C": [
+      59.189220367530766,
+      59.189220367530766
+     ],
+     "pipe": "steel",
+     "run": "EOW 13"
+    },
+    {
+     "depth_m": 2019.7775702970298,
+     "measured_C": 65.63767876787675,
+     "modelled_C": [
+      56.41758535427293,
+      56.41758535427293
+     ],
+     "pipe": "steel",
+     "run": "EOW 15"
+    },
+    {
+     "depth_m": 2054.8584637590366,
+     "measured_C": 64.23821954484605,
+     "modelled_C": [
+      60.062092271152686,
+      60.062092271152686
+     ],
+     "pipe": "steel",
+     "run": "EOW 15"
+    },
+    {
+     "depth_m": 2084.171247388235,
+     "measured_C": 61.17888888888891,
+     "modelled_C": [
+      58.57901445722944,
+      58.57901445722944
+     ],
+     "pipe": "steel",
+     "run": "EOW 15"
+    },
+    {
+     "depth_m": 2093.2588339534886,
+     "measured_C": 61.100387596899246,
+     "modelled_C": [
+      60.26125527238482,
+      60.26125527238482
+     ],
+     "pipe": "steel",
+     "run": "EOW 15"
+    },
+    {
+     "depth_m": 2129.397553066667,
+     "measured_C": 82.84617283950615,
+     "modelled_C": [
+      59.58189134846275,
+      59.58189134846275
+     ],
+     "pipe": "steel",
+     "run": "EOW 16"
+    },
+    {
+     "depth_m": 2143.997828666667,
+     "measured_C": 76.50074074074075,
+     "modelled_C": [
+      63.56135489876911,
+      63.56135489876911
+     ],
+     "pipe": "steel",
+     "run": "EOW 16"
+    },
+    {
+     "depth_m": 2153.2226006666665,
+     "measured_C": 75.5362962962963,
+     "modelled_C": [
+      64.67771628421036,
+      64.67771628421036
+     ],
+     "pipe": "steel",
+     "run": "EOW 16"
+    },
+    {
+     "depth_m": 2162.3158386206896,
+     "measured_C": 73.97560664112387,
+     "modelled_C": [
+      63.73788221834513,
+      63.73788221834513
+     ],
+     "pipe": "steel",
+     "run": "EOW 16"
+    },
+    {
+     "depth_m": 2194.0858115348838,
+     "measured_C": 72.72360034453057,
+     "modelled_C": [
+      68.57628390645802,
+      68.57628390645802
+     ],
+     "pipe": "steel",
+     "run": "EOW 16"
+    },
+    {
+     "depth_m": 2231.4732273333334,
+     "measured_C": 73.00271604938273,
+     "modelled_C": [
+      69.87651202119457,
+      69.87651202119457
+     ],
+     "pipe": "steel",
+     "run": "EOW 16"
+    },
+    {
+     "depth_m": 2238.2753473333332,
+     "measured_C": 71.82395061728396,
+     "modelled_C": [
+      70.90149659838077,
+      70.90149659838077
+     ],
+     "pipe": "steel",
+     "run": "EOW 16"
+    },
+    {
+     "depth_m": 2244.871693466667,
+     "measured_C": 72.1148148148148,
+     "modelled_C": [
+      71.46877575504513,
+      71.46877575504513
+     ],
+     "pipe": "steel",
+     "run": "EOW 16"
+    },
+    {
+     "depth_m": 2251.062925456648,
+     "measured_C": 72.41213872832368,
+     "modelled_C": [
+      71.56678515135711,
+      71.56678515135711
+     ],
+     "pipe": "steel",
+     "run": "EOW 16"
+    },
+    {
+     "depth_m": 2262.4713196,
+     "measured_C": 72.75012345679013,
+     "modelled_C": [
+      70.77127023225421,
+      70.77127023225421
+     ],
+     "pipe": "steel",
+     "run": "EOW 16"
+    },
+    {
+     "depth_m": 2268.367201246753,
+     "measured_C": 72.6038961038961,
+     "modelled_C": [
+      71.69490440724613,
+      71.69490440724613
+     ],
+     "pipe": "steel",
+     "run": "EOW 16"
+    },
+    {
+     "depth_m": 2273.6627059881657,
+     "measured_C": 72.8621301775148,
+     "modelled_C": [
+      71.89216529557956,
+      71.89216529557956
+     ],
+     "pipe": "steel",
+     "run": "EOW 16"
+    },
+    {
+     "depth_m": 2279.1560885333333,
+     "measured_C": 72.80370370370369,
+     "modelled_C": [
+      72.2307717064187,
+      72.2307717064187
+     ],
+     "pipe": "steel",
+     "run": "EOW 16"
+    },
+    {
+     "depth_m": 2292.7614630666662,
+     "measured_C": 72.88024691358024,
+     "modelled_C": [
+      72.28243769258866,
+      72.28243769258866
+     ],
+     "pipe": "steel",
+     "run": "EOW 16"
+    },
+    {
+     "depth_m": 2298.303878533334,
+     "measured_C": 72.88024691358024,
+     "modelled_C": [
+      72.91827944604444,
+      72.91827944604444
+     ],
+     "pipe": "steel",
+     "run": "EOW 16"
+    },
+    {
+     "depth_m": 2339.6213893109243,
+     "measured_C": 85.491223155929,
+     "modelled_C": [
+      77.52012439483846,
+      77.52012439483846
+     ],
+     "pipe": "steel",
+     "run": "EOW 17"
+    },
+    {
+     "depth_m": 2354.1461610410956,
+     "measured_C": 81.33774733637748,
+     "modelled_C": [
+      77.4561544133383,
+      77.4561544133383
+     ],
+     "pipe": "steel",
+     "run": "EOW 17"
+    },
+    {
+     "depth_m": 2370.836328705883,
+     "measured_C": 81.49450980392157,
+     "modelled_C": [
+      80.88924939471973,
+      80.88924939471973
+     ],
+     "pipe": "steel",
+     "run": "EOW 17"
+    },
+    {
+     "depth_m": 2380.817781647059,
+     "measured_C": 79.61604938271607,
+     "modelled_C": [
+      81.7369954486626,
+      81.7369954486626
+     ],
+     "pipe": "steel",
+     "run": "EOW 17"
+    },
+    {
+     "depth_m": 2387.6599440000005,
+     "measured_C": 79.93642611683852,
+     "modelled_C": [
+      82.19884235057131,
+      82.19884235057131
+     ],
+     "pipe": "steel",
+     "run": "EOW 17"
+    },
+    {
+     "depth_m": 2391.3129719999997,
+     "measured_C": 78.68902606310014,
+     "modelled_C": [
+      82.74426383959525,
+      82.74426383959525
+     ],
+     "pipe": "steel",
+     "run": "EOW 17"
+    },
+    {
+     "depth_m": 2400.167825925926,
+     "measured_C": 79.48847736625515,
+     "modelled_C": [
+      82.77783099918096,
+      82.77783099918096
+     ],
+     "pipe": "steel",
+     "run": "EOW 17"
+    },
+    {
+     "depth_m": 2406.4896752,
+     "measured_C": 79.8303703703704,
+     "modelled_C": [
+      85.53692048405742,
+      85.53692048405742
+     ],
+     "pipe": "steel",
+     "run": "EOW 17"
+    },
+    {
+     "depth_m": 2418.939156104348,
+     "measured_C": 80.74888888888893,
+     "modelled_C": [
+      87.69711140416958,
+      87.69711140416958
+     ],
+     "pipe": "steel",
+     "run": "EOW 17"
+    },
+    {
+     "depth_m": 2426.5464120827587,
+     "measured_C": 81.50904214559385,
+     "modelled_C": [
+      86.65791946366114,
+      86.65791946366114
+     ],
+     "pipe": "steel",
+     "run": "EOW 17"
+    },
+    {
+     "depth_m": 2433.8574721935483,
+     "measured_C": 82.2111111111111,
+     "modelled_C": [
+      88.8826139707001,
+      88.8826139707001
+     ],
+     "pipe": "steel",
+     "run": "EOW 17"
+    },
+    {
+     "depth_m": 2438.8228338,
+     "measured_C": 81.66166666666666,
+     "modelled_C": [
+      89.19882771247094,
+      89.19882771247094
+     ],
+     "pipe": "steel",
+     "run": "EOW 17"
+    },
+    {
+     "depth_m": 2448.2846279289943,
+     "measured_C": 82.80006574621956,
+     "modelled_C": [
+      89.18103100794467,
+      89.18103100794467
+     ],
+     "pipe": "steel",
+     "run": "EOW 17"
+    },
+    {
+     "depth_m": 2457.9999141639346,
+     "measured_C": 84.27012750455374,
+     "modelled_C": [
+      91.13492383484932,
+      91.13492383484932
+     ],
+     "pipe": "steel",
+     "run": "EOW 17"
+    },
+    {
+     "depth_m": 2475.853491490909,
+     "measured_C": 65.10065656565654,
+     "modelled_C": [
+      63.550586327938895,
+      63.550586327938895
+     ],
+     "pipe": "insulated",
+     "run": "EOW 18"
+    },
+    {
+     "depth_m": 2521.328324533333,
+     "measured_C": 65.9984259259259,
+     "modelled_C": [
+      68.56672879403109,
+      68.56672879403109
+     ],
+     "pipe": "insulated",
+     "run": "EOW 18"
+    },
+    {
+     "depth_m": 2527.308583448276,
+     "measured_C": 66.87609195402298,
+     "modelled_C": [
+      69.28962334614535,
+      69.28962334614535
+     ],
+     "pipe": "insulated",
+     "run": "EOW 18"
+    },
+    {
+     "depth_m": 2533.8429384,
+     "measured_C": 67.05377777777777,
+     "modelled_C": [
+      70.53327506593233,
+      70.53327506593233
+     ],
+     "pipe": "insulated",
+     "run": "EOW 18"
+    },
+    {
+     "depth_m": 2537.583372282353,
+     "measured_C": 66.15254901960782,
+     "modelled_C": [
+      70.1932878790985,
+      70.1932878790985
+     ],
+     "pipe": "insulated",
+     "run": "EOW 18"
+    },
+    {
+     "depth_m": 2546.525250763636,
+     "measured_C": 67.50969696969698,
+     "modelled_C": [
+      68.79334522449614,
+      68.79334522449614
+     ],
+     "pipe": "insulated",
+     "run": "EOW 18"
+    },
+    {
+     "depth_m": 2551.491832434783,
+     "measured_C": 66.48888888888884,
+     "modelled_C": [
+      66.89432544578922,
+      66.89432544578922
+     ],
+     "pipe": "insulated",
+     "run": "EOW 18"
+    },
+    {
+     "depth_m": 2558.2752783829787,
+     "measured_C": 64.9683806146572,
+     "modelled_C": [
+      64.5357972635865,
+      64.5357972635865
+     ],
+     "pipe": "insulated",
+     "run": "EOW 18"
+    },
+    {
+     "depth_m": 2561.4874348000008,
+     "measured_C": 62.43419753086423,
+     "modelled_C": [
+      64.85091973226554,
+      64.85091973226554
+     ],
+     "pipe": "insulated",
+     "run": "EOW 18"
+    },
+    {
+     "depth_m": 2572.9533885000005,
+     "measured_C": 62.091666666666676,
+     "modelled_C": [
+      64.39899106912993,
+      64.39899106912993
+     ],
+     "pipe": "insulated",
+     "run": "EOW 18"
+    },
+    {
+     "depth_m": 2678.0585673333335,
+     "measured_C": 77.30699588477364,
+     "modelled_C": [
+      70.66093356562058,
+      70.66093356562058
+     ],
+     "pipe": "insulated",
+     "run": "EOW 19"
+    },
+    {
+     "depth_m": 2681.358586133333,
+     "measured_C": 73.19407407407408,
+     "modelled_C": [
+      71.51724974971489,
+      71.51724974971489
+     ],
+     "pipe": "insulated",
+     "run": "EOW 19"
+    },
+    {
+     "depth_m": 2687.7991049599996,
+     "measured_C": 71.03096296296297,
+     "modelled_C": [
+      72.07387610786428,
+      72.07387610786428
+     ],
+     "pipe": "insulated",
+     "run": "EOW 19"
+    },
+    {
+     "depth_m": 2712.4781392207788,
+     "measured_C": 69.26681096681097,
+     "modelled_C": [
+      70.0224855089944,
+      70.0224855089944
+     ],
+     "pipe": "insulated",
+     "run": "EOW 19"
+    },
+    {
+     "depth_m": 2724.346813714286,
+     "measured_C": 68.41777777777777,
+     "modelled_C": [
+      72.72093466505567,
+      72.72093466505567
+     ],
+     "pipe": "insulated",
+     "run": "EOW 19"
+    },
+    {
+     "depth_m": 2758.0699598297865,
+     "measured_C": 72.19787234042553,
+     "modelled_C": [
+      74.41019767776618,
+      74.41019767776618
+     ],
+     "pipe": "insulated",
+     "run": "EOW 19"
+    },
+    {
+     "depth_m": 2772.252393,
+     "measured_C": 72.51666666666667,
+     "modelled_C": [
+      72.50123344707171,
+      72.50123344707171
+     ],
+     "pipe": "insulated",
+     "run": "EOW 19"
+    },
+    {
+     "depth_m": 2785.7128742479335,
+     "measured_C": 71.00651974288338,
+     "modelled_C": [
+      73.3381796433143,
+      73.3381796433143
+     ],
+     "pipe": "insulated",
+     "run": "EOW 19"
+    },
+    {
+     "depth_m": 2797.111875478261,
+     "measured_C": 69.93832528180354,
+     "modelled_C": [
+      72.9249469083881,
+      72.9249469083881
+     ],
+     "pipe": "insulated",
+     "run": "EOW 19"
+    },
+    {
+     "depth_m": 2806.1485273112585,
+     "measured_C": 68.0149374540103,
+     "modelled_C": [
+      74.50441105064407,
+      74.50441105064407
+     ],
+     "pipe": "insulated",
+     "run": "EOW 19"
+    },
+    {
+     "depth_m": 2827.3395587368423,
+     "measured_C": 115.73549707602332,
+     "modelled_C": [
+      100.74066164986712,
+      100.74066164986712
+     ],
+     "pipe": "steel",
+     "run": "EOW 20"
+    },
+    {
+     "depth_m": 2839.520420932331,
+     "measured_C": 109.72861319966583,
+     "modelled_C": [
+      99.43913045860738,
+      99.43913045860738
+     ],
+     "pipe": "steel",
+     "run": "EOW 20"
+    },
+    {
+     "depth_m": 2854.5388984800006,
+     "measured_C": 109.85144444444444,
+     "modelled_C": [
+      114.66657249151612,
+      114.66657249151612
+     ],
+     "pipe": "steel",
+     "run": "EOW 20"
+    },
+    {
+     "depth_m": 2867.847179107438,
+     "measured_C": 107.30748393021119,
+     "modelled_C": [
+      100.92377261995588,
+      100.92377261995588
+     ],
+     "pipe": "steel",
+     "run": "EOW 20"
+    },
+    {
+     "depth_m": 2877.837991015385,
+     "measured_C": 102.84632478632477,
+     "modelled_C": [
+      103.61823550407142,
+      103.61823550407142
+     ],
+     "pipe": "steel",
+     "run": "EOW 20"
+    },
+    {
+     "depth_m": 2885.5289522242992,
+     "measured_C": 101.27133956386294,
+     "modelled_C": [
+      100.7969731397814,
+      100.7969731397814
+     ],
+     "pipe": "steel",
+     "run": "EOW 20"
+    },
+    {
+     "depth_m": 2916.1093772773115,
+     "measured_C": 105.22007469654527,
+     "modelled_C": [
+      116.86501181971725,
+      116.86501181971725
+     ],
+     "pipe": "steel",
+     "run": "EOW 20"
+    },
+    {
+     "depth_m": 2939.0731668000003,
+     "measured_C": 103.80370370370373,
+     "modelled_C": [
+      102.49760212019876,
+      102.49760212019876
+     ],
+     "pipe": "steel",
+     "run": "EOW 20"
+    },
+    {
+     "depth_m": 2945.87853478481,
+     "measured_C": 100.20520393811536,
+     "modelled_C": [
+      104.35666178267022,
+      104.35666178267022
+     ],
+     "pipe": "steel",
+     "run": "EOW 20"
+    },
+    {
+     "depth_m": 2958.89994325,
+     "measured_C": 100.96203703703702,
+     "modelled_C": [
+      114.97664112165043,
+      114.97664112165043
+     ],
+     "pipe": "steel",
+     "run": "EOW 20"
+    },
+    {
+     "depth_m": 2974.1581360000005,
+     "measured_C": 104.37777777777775,
+     "modelled_C": [
+      118.7829378341702,
+      118.7829378341702
+     ],
+     "pipe": "steel",
+     "run": "EOW 20"
+    },
+    {
+     "depth_m": 3012.304702666667,
+     "measured_C": 121.68756613756618,
+     "modelled_C": [
+      99.70459494687503,
+      99.77612852688515
+     ],
+     "pipe": "steel",
+     "run": "EOW 27"
+    },
+    {
+     "depth_m": 3042.1447521568634,
+     "measured_C": 112.31005809731299,
+     "modelled_C": [
+      101.17779230386805,
+      101.23546235086069
+     ],
+     "pipe": "steel",
+     "run": "EOW 27"
+    },
+    {
+     "depth_m": 3045.6299090666666,
+     "measured_C": 107.82225308641974,
+     "modelled_C": [
+      101.83732761444327,
+      101.89196263260794
+     ],
+     "pipe": "steel",
+     "run": "EOW 27"
+    },
+    {
+     "depth_m": 3068.602628411215,
+     "measured_C": 110.08193146417443,
+     "modelled_C": [
+      120.53069025226054,
+      120.61647352977793
+     ],
+     "pipe": "steel",
+     "run": "EOW 27"
+    },
+    {
+     "depth_m": 3105.224352727272,
+     "measured_C": 114.45572390572383,
+     "modelled_C": [
+      124.10691096368066,
+      124.18132532404904
+     ],
+     "pipe": "steel",
+     "run": "EOW 27"
+    },
+    {
+     "depth_m": 3211.1995051578947,
+     "measured_C": 119.88333333333334,
+     "modelled_C": [
+      111.7504331908395,
+      111.80608715846309
+     ],
+     "pipe": "steel",
+     "run": "EOW 38"
+    },
+    {
+     "depth_m": 3218.4298561714286,
+     "measured_C": 117.24587301587297,
+     "modelled_C": [
+      112.90203493827109,
+      112.953637496402
+     ],
+     "pipe": "steel",
+     "run": "EOW 38"
+    },
+    {
+     "depth_m": 3233.8869764081633,
+     "measured_C": 116.4810657596372,
+     "modelled_C": [
+      123.26493574713055,
+      123.34488433335491
+     ],
+     "pipe": "steel",
+     "run": "EOW 38"
+    },
+    {
+     "depth_m": 3273.7575304500006,
+     "measured_C": 126.33305555555555,
+     "modelled_C": [
+      121.1712502293749,
+      121.25195733054262
+     ],
+     "pipe": "steel",
+     "run": "EOW 38"
+    },
+    {
+     "depth_m": 3303.1644235862072,
+     "measured_C": 125.12126436781607,
+     "modelled_C": [
+      128.1567223602557,
+      128.2424607770547
+     ],
+     "pipe": "steel",
+     "run": "EOW 38"
+    }
+   ],
+   "samples": 109,
+   "title": "FORGE 16B: whole-well circulation comparison",
+   "well": "Utah FORGE well 16B"
+  }
+ ],
+ "sections": [
+  "FORGE 16B: whole-well circulation comparison",
+  "FORGE 16A: blind circulation comparison"
+ ],
+ "source": "BoreTHM v1.8.0, docs/science/validation.md"
+}

@@ -1,0 +1,76 @@
+{
+ "commit": "15515b581bf2504542595447b787562ad7e324e2",
+ "outputs": {
+  "comparisons.json": "93e67b8fffbd02821dec853539b6dfd4e33c5a2ef6cefcccce8ecc4d8d29b34c",
+  "tested-range.json": "3f16be13269fa0f0b4cb336732a2ef327d8b1f4248a6aa8b0b27d5bc3e643d8a"
+ },
+ "repository": "https://github.com/ldocallaghan/BoreTHM",
+ "script": "deploy/build_evidence.py",
+ "sources": {
+  "docs/science/validation.md": {
+   "bytes": 51024,
+   "sha256": "92b37212f2558c27309b7fb44ee5d2dd4cc05ae8335d081313ee7c85f6c8d752"
+  },
+  "validation/forge16a/README.md": {
+   "bytes": 11348,
+   "sha256": "e730eae7f287f3d5ea41ffac6b7897a3f7a54621e60a39aa26fc3107d56731fe"
+  },
+  "validation/forge16a/circulation-metrics.csv": {
+   "bytes": 392406,
+   "sha256": "e6ad414069969983c0d91b244b6530afa2178b6488e86d5f49813116e148691f"
+  },
+  "validation/forge16a/circulation-primary.csv": {
+   "bytes": 74110,
+   "sha256": "dc3dc56c1c5f315cdeea25777942570dbaead2f7c85df52f467128b5b9efe3d0"
+  },
+  "validation/forge16a/comparison_protocol.md": {
+   "bytes": 11052,
+   "sha256": "596bdb8b2e918e3e6929cc84341a5ff0ccdfbc7052e1cdf37494f19bb5a5a6b3"
+  },
+  "validation/forge16a/formation_temperature_216day.csv": {
+   "bytes": 77697,
+   "sha256": "5af4cf699f4133ebdfb11b91df12551b9ace041a2306c2ecbfdb2b9f60715ae4"
+  },
+  "validation/forge16a/inlet-counterfactual.csv": {
+   "bytes": 4066,
+   "sha256": "2c7b1a59f3cc429a4a4ba206d1e0d8cf6f835d792970a3c1c85496bda07099ea"
+  },
+  "validation/forge16a/return-metrics.csv": {
+   "bytes": 57932,
+   "sha256": "c88fb083915080d75d27e7b9b6d9e17d62fc32250c6cf942aa38967bcc6bf787"
+  },
+  "validation/forge16a/run_inputs.csv": {
+   "bytes": 4970,
+   "sha256": "b122e66f2f6a9f0a401e305c58d87309d86a7fecf8d8a1617ae9f97c5ab69e9f"
+  },
+  "validation/forge16b/comparison_protocol.md": {
+   "bytes": 12385,
+   "sha256": "a94c2c547620186aa156e92677e53e0b08d15514a3ce9b296e01a6d8d29925df"
+  },
+  "validation/forge16b/comparison_protocol_s1.md": {
+   "bytes": 8650,
+   "sha256": "9e87a96489841cc5fe10ece425e1cea50b84452989e3b577c870e21850297bb4"
+  },
+  "validation/forge16b/s1/frozen-inputs.json": {
+   "bytes": 429180,
+   "sha256": "355d8b2b6c9f53525ab3df4bbfa24383b46e202bc2f942845d34dcd31da610d8"
+  },
+  "validation/forge16b/s1/pooled-metrics.csv": {
+   "bytes": 16662,
+   "sha256": "d93ecf6ba5164db82371143dfee60f06954dfaab13790555ef3202529d70dec5"
+  },
+  "validation/forge16b/s1/results.jsonl": {
+   "bytes": 747119,
+   "sha256": "8619fa531af353d726ae68a60513efe4fe12eb413c4d0acfba770f7a9ed0800b"
+  },
+  "validation/forge16b/s1/run-metrics.csv": {
+   "bytes": 38666,
+   "sha256": "3ddfc36169766e201b58e22ea93d9683fd481a659231210f24f5f9a7c1b259bd"
+  },
+  "validation/forge16b/s1/sample-comparisons.csv": {
+   "bytes": 302959,
+   "sha256": "6a7dffe7e8f61a14ecf20937674974a6a5252207596623dda35baea4e1df0dc5"
+  }
+ },
+ "tag": "v1.8.0"
+}

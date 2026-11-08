@@ -762,6 +762,7 @@ def create_app(data_dir=None, start_jobs=True, deadline=30, policy=None):
 
     from pydantic import BaseModel, ConfigDict, Field
 
+    from . import evidence as field_evidence
     from . import sites as site_files
     from .settings import Settings, load_settings, save_settings
     from .units import units_table
@@ -851,6 +852,21 @@ def create_app(data_dir=None, start_jobs=True, deadline=30, policy=None):
         return {
             "depth_m": depth.tolist(),
             "temperature_C": np.asarray(geotherm(depth), dtype=float).tolist(),
+        }
+
+    @app.get("/api/v1/evidence")
+    def field_comparisons(units: UnitChoice = "SI"):
+        data = field_evidence.comparisons()
+        return {
+            "comparisons": [
+                {
+                    **{k: v for k, v in c.items() if k != "sample_values"},
+                    "figure": field_evidence.comparison_figure(c, units),
+                }
+                for c in data["comparisons"]
+            ],
+            "tested_range": field_evidence.tested_range(),
+            "sources": field_evidence.sources(),
         }
 
     if (PACKAGE / "static" / "index.html").is_file():

@@ -11,6 +11,27 @@ Newberry EGS Demonstration: Well 55-29 Stimulation Data. Cladouhos, T.T.
 https://doi.org/10.15121/1357916. CC BY 4.0.
 The preset represents model inputs derived from those data.
 
+The field-comparison tables in src/borethm_workbench/evidence/ are derived
+from the FORGE 16A and 16B circulation comparisons published with BoreTHM
+v1.8.0: its validation guide (CC BY 4.0) and the comparison tables in its
+validation records. deploy/build_evidence.py records each source file and
+checksum. Changes comprise selection of the published primary comparison
+values, conversion to SI units and conversion to JSON. The underlying
+measurements keep their source licences, as stated in the BoreTHM sources:
+Utah FORGE: Well 16A(78)-32 Drilling Data. McLennan, J., Nash, G., Moore, J.,
+Skowron, G. and Woolsey, S. (2021). Geothermal Data Repository, submission
+1283. https://doi.org/10.15121/1776602. CC BY 4.0.
+Utah FORGE: Well 16A(78)-32 Logs. Gilmour, B., Wooden, J., Pulka, F., Rose,
+B., Barker, C. and Borchardt, E. (2021). Geothermal Data Repository,
+submission 1292. https://doi.org/10.15121/1777912. CC BY 4.0.
+Utah FORGE: Deep Wells Temperature Surveys as of September 2022. Jones, C.
+(2022). Geothermal Data Repository, submission 1421.
+https://doi.org/10.15121/1893533. CC BY 4.0.
+Utah FORGE: Well 16B(78)-32 Drilling Data. McLennan, J., Mock, B.,
+Swearingen, L., Baldwin, R., Hodder, M., Vetsak, A., Kuhns, A.T., Breland, J.,
+England, K. (2023). Geothermal Data Repository, submission 1516.
+https://doi.org/10.15121/1998591. CC BY 4.0.
+
 Built browser packages include React, React DOM, Lucide, Plotly and Three.js.
 The build generates THIRD-PARTY-LICENCES.txt in the installed package from
 the npm dependencies' licence files. Their licences continue to apply.
