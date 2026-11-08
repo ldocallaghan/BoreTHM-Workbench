@@ -869,6 +869,56 @@ def create_app(data_dir=None, start_jobs=True, deadline=30, policy=None):
             "sources": field_evidence.sources(),
         }
 
+    def completed(rid):
+        record = store.get(rid)
+        if record["state"] != "completed" or not record.get("manifest"):
+            raise HTTPException(409, "Results need a completed run")
+        mode = record["manifest"].get("mode", "circulation_state")
+        if mode not in ("circulation_state", "site_assessment"):
+            raise HTTPException(
+                422,
+                "CAPABILITY_UNSUPPORTED: results pages cover circulation runs and assessments",
+            )
+        return record
+
+    class ResultsRequest(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        manifest: dict
+
+    @app.post("/api/v1/results")
+    def manifest_results(request: ResultsRequest, units: UnitChoice = "SI"):
+        from .results import results
+
+        mode = request.manifest.get("mode", "circulation_state")
+        if mode not in ("circulation_state", "site_assessment"):
+            raise HTTPException(
+                422,
+                "CAPABILITY_UNSUPPORTED: results pages cover circulation runs and assessments",
+            )
+        try:
+            return results(request.manifest, units)
+        except (KeyError, TypeError, ValueError, IndexError) as error:
+            raise HTTPException(422, f"ARTIFACT_INVALID: {error}") from error
+
+    @app.get("/api/v1/runs/{rid}/results")
+    def run_results(rid: str, units: UnitChoice = "SI"):
+        from .results import results
+
+        return results(completed(rid)["manifest"], units)
+
+    @app.get("/api/v1/runs/{rid}/report")
+    def run_report(rid: str, units: UnitChoice = "SI"):
+        from .report import report_html
+
+        data = report_html(completed(rid), units)
+        return Response(
+            data,
+            media_type="text/html; charset=utf-8",
+            headers={
+                "Content-Disposition": f'attachment; filename="{rid}-report.html"'
+            },
+        )
+
     if (PACKAGE / "static" / "index.html").is_file():
         app.mount(
             "/", StaticFiles(directory=PACKAGE / "static", html=True), name="frontend"
