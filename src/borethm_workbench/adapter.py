@@ -499,6 +499,9 @@ def validate(scenario):
     return warnings
 
 
+NOT_CONVERGED = "The circulation calculation did not converge for these inputs."
+
+
 def validate_thermal(scenario, geometry, result, settings):
     from borethm import model1_coupled as m1
     from borethm.hydraulic_losses import LossModel
@@ -517,20 +520,29 @@ def validate_thermal(scenario, geometry, result, settings):
             "RESULT_NONFINITE", "Accepted thermal output contains non-finite values."
         )
     raw_p = m1.P_of_z(geometry.survey.tvd(audit_z), settings["P_surface"])
+    ranges = {
+        "temperature_range_C": [float(audit_t.min()), float(audit_t.max())],
+        "pressure_range_absolute_Pa": [float(raw_p.min()), float(raw_p.max())],
+    }
+    if not result["success"]:
+        # The model reports no success: a non-convergence, whatever the
+        # temperatures of the unsuccessful profile.
+        raise CalculationError(
+            "SOLVER_NOT_CONVERGED",
+            NOT_CONVERGED,
+            {**ranges, "model_success": False},
+        )
     outside = scenario.definition.fluid.kind != "constant_properties" and (
         audit_t.min() < 1
         or audit_t.max() > 479
         or raw_p.min() < 1e5
         or raw_p.max() > 218.1e6
     )
-    if outside or not result["success"]:
+    if outside:
         raise CalculationError(
             "PROPERTY_DOMAIN_OUTSIDE",
             "Accepted solution exceeds the declared property domain; no physical profile published.",
-            {
-                "temperature_range_C": [float(audit_t.min()), float(audit_t.max())],
-                "pressure_range_absolute_Pa": [float(raw_p.min()), float(raw_p.max())],
-            },
+            ranges,
         )
     residual = float(np.max(sol.rms_residuals))
     inlet = float(sol.sol(np.array([0.0]))[0, 0] - settings["T_inj"])
@@ -578,8 +590,17 @@ def run_circulation(
         make_settings(scenario),
     )
     rate = mass_rate(scenario, fluid)
+    if d.fluid.kind != "constant_properties" and not (
+        1 <= settings["target_rock_T"] <= 479
+    ):
+        raise CalculationError(
+            "PROPERTY_DOMAIN_OUTSIDE",
+            f"The formation temperature at the bit, {settings['target_rock_T']:.1f} °C, "
+            "is outside the water-property table's 1–479 °C range.",
+            {"formation_temperature_at_bit_C": settings["target_rock_T"]},
+        )
     started = time.perf_counter()
-    stage("running", {"name": "Circulation boundary-value solve", "attempt": 1})
+    stage("running", {"name": "Solving circulation temperatures", "attempt": 1})
     from .initialisation import compatibility_key, solve
 
     result, attempts, accepted_seed = solve(
@@ -596,7 +617,7 @@ def run_circulation(
     sol = result["sol"]
     stage(
         "postprocessing",
-        {"name": "Validate, reconstruct pressure and publish artifacts"},
+        {"name": "Checking the result and calculating pressures"},
     )
     # Include accepted adaptive nodes and every physical breakpoint in audit.
     model = LossModel(geometry, **loss_settings(scenario))
@@ -619,15 +640,20 @@ def run_circulation(
         or raw_p.min() < 1e5
         or raw_p.max() > 218.1e6
     )
-    if outside or not result["success"]:
+    ranges = {
+        "attempts": attempts,
+        "temperature_range_C": [float(audit_t.min()), float(audit_t.max())],
+        "pressure_range_absolute_Pa": [float(raw_p.min()), float(raw_p.max())],
+    }
+    if not result["success"]:
+        raise CalculationError(
+            "SOLVER_NOT_CONVERGED", NOT_CONVERGED, {**ranges, "model_success": False}
+        )
+    if outside:
         raise CalculationError(
             "PROPERTY_DOMAIN_OUTSIDE",
             "Accepted solution exceeds the declared property domain; no physical profile published.",
-            {
-                "attempts": attempts,
-                "temperature_range_C": [float(audit_t.min()), float(audit_t.max())],
-                "pressure_range_absolute_Pa": [float(raw_p.min()), float(raw_p.max())],
-            },
+            ranges,
         )
     hyd = core.hydraulics(
         rate,

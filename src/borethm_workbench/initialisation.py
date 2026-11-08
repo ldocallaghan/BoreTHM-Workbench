@@ -150,7 +150,12 @@ def solve(
             record.update(
                 outcome="rejected", failure_code=error.code, solver_message=str(error)
             )
-            if error.code not in {"SOLVER_NOT_CONVERGED", "RESULT_NONFINITE"}:
+            # A result the model itself reports as unsuccessful ends the run
+            # without further attempts, as the previous domain error did.
+            if error.code not in {
+                "SOLVER_NOT_CONVERGED",
+                "RESULT_NONFINITE",
+            } or error.diagnostics.get("model_success") is False:
                 record["duration_s"] = time.perf_counter() - started
                 attempts.append(record)
                 notify(
@@ -236,10 +241,13 @@ def solve(
             )
             if result:
                 return result, attempts, accepted_seed
+    from .adapter import NOT_CONVERGED
+
     raise CalculationError(
         "SOLVER_NOT_CONVERGED",
-        "All bounded initialisation attempts failed. Inspect attempt diagnostics; try a supported operating condition or an explicitly different numerical policy.",
+        NOT_CONVERGED,
         {
+            "detail": "Every initialisation attempt failed. The attempt records give each solver message.",
             "attempts": attempts,
             "solver_converged": False,
             "initialisation_policy": profile,

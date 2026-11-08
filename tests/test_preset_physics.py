@@ -60,9 +60,11 @@ def test_preset_calls_resolve_consistently(path, monkeypatch):
     try:
         result = operation(scenario)
     except CalculationError as error:
-        assert (
-            path.stem == "high-temperature" and error.code == "PROPERTY_DOMAIN_OUTSIDE"
-        )
+        # Under current physics the model reports no success for this preset.
+        assert path.stem == "high-temperature"
+        assert scenario.model.physics == "v1.8.0"
+        assert error.code == "SOLVER_NOT_CONVERGED"
+        assert str(error) == "The circulation calculation did not converge for these inputs."
     else:
         assert result["physics"] == scenario.model.physics
         for key, value in expected.items():

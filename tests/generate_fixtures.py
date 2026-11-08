@@ -123,7 +123,9 @@ def cases():
         approximation_label="Analytic constant-property fixture; not a water-property calculation",
     )
     hot = json.loads(json.dumps(base))
-    hot["title"] = "High-temperature property-domain qualification fixture"
+    hot["title"] = (
+        "High-temperature water case: no converged solution under current physics"
+    )
     hot["definition"]["formation"]["geotherm"]["points_tvd_m_temperature_C"][-1][1] = (
         450.0
     )
