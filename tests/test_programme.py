@@ -283,6 +283,7 @@ def test_the_reference_pulser_keeps_the_walkthrough_string_in_the_scenario():
     assert result["valid"] and result["toml_table"] is None
     assert "mwd pulser with the total internal basis over 2 sections" in result["toml_note"]
     assert "cannot state a tool's basis or span" in result["toml_note"]
+    assert result["toml_note"].startswith("Section 5 names")
 
 
 @needs_interface

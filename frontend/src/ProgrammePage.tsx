@@ -153,7 +153,6 @@ function HydraulicProgramme({programme, set, inSite, pipes, check}: {programme: 
       <div className="small"><p>The well the model builds at the target{kind !== 'custom' ? ', with the first candidate pipe; the model chooses the pipe when it runs' : ''}.</p>
         <ul>{check.drawing.string.map(s => <li key={s.id}>{s.pipe.name}: {format(s.length_m, 'length')}{s.tool_class ? `, ${s.tool_class.replace('_', ' ')}` : ''}</li>)}</ul></div>
     </div>}
-    {check?.toml_note && <p className="small muted">{check.toml_note}</p>}
   </section>;
 }
 

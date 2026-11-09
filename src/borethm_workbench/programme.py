@@ -355,7 +355,7 @@ def _named(pipe):
     return pipe.name if same else None
 
 
-def _segment_table(segment):
+def _segment_table(segment, number):
     pipe = segment.pipe
     name = _named(pipe)
     if name is not None:
@@ -405,7 +405,7 @@ def _segment_table(segment):
         t = segment.tool_loss
         if not t.include_boundary_changes or t.unresolved:
             raise ValueError(
-                f"Section {segment.id} has a tool loss curve with include_boundary_changes or unresolved "
+                f"Section {number} has a tool loss curve with include_boundary_changes or unresolved "
                 "set, which a site file's [programme] table cannot state. The programme is kept with "
                 "the assessment."
             )
@@ -420,7 +420,7 @@ def _segment_table(segment):
     if segment.tool_class is not None:
         if segment.tool_basis != "additional" or segment.tool_span_segments != 1:
             raise ValueError(
-                f"Section {segment.id} names a {segment.tool_class.replace('_', ' ')} with the "
+                f"Section {number} names a {segment.tool_class.replace('_', ' ')} with the "
                 f"{segment.tool_basis.replace('_', ' ')} basis over {segment.tool_span_segments} sections. "
                 "A site file's [programme] tools entry cannot state a tool's basis or span, so the "
                 "programme is kept with the assessment."
@@ -447,7 +447,7 @@ def to_table(definition):
                 for t in definition.bha_tools
             ]
         return table
-    table["segments"] = [_segment_table(s) for s in definition.string]
+    table["segments"] = [_segment_table(s, i) for i, s in enumerate(definition.string, start=1)]
     if definition.hole:
         table["hole"] = [
             {
