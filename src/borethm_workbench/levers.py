@@ -507,7 +507,9 @@ def report_html(study, system="SI"):
     if study.get("tornado"):
         parts.append("<h2>Change of each margin from the base run</h2>")
         for chart in study["tornado"].values():
-            parts.append(f"<figure>{tornado_svg(chart, system)}</figure>")
+            parts.append(f"<figure><figcaption><strong>{escape(chart['label'])}</strong>: change from the base run. "
+                         "Each bar runs from the smallest to the largest change over the lever's computed values; "
+                         f"red where a change is negative.</figcaption>{tornado_svg(chart, system)}</figure>")
     if study.get("grid"):
         g = study["grid"]
         parts.append(f"<h2>{escape(g['rows']['label'])} against {escape(g['columns']['label'])}</h2><table><thead><tr><th></th>")
