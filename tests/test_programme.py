@@ -54,6 +54,40 @@ def test_capabilities_report_the_interface(client):
         assert capabilities["programme_interface"]["message"] == P.UNAVAILABLE
 
 
+def test_an_earlier_interface_counts_as_unavailable(monkeypatch):
+    """The interface before flow units were explicit had Operations.flow and
+    Operations.flows and no operation_defaults; the application treats it as
+    unavailable. The settled fields with operation_defaults are accepted."""
+    import dataclasses
+
+    import borethm
+
+    @dataclasses.dataclass
+    class Earlier:
+        flow: float | None = None
+        flows: tuple | None = None
+
+    @dataclasses.dataclass
+    class Settled:
+        mass_flow_kg_s: float | None = None
+        volume_flow_L_s: float | None = None
+        mass_flows_kg_s: tuple | None = None
+        volume_flows_L_s: tuple | None = None
+
+    def evaluate(site, operations=None):
+        return None
+
+    monkeypatch.setattr(borethm, "evaluate", evaluate, raising=False)
+    monkeypatch.setattr(borethm, "validate_operations", lambda operations: [], raising=False)
+    monkeypatch.setattr(borethm, "Operations", Earlier, raising=False)
+    monkeypatch.delattr(borethm, "operation_defaults", raising=False)
+    assert P.interface_available() is False
+    monkeypatch.setattr(borethm, "operation_defaults", lambda site=None, programme=None: {}, raising=False)
+    assert P.interface_available() is False
+    monkeypatch.setattr(borethm, "Operations", Settled)
+    assert P.interface_available() is True
+
+
 @without_interface
 def test_without_the_interface_the_new_features_are_refused(client):
     for path in ("/api/v1/programme/pipes", "/api/v1/operations/fields"):
