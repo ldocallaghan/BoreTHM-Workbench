@@ -315,7 +315,7 @@ export function ProgrammePage({scenario, draft, site, editSite, siteCheck}: {sce
     const controller = new AbortController();
     const timer = setTimeout(() => { void api<ProgrammeCheck>('/programme/check', {method: 'POST', body: request, signal: controller.signal}).then(c => setCheck({...c, request})).catch(e => { if ((e as Error).name !== 'AbortError') setError((e as Error).message); }); }, 300);
     return () => { clearTimeout(timer); controller.abort(); };
-  }, [request]);
+  }, [request, form === undefined]);
   // Store the checked form: in the site file where its table can hold it.
   useEffect(() => {
     if (form === undefined || !check || check.request !== request) return;
