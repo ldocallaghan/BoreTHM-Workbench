@@ -878,9 +878,9 @@ def create_app(data_dir=None, start_jobs=True, deadline=30, policy=None):
         }
 
     @app.get("/api/v1/operations/fields")
-    def operation_fields(units: UnitChoice = "SI"):
+    def operation_fields():
         programme_interface()
-        return programmes.operation_fields(units)
+        return programmes.operation_fields()
 
     @app.post("/api/v1/operations/check")
     def operations_check(request: OperationsCheck):

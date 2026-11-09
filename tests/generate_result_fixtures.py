@@ -68,11 +68,11 @@ def assessment(key):
 INTERFACE = {"go": "newberry", "conditional": "larderello", "stated": "newberry"}
 STATED_OPERATIONS = """
 [operations]
-flow = 20.0
+mass_flow_kg_s = 20.0
 tool_limit_C = 90.0
 
 [operations.sources]
-flow = ["assumed", "Fixture: a fixed flow"]
+mass_flow_kg_s = ["assumed", "Fixture: a fixed flow"]
 tool_limit_C = ["assumed", "Fixture: a low tool limit"]
 """
 

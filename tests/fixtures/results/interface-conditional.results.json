@@ -156,12 +156,10 @@
   "not_returned": "Not returned by the installed BoreTHM",
   "pressure": {
    "drilling": {
-    "flow_gpm": 478.35434183532436,
-    "flow_m3_s": 0.0301794693752,
+    "flow_m3_s": 0.030179469375183354,
     "margin_Pa": 43893008.87206721,
     "ok": true,
-    "rig_capacity_gpm": 3645.0,
-    "rig_capacity_m3_s": 0.229963765878,
+    "rig_capacity_m3_s": 0.22996376587799996,
     "standpipe_Pa": 7806991.127932783,
     "within_rig": true
    },
@@ -171,12 +169,10 @@
    "returned": true,
    "standpipe_Pa": 7806991.127932783,
    "trip": {
-    "flow_gpm": 478.3134058952041,
-    "flow_m3_s": 0.0301768867187,
+    "flow_m3_s": 0.03017688671868134,
     "margin_Pa": 43623168.03710268,
     "ok": true,
-    "rig_capacity_gpm": 3645.0,
-    "rig_capacity_m3_s": 0.229963765878,
+    "rig_capacity_m3_s": 0.22996376587799996,
     "separate_circulation": true,
     "standpipe_Pa": 8076831.96289732,
     "within_rig": true
@@ -443,6 +439,7 @@
       "ok": true,
       "peak_C": 58.20959041018598,
       "rating_C": 204.0,
+      "sets_status": true,
       "state": "circulating"
      },
      {
@@ -452,6 +449,7 @@
       "ok": true,
       "peak_C": 54.999644754768575,
       "rating_C": 204.0,
+      "sets_status": true,
       "state": "connection"
      },
      {
@@ -461,6 +459,7 @@
       "ok": true,
       "peak_C": 70.8098685777143,
       "rating_C": 204.0,
+      "sets_status": true,
       "state": "run_in"
      }
     ],
@@ -476,6 +475,7 @@
      "ok": true,
      "peak_C": 46.1715850957953,
      "rating_C": 200.0,
+     "sets_status": true,
      "state": "drilling"
     },
     {
@@ -485,6 +485,7 @@
      "ok": true,
      "peak_C": 46.25381523066938,
      "rating_C": 200.0,
+     "sets_status": true,
      "state": "connection"
     },
     {
@@ -500,6 +501,7 @@
      "ok": true,
      "peak_C": 49.21076812093448,
      "rating_C": 200.0,
+     "sets_status": true,
      "state": "run_in_staged"
     },
     {
@@ -511,6 +513,7 @@
      "ok": true,
      "peak_C": 79.98718418670191,
      "rating_C": 200.0,
+     "sets_status": false,
      "state": "run_in_unstaged"
     }
    ],

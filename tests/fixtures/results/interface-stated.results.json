@@ -171,12 +171,10 @@
   "not_returned": "Not returned by the installed BoreTHM",
   "pressure": {
    "drilling": {
-    "flow_gpm": 319.4946547532792,
-    "flow_m3_s": 0.0201569805171,
+    "flow_m3_s": 0.020156980517134576,
     "margin_Pa": 48548474.802465156,
     "ok": true,
-    "rig_capacity_gpm": 3645.0,
-    "rig_capacity_m3_s": 0.229963765878,
+    "rig_capacity_m3_s": 0.22996376587799996,
     "standpipe_Pa": 3151525.197534841,
     "within_rig": true
    },
@@ -186,12 +184,10 @@
    "returned": true,
    "standpipe_Pa": 3151525.197534841,
    "trip": {
-    "flow_gpm": 319.4946547532792,
-    "flow_m3_s": 0.0201569805171,
+    "flow_m3_s": 0.020156980517134576,
     "margin_Pa": 48548474.802465156,
     "ok": true,
-    "rig_capacity_gpm": 3645.0,
-    "rig_capacity_m3_s": 0.229963765878,
+    "rig_capacity_m3_s": 0.22996376587799996,
     "separate_circulation": false,
     "standpipe_Pa": 3151525.197534841,
     "within_rig": true
@@ -390,13 +386,13 @@
    }
   },
   "stated": {
-   "controlling_sentence": "Stated operations used in this check: tool limit 90 C; flow 20 kg/s.",
+   "controlling_sentence": "Stated operations used in this check: tool limit 90 C; mass flow 20 kg/s.",
    "items": [
     {
      "basis": "assumed",
-     "label": "Flow",
-     "name": "flow",
-     "quantity": null,
+     "label": "Flow, as a mass flow",
+     "name": "mass_flow_kg_s",
+     "quantity": "mass_flow",
      "source": "Fixture: a fixed flow",
      "unit": "kg/s",
      "value": 20.0
@@ -427,6 +423,7 @@
       "ok": null,
       "peak_C": 73.4154360283762,
       "rating_C": null,
+      "sets_status": true,
       "state": "circulating"
      },
      {
@@ -436,6 +433,7 @@
       "ok": null,
       "peak_C": 73.09077334346958,
       "rating_C": null,
+      "sets_status": true,
       "state": "connection"
      },
      {
@@ -445,6 +443,7 @@
       "ok": null,
       "peak_C": 50.19884266877342,
       "rating_C": null,
+      "sets_status": true,
       "state": "run_in"
      }
     ],
@@ -460,6 +459,7 @@
      "ok": false,
      "peak_C": 108.94627440368919,
      "rating_C": 90.0,
+     "sets_status": true,
      "state": "drilling"
     },
     {
@@ -469,6 +469,7 @@
      "ok": false,
      "peak_C": 109.06400779414672,
      "rating_C": 90.0,
+     "sets_status": true,
      "state": "connection"
     },
     {
@@ -484,6 +485,7 @@
      "ok": false,
      "peak_C": 111.82430032443975,
      "rating_C": 90.0,
+     "sets_status": true,
      "state": "run_in_staged"
     },
     {
@@ -495,16 +497,17 @@
      "ok": false,
      "peak_C": 181.788371454192,
      "rating_C": 90.0,
+     "sets_status": false,
      "state": "run_in_unstaged"
     }
    ],
    "status": "FAIL: 109 C at the bit while drilling"
   },
   "verdict": {
-   "controlling_constraint": "The tool check fails: 109 C at the bit while drilling. Stated operations used in this check: tool limit 90 C; flow 20 kg/s.",
+   "controlling_constraint": "The tool check fails: 109 C at the bit while drilling. Stated operations used in this check: tool limit 90 C; mass flow 20 kg/s.",
    "reading": {
     "calculation": "Valid: the reported numerical checks converged.",
-    "controlling_constraint": "The tool check fails: 109 C at the bit while drilling. Stated operations used in this check: tool limit 90 C; flow 20 kg/s.",
+    "controlling_constraint": "The tool check fails: 109 C at the bit while drilling. Stated operations used in this check: tool limit 90 C; mass flow 20 kg/s.",
     "equipment": "The tool fails its 90 C temperature check: 109 C at the bit while drilling. No coating rating is stated; coating qualification is not assessed.",
     "scenarios_at_target": "Cases passing target stability, including stated fluid conditions: drilling 6/6; connection 6/6; connection, fresh rock 6/6; trip 6/6.",
     "whole_programme": "One drilling fluid and one trip fluid satisfy the pressure limits at every evaluated depth, state and case. Surface densities at 20 C: drilling fluid 0.998 to 1.243 SG; trip fluid 0.998 to 1.240 SG."

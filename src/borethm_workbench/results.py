@@ -73,8 +73,27 @@ def _stated(manifest, report):
 
     labels = {name: label for name, _, label in FIELDS}
     quantities = {name: q for name, q, _ in FIELDS if q in units.QUANTITIES}
+    # Volume flows are L/s in the model's record and m3/s in the volume_flow quantity.
+    scale = {"volume_flow_L_s": 0.001, "volume_flows_L_s": 0.001}
+
+    def si(name, value):
+        factor = scale.get(name)
+        if factor is None or value is None:
+            return value
+        return [v * factor for v in value] if isinstance(value, list) else value * factor
     record = report.get("operations")
-    programme = (manifest.get("resolved_scenario") or {}).get("definition", {}).get("programme")
+    definition = (manifest.get("resolved_scenario") or {}).get("definition", {})
+    programme = definition.get("programme")
+    kind = None if programme is None else programme.get("kind")
+    if kind is None:
+        import tomllib
+
+        try:
+            table = tomllib.loads((definition.get("site") or {}).get("content", "")).get("programme")
+        except tomllib.TOMLDecodeError:
+            table = None
+        if table is not None:
+            kind = "custom" if table.get("segments") else "reference"
     constraint = (report.get("reading") or {}).get("controlling_constraint") or ""
     marker = "Stated operations used in this check:"
     return {
@@ -84,7 +103,7 @@ def _stated(manifest, report):
                 "name": name,
                 "label": labels.get(name, name),
                 "quantity": quantities.get(name),
-                "value": entry.get("value"),
+                "value": si(name, entry.get("value")),
                 "unit": entry.get("unit"),
                 "basis": entry.get("basis"),
                 "source": entry.get("source"),
@@ -92,7 +111,7 @@ def _stated(manifest, report):
             for name, entry in (record or {}).items()
             if entry.get("stated")
         ],
-        "programme": None if programme is None else programme.get("kind"),
+        "programme": kind,
         "sets_controlling_constraint": marker in constraint,
         "controlling_sentence": constraint[constraint.index(marker):].strip() if marker in constraint else None,
     }
@@ -145,6 +164,7 @@ def assessment_summary(manifest):
                 "rating_C": _number(limit if limit is not None else (check or {}).get("limit_C", tools.get("limit"))),
                 "margin_C": None if entry is None else _number(entry.get("margin_C")),
                 "ok": ok if entry is None else entry.get("ok"),
+                "sets_status": None if entry is None else entry.get("sets_status"),
                 "detail": detail,
             }
         )
@@ -212,6 +232,7 @@ def assessment_summary(manifest):
                     "rating_C": _number(coating_rating),
                     "margin_C": _number(entry.get("margin_C")),
                     "ok": entry.get("ok"),
+                    "sets_status": entry.get("sets_status"),
                     "minutes_above_rating": minutes,
                 }
             )
@@ -231,15 +252,14 @@ def assessment_summary(manifest):
 
     def pumping(key):
         entry = (pump_check or {}).get(key) or {}
-        gpm = lambda v: None if _number(v) is None else units.to_si(v, "volume_flow", "oilfield")
+        # The model gives the flows in L/s; the volume_flow quantity is m3/s.
+        litres = lambda v: None if _number(v) is None else _number(v) / 1000.0
         return {
             "standpipe_Pa": _number(entry.get("spp_Pa")),
             "margin_Pa": _number(entry.get("margin_Pa")),
             "ok": entry.get("ok"),
-            "flow_gpm": _number(entry.get("flow_gpm")),
-            "rig_capacity_gpm": _number(entry.get("rig_capacity_gpm")),
-            "flow_m3_s": gpm(entry.get("flow_gpm")),
-            "rig_capacity_m3_s": gpm(entry.get("rig_capacity_gpm")),
+            "flow_m3_s": litres(entry.get("flow_L_s")),
+            "rig_capacity_m3_s": litres(entry.get("rig_capacity_L_s")),
             "within_rig": entry.get("within_rig"),
         }
 

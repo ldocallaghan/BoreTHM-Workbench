@@ -9,19 +9,22 @@
     "circulating": {
      "margin_C": 145.79040958981403,
      "max_C": 58.20959041018598,
-     "ok": true
+     "ok": true,
+     "sets_status": true
     },
     "connection": {
      "margin_C": 149.00035524523142,
      "max_C": 54.999644754768575,
-     "ok": true
+     "ok": true,
+     "sets_status": true
     },
     "pipe": "TK-Drakon coated",
     "rating_C": 204.0,
     "run_in": {
      "margin_C": 133.1901314222857,
      "max_C": 70.8098685777143,
-     "ok": true
+     "ok": true,
+     "sets_status": true
     }
    },
    "components": {
@@ -243,7 +246,8 @@
    ],
    "operations": {
     "coating_ratings_C": {
-     "rule": "the TK-Drakon coating's published rating",
+     "rule": "the coating maker's rating, given while circulation is maintained",
+     "rule_source": "data/materials.md",
      "stated": false,
      "unit": "C",
      "value": {
@@ -251,33 +255,157 @@
      }
     },
     "connection_median_min": {
-     "rule": "FORGE 16B, median",
+     "rule": "the median connection with the pumps off",
+     "rule_source": "FORGE 16B drilling record (data/forge16b, drilling_cycle.forge_timings)",
      "stated": false,
      "unit": "min",
      "value": 2.83
     },
     "connection_p90_min": {
-     "rule": "FORGE 16B, 90th percentile",
+     "rule": "the 90th-percentile connection with the pumps off",
+     "rule_source": "FORGE 16B drilling record (data/forge16b, drilling_cycle.forge_timings)",
      "stated": false,
      "unit": "min",
      "value": 6.33
     },
     "drilling_fluid_kg_m3": {
-     "rule": "the drilling fluid common window's lower bound, iterated",
+     "rule": "the lower bound of the drilling fluid's common window, never below water, iterated with the circulation",
+     "rule_source": "site_evaluation.drilling_fluid",
      "stated": false,
      "unit": "kg/m3 at 20 C",
      "value": 1032.4476319621147
     },
-    "flow": {
-     "rule": "the flow search over flows (choose_circulation)",
+    "mass_flow_kg_s": {
+     "rule": "the lowest flow on the grid that keeps the tool below its limit and cleans the hole within the pump limit",
+     "rule_source": "site_evaluation.choose_circulation",
      "stated": false,
-     "unit": "L/s",
-     "value": 30
+     "unit": "kg/s",
+     "value": 30.973428958863437
     },
-    "flows": {
-     "rule": "the evaluator's flow grid",
+    "mass_flows_kg_s": {
+     "rule": "the evaluator's grid, in kg/s with water",
+     "rule_source": "site_evaluation.SITE_FLOWS",
      "stated": false,
-     "unit": "L/s",
+     "unit": "kg/s",
+     "value": [
+      5.162238159810573,
+      10.324476319621146,
+      15.486714479431718,
+      20.648952639242292,
+      25.811190799052866,
+      30.973428958863437,
+      36.135667118674014,
+      41.297905278484585,
+      46.46014343829516,
+      51.62238159810573,
+      61.946857917726874,
+      72.27133423734803,
+      82.59581055696917,
+      92.92028687659032,
+      103.24476319621147
+     ]
+    },
+    "min_annular_velocity_m_s": {
+     "rule": "the annular velocity around the drill pipe at FORGE 16B at 600 US gal/min",
+     "rule_source": "model1_coupled.HOLE_CLEANING_V",
+     "stated": false,
+     "unit": "m/s",
+     "value": 1.245
+    },
+    "pipes": {
+     "rule": "the best-insulated commercial pipe for which a flow passes, tried in this order",
+     "rule_source": "site_evaluation.SITE_PIPES; pipe data in data/materials.md",
+     "stated": false,
+     "unit": null,
+     "value": [
+      "TK-Drakon coated",
+      "internally coated",
+      "externally coated",
+      "conventional"
+     ]
+    },
+    "precirculation_min": {
+     "rule": "the 10th percentile of circulation after the last new hole; the schedule search follows if the tool needs it",
+     "rule_source": "FORGE 16B drilling record (data/forge16b, drilling_cycle.forge_timings)",
+     "stated": false,
+     "unit": "min",
+     "value": 0.33
+    },
+    "pump_pressure_limit_Pa": {
+     "rule": "7,500 psi, the limit of the reference well design",
+     "rule_source": "model1_coupled.PUMP_LIMIT, after Wu et al. (2025)",
+     "stated": false,
+     "unit": "Pa",
+     "value": 51700000.0
+    },
+    "rig_pumps": {
+     "rule": "three pumps of the reference rig's model, each 1,980 hydraulic hp and 7,475 psi",
+     "rule_source": "NOV 14-P-220 data sheet (data/materials.md)",
+     "stated": false,
+     "unit": "pumps",
+     "value": 3
+    },
+    "rop_m_h": {
+     "rule": "Model 3 at the circulation, iterated with the wall's exposure for a coupled site",
+     "rule_source": "model3_optimiser.evaluate_at",
+     "stated": false,
+     "unit": "m/h",
+     "value": 6.549586135468945
+    },
+    "stage_minutes": {
+     "rule": "the FORGE 16B stage circulation; the staging search follows if the tool needs it",
+     "rule_source": "FORGE 16B drilling record (data/forge16b, drilling_cycle.forge_timings)",
+     "stated": false,
+     "unit": "min",
+     "value": 15.51
+    },
+    "stage_spacing_m": {
+     "rule": "the FORGE 16B staging interval; the staging search follows if the tool needs it",
+     "rule_source": "FORGE 16B drilling record (data/forge16b, drilling_cycle.forge_timings)",
+     "stated": false,
+     "unit": "m",
+     "value": 144.8775360000002
+    },
+    "tool_limit_C": {
+     "rule": "the high-temperature tool class",
+     "rule_source": "geo_constants.BHA_SURVIVAL_TEMP",
+     "stated": false,
+     "unit": "C",
+     "value": 200.0
+    },
+    "trip_fluid_kg_m3": {
+     "rule": "the larger of the drilling fluid and the lower bound of the trip fluid's common window",
+     "rule_source": "site_evaluation.drilling_fluid",
+     "stated": false,
+     "unit": "kg/m3 at 20 C",
+     "value": 1087.1786156476371
+    },
+    "trip_hours": {
+     "rule": "tripping speeds and surface time from FORGE 16B, scaled to the target depth",
+     "rule_source": "FORGE 16B drilling record (data/forge16b, drilling_cycle.forge_timings)",
+     "stated": false,
+     "unit": "h",
+     "value": 12.87685228318917
+    },
+    "trip_scale": {
+     "rule": "no factor on the trip-time rule",
+     "rule_source": "FORGE 16B drilling record (data/forge16b, drilling_cycle.forge_timings)",
+     "stated": false,
+     "unit": null,
+     "value": 1.0
+    },
+    "volume_flow_L_s": {
+     "rule": "the same search; a volume flow is at surface, at the fluid's density at 20 C",
+     "rule_source": "site_evaluation.choose_circulation",
+     "stated": false,
+     "unit": "L/s at surface",
+     "value": 30.0
+    },
+    "volume_flows_L_s": {
+     "rule": "the evaluator's grid, in L/s at surface with a weighted fluid",
+     "rule_source": "site_evaluation.SITE_FLOWS",
+     "stated": false,
+     "unit": "L/s at surface",
      "value": [
       5,
       10,
@@ -295,83 +423,6 @@
       90,
       100
      ]
-    },
-    "min_annular_velocity_m_s": {
-     "rule": "the FORGE 16B annular velocity at 600 gal/min",
-     "stated": false,
-     "unit": "m/s",
-     "value": 1.245
-    },
-    "pipes": {
-     "rule": "the best-insulated commercial pipe for which a flow passes, in this order",
-     "stated": false,
-     "unit": null,
-     "value": [
-      "TK-Drakon coated",
-      "internally coated",
-      "externally coated",
-      "conventional"
-     ]
-    },
-    "precirculation_min": {
-     "rule": "FORGE 16B, 10th percentile; the connection schedule search follows",
-     "stated": false,
-     "unit": "min",
-     "value": 0.33
-    },
-    "pump_pressure_limit_Pa": {
-     "rule": "model1_coupled.PUMP_LIMIT, 7,500 psi",
-     "stated": false,
-     "unit": "Pa",
-     "value": 51700000.0
-    },
-    "rig_pumps": {
-     "rule": "the reference rig's three pumps",
-     "stated": false,
-     "unit": "pumps",
-     "value": 3
-    },
-    "rop_m_h": {
-     "rule": "Model 3 at the circulation, iterated with the exposure for a coupled site",
-     "stated": false,
-     "unit": "m/h",
-     "value": 6.549586135468945
-    },
-    "stage_minutes": {
-     "rule": "FORGE 16B staging; the staging search follows",
-     "stated": false,
-     "unit": "min",
-     "value": 15.51
-    },
-    "stage_spacing_m": {
-     "rule": "FORGE 16B staging; the staging search follows",
-     "stated": false,
-     "unit": "m",
-     "value": 144.8775360000002
-    },
-    "tool_limit_C": {
-     "rule": "geo_constants.BHA_SURVIVAL_TEMP",
-     "stated": false,
-     "unit": "C",
-     "value": 200.0
-    },
-    "trip_fluid_kg_m3": {
-     "rule": "the larger of the drilling fluid and the trip window's lower bound, iterated",
-     "stated": false,
-     "unit": "kg/m3 at 20 C",
-     "value": 1087.1786156476371
-    },
-    "trip_hours": {
-     "rule": "FORGE 16B tripping speeds and surface time, scaled to the target depth",
-     "stated": false,
-     "unit": "h",
-     "value": 12.87685228318917
-    },
-    "trip_scale": {
-     "rule": "no scale on the trip rule",
-     "stated": false,
-     "unit": null,
-     "value": 1.0
     }
    },
    "physics": {
@@ -565,9 +616,11 @@
    },
    "pump_check": {
     "drilling": {
+     "flow_L_s": 30.179469375183352,
      "flow_gpm": 478.35434183532436,
      "margin_Pa": 43893008.87206721,
      "ok": true,
+     "rig_capacity_L_s": 229.96376587799998,
      "rig_capacity_gpm": 3645.0,
      "spp_Pa": 7806991.127932783,
      "within_rig": true
@@ -575,9 +628,11 @@
     "limit_Pa": 51700000.0,
     "pumps": 3,
     "trip": {
+     "flow_L_s": 30.17688671868134,
      "flow_gpm": 478.3134058952041,
      "margin_Pa": 43623168.03710268,
      "ok": true,
+     "rig_capacity_L_s": 229.96376587799998,
      "rig_capacity_gpm": 3645.0,
      "separate_circulation": true,
      "spp_Pa": 8076831.96289732,
@@ -770,19 +825,22 @@
      "off_min": 6.33,
      "ok": true,
      "peak_C": 46.25381523066938,
-     "precirc_min": 0.33
+     "precirc_min": 0.33,
+     "sets_status": true
     },
     "connection_schedule": {
      "margin_C": 153.74618476933063,
      "off_min": 6.33,
      "ok": true,
      "peak_C": 46.25381523066938,
-     "precirc_min": 0.33
+     "precirc_min": 0.33,
+     "sets_status": true
     },
     "drilling": {
      "margin_C": 153.8284149042047,
      "ok": true,
-     "peak_C": 46.1715850957953
+     "peak_C": 46.1715850957953,
+     "sets_status": true
     },
     "limit_C": 200.0,
     "run_in_schedule": {
@@ -790,6 +848,7 @@
      "minutes": 15.51,
      "ok": true,
      "peak_C": 49.21076812093448,
+     "sets_status": true,
      "spacing_m": 144.8775360000002
     },
     "run_in_staged": {
@@ -797,12 +856,14 @@
      "minutes": 15.51,
      "ok": true,
      "peak_C": 49.21076812093448,
+     "sets_status": true,
      "spacing_m": 144.8775360000002
     },
     "run_in_unstaged": {
      "margin_C": 120.01281581329809,
      "ok": true,
-     "peak_C": 79.98718418670191
+     "peak_C": 79.98718418670191,
+     "sets_status": false
     }
    },
    "tools": {
@@ -867,7 +928,7 @@
    },
    "trip_profile": [],
    "versions": {
-    "commit": "e8e8af14593579dffd66c802a1956926b9c1a8f0",
+    "commit": "708163636188908163e24f7e05709e0cc07a9eb8",
     "dirty": false,
     "packages": {
      "borethm": "1.8.0",
@@ -3496,7 +3557,7 @@
   },
   "attempts": [
    {
-    "duration_s": 136.1317944629991,
+    "duration_s": 125.67682056099875,
     "message": "Evaluator's internal selection policy retained",
     "strategy": "complete-core-evaluator-v160"
    }
@@ -3505,7 +3566,7 @@
    "adapter_compatible": true,
    "adapter_version": "borethm-1-bridge",
    "app_version": "0.3.0.dev0",
-   "core_commit": "e8e8af14593579dffd66c802a1956926b9c1a8f0",
+   "core_commit": "708163636188908163e24f7e05709e0cc07a9eb8",
    "core_version": "1.8.0",
    "history_capabilities": {
     "checkpoints": true,
@@ -3557,7 +3618,7 @@
    "python": "3.14.4",
    "schema_version": "1.1"
   },
-  "execution_identity": "d9c1fc2b5fd1b6db190e198852334045e531de6ecebef281a72af4bac502004f",
+  "execution_identity": "4c2c15f54d0656bd0f3c40a7abd2251cf0d7e1d787e9ea14d8c26813f470f8f6",
   "frozen_site_toml_sha256": "4c1f7016d3d82b0b5c9aaaafdd0ddb122c3d60e050d32ee31ce3a6535d8f4267",
   "limitations": [
    "Vertical-hole stress/stability formulation",
@@ -8241,7 +8302,7 @@
    "fields_finite": true,
    "solver_converged": true
   },
-  "wall_clock_duration_s": 136.15629654099757,
+  "wall_clock_duration_s": 125.70161329399707,
   "warnings": [
    {
     "code": "SITE_INPUT_QUALIFICATION",

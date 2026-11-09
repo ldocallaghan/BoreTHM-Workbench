@@ -9,19 +9,22 @@
     "circulating": {
      "margin_C": null,
      "max_C": 73.4154360283762,
-     "ok": null
+     "ok": null,
+     "sets_status": true
     },
     "connection": {
      "margin_C": null,
      "max_C": 73.09077334346958,
-     "ok": null
+     "ok": null,
+     "sets_status": true
     },
     "pipe": "vacuum-insulated (sensitivity)",
     "rating_C": null,
     "run_in": {
      "margin_C": null,
      "max_C": 50.19884266877342,
-     "ok": null
+     "ok": null,
+     "sets_status": true
     }
    },
    "components": {
@@ -259,7 +262,8 @@
    ],
    "operations": {
     "coating_ratings_C": {
-     "rule": "the TK-Drakon coating's published rating",
+     "rule": "the coating maker's rating, given while circulation is maintained",
+     "rule_source": "data/materials.md",
      "stated": false,
      "unit": "C",
      "value": {
@@ -267,32 +271,36 @@
      }
     },
     "connection_median_min": {
-     "rule": "FORGE 16B, median",
+     "rule": "the median connection with the pumps off",
+     "rule_source": "FORGE 16B drilling record (data/forge16b, drilling_cycle.forge_timings)",
      "stated": false,
      "unit": "min",
      "value": 2.83
     },
     "connection_p90_min": {
-     "rule": "FORGE 16B, 90th percentile",
+     "rule": "the 90th-percentile connection with the pumps off",
+     "rule_source": "FORGE 16B drilling record (data/forge16b, drilling_cycle.forge_timings)",
      "stated": false,
      "unit": "min",
      "value": 6.33
     },
     "drilling_fluid_kg_m3": {
-     "rule": "the drilling fluid common window's lower bound, iterated",
+     "rule": "the lower bound of the drilling fluid's common window, never below water, iterated with the circulation",
+     "rule_source": "site_evaluation.drilling_fluid",
      "stated": false,
      "unit": "kg/m3 at 20 C",
      "value": 998.2012723757281
     },
-    "flow": {
+    "mass_flow_kg_s": {
      "basis": "assumed",
      "source": "Fixture: a fixed flow",
      "stated": true,
      "unit": "kg/s",
      "value": 20.0
     },
-    "flows": {
-     "rule": "the evaluator's flow grid",
+    "mass_flows_kg_s": {
+     "rule": "the evaluator's grid, in kg/s with water",
+     "rule_source": "site_evaluation.SITE_FLOWS",
      "stated": false,
      "unit": "kg/s",
      "value": [
@@ -300,13 +308,15 @@
      ]
     },
     "min_annular_velocity_m_s": {
-     "rule": "the FORGE 16B annular velocity at 600 gal/min",
+     "rule": "the annular velocity around the drill pipe at FORGE 16B at 600 US gal/min",
+     "rule_source": "model1_coupled.HOLE_CLEANING_V",
      "stated": false,
      "unit": "m/s",
      "value": 1.245
     },
     "pipes": {
-     "rule": "the best-insulated commercial pipe for which a flow passes, in this order",
+     "rule": "the programme's custom string fixes the pipe",
+     "rule_source": "site_evaluation.SITE_PIPES; pipe data in data/materials.md",
      "stated": false,
      "unit": null,
      "value": [
@@ -314,37 +324,43 @@
      ]
     },
     "precirculation_min": {
-     "rule": "FORGE 16B, 10th percentile; the connection schedule search follows",
+     "rule": "the 10th percentile of circulation after the last new hole; the schedule search follows if the tool needs it",
+     "rule_source": "FORGE 16B drilling record (data/forge16b, drilling_cycle.forge_timings)",
      "stated": false,
      "unit": "min",
      "value": 0.33
     },
     "pump_pressure_limit_Pa": {
-     "rule": "model1_coupled.PUMP_LIMIT, 7,500 psi",
+     "rule": "7,500 psi, the limit of the reference well design",
+     "rule_source": "model1_coupled.PUMP_LIMIT, after Wu et al. (2025)",
      "stated": false,
      "unit": "Pa",
      "value": 51700000.0
     },
     "rig_pumps": {
-     "rule": "the reference rig's three pumps",
+     "rule": "three pumps of the reference rig's model, each 1,980 hydraulic hp and 7,475 psi",
+     "rule_source": "NOV 14-P-220 data sheet (data/materials.md)",
      "stated": false,
      "unit": "pumps",
      "value": 3
     },
     "rop_m_h": {
-     "rule": "Model 3 at the circulation, iterated with the exposure for a coupled site",
+     "rule": "Model 3 at the circulation, iterated with the wall's exposure for a coupled site",
+     "rule_source": "model3_optimiser.evaluate_at",
      "stated": false,
      "unit": "m/h",
      "value": 5.596627934672626
     },
     "stage_minutes": {
-     "rule": "FORGE 16B staging; the staging search follows",
+     "rule": "the FORGE 16B stage circulation; the staging search follows if the tool needs it",
+     "rule_source": "FORGE 16B drilling record (data/forge16b, drilling_cycle.forge_timings)",
      "stated": false,
      "unit": "min",
      "value": 15.51
     },
     "stage_spacing_m": {
-     "rule": "FORGE 16B staging; the staging search follows",
+     "rule": "the FORGE 16B staging interval; the staging search follows if the tool needs it",
+     "rule_source": "FORGE 16B drilling record (data/forge16b, drilling_cycle.forge_timings)",
      "stated": false,
      "unit": "m",
      "value": 144.8775360000002
@@ -357,22 +373,41 @@
      "value": 90.0
     },
     "trip_fluid_kg_m3": {
-     "rule": "the larger of the drilling fluid and the trip window's lower bound, iterated",
+     "rule": "the larger of the drilling fluid and the lower bound of the trip fluid's common window",
+     "rule_source": "site_evaluation.drilling_fluid",
      "stated": false,
      "unit": "kg/m3 at 20 C",
      "value": 998.2012723757281
     },
     "trip_hours": {
-     "rule": "FORGE 16B tripping speeds and surface time, scaled to the target depth",
+     "rule": "tripping speeds and surface time from FORGE 16B, scaled to the target depth",
+     "rule_source": "FORGE 16B drilling record (data/forge16b, drilling_cycle.forge_timings)",
      "stated": false,
      "unit": "h",
      "value": 17.458607852696083
     },
     "trip_scale": {
-     "rule": "no scale on the trip rule",
+     "rule": "no factor on the trip-time rule",
+     "rule_source": "FORGE 16B drilling record (data/forge16b, drilling_cycle.forge_timings)",
      "stated": false,
      "unit": null,
      "value": 1.0
+    },
+    "volume_flow_L_s": {
+     "rule": "the same search; a volume flow is at surface, at the fluid's density at 20 C",
+     "rule_source": "site_evaluation.choose_circulation",
+     "stated": false,
+     "unit": "L/s at surface",
+     "value": 20.036039377509326
+    },
+    "volume_flows_L_s": {
+     "rule": "the evaluator's grid, in L/s at surface with a weighted fluid",
+     "rule_source": "site_evaluation.SITE_FLOWS",
+     "stated": false,
+     "unit": "L/s at surface",
+     "value": [
+      20.036039377509326
+     ]
     }
    },
    "physics": {
@@ -786,9 +821,11 @@
    },
    "pump_check": {
     "drilling": {
+     "flow_L_s": 20.156980517134578,
      "flow_gpm": 319.4946547532792,
      "margin_Pa": 48548474.802465156,
      "ok": true,
+     "rig_capacity_L_s": 229.96376587799998,
      "rig_capacity_gpm": 3645.0,
      "spp_Pa": 3151525.197534841,
      "within_rig": true
@@ -796,9 +833,11 @@
     "limit_Pa": 51700000.0,
     "pumps": 3,
     "trip": {
+     "flow_L_s": 20.156980517134578,
      "flow_gpm": 319.4946547532792,
      "margin_Pa": 48548474.802465156,
      "ok": true,
+     "rig_capacity_L_s": 229.96376587799998,
      "rig_capacity_gpm": 3645.0,
      "separate_circulation": false,
      "spp_Pa": 3151525.197534841,
@@ -807,7 +846,7 @@
    },
    "reading": {
     "calculation": "Valid: the reported numerical checks converged.",
-    "controlling_constraint": "The tool check fails: 109 C at the bit while drilling. Stated operations used in this check: tool limit 90 C; flow 20 kg/s.",
+    "controlling_constraint": "The tool check fails: 109 C at the bit while drilling. Stated operations used in this check: tool limit 90 C; mass flow 20 kg/s.",
     "equipment": "The tool fails its 90 C temperature check: 109 C at the bit while drilling. No coating rating is stated; coating qualification is not assessed.",
     "scenarios_at_target": "Cases passing target stability, including stated fluid conditions: drilling 6/6; connection 6/6; connection, fresh rock 6/6; trip 6/6.",
     "whole_programme": "One drilling fluid and one trip fluid satisfy the pressure limits at every evaluated depth, state and case. Surface densities at 20 C: drilling fluid 0.998 to 1.243 SG; trip fluid 0.998 to 1.240 SG."
@@ -930,13 +969,15 @@
      "off_min": 6.33,
      "ok": false,
      "peak_C": 109.06400779414672,
-     "precirc_min": 0.33
+     "precirc_min": 0.33,
+     "sets_status": true
     },
     "connection_schedule": null,
     "drilling": {
      "margin_C": -18.946274403689188,
      "ok": false,
-     "peak_C": 108.94627440368919
+     "peak_C": 108.94627440368919,
+     "sets_status": true
     },
     "limit_C": 90.0,
     "run_in_schedule": null,
@@ -945,12 +986,14 @@
      "minutes": 15.51,
      "ok": false,
      "peak_C": 111.82430032443975,
+     "sets_status": true,
      "spacing_m": 144.8775360000002
     },
     "run_in_unstaged": {
      "margin_C": -91.788371454192,
      "ok": false,
-     "peak_C": 181.788371454192
+     "peak_C": 181.788371454192,
+     "sets_status": false
     }
    },
    "tools": {
@@ -1003,7 +1046,7 @@
    },
    "trip_profile": [],
    "versions": {
-    "commit": "e8e8af14593579dffd66c802a1956926b9c1a8f0",
+    "commit": "708163636188908163e24f7e05709e0cc07a9eb8",
     "dirty": false,
     "packages": {
      "borethm": "1.8.0",
@@ -4512,7 +4555,7 @@
   },
   "attempts": [
    {
-    "duration_s": 32.92405573200085,
+    "duration_s": 26.184373823998612,
     "message": "Evaluator's internal selection policy retained",
     "strategy": "complete-core-evaluator-v160"
    }
@@ -4521,7 +4564,7 @@
    "adapter_compatible": true,
    "adapter_version": "borethm-1-bridge",
    "app_version": "0.3.0.dev0",
-   "core_commit": "e8e8af14593579dffd66c802a1956926b9c1a8f0",
+   "core_commit": "708163636188908163e24f7e05709e0cc07a9eb8",
    "core_version": "1.8.0",
    "history_capabilities": {
     "checkpoints": true,
@@ -4573,8 +4616,8 @@
    "python": "3.14.4",
    "schema_version": "1.1"
   },
-  "execution_identity": "c0adcc7415d1c32844f8c271e28db961ac38f19ffba73b3b5216a970c125551e",
-  "frozen_site_toml_sha256": "dae215b0f2d61d2e506b053b4484f007724355ede1f94dbeb704fd0ee49462be",
+  "execution_identity": "67fbc96bd202673f48e96cfcf190fb2e3b9d202e0053d65a5a3715e6ae0447c1",
+  "frozen_site_toml_sha256": "bc3885e56a5a99c60e097b063bd938edc1027f6806ee8fb67189c8aeb66d3def",
   "limitations": [
    "Vertical-hole stress/stability formulation",
    "Surface density at 20 °C differs from target SG-equivalent",
@@ -4591,7 +4634,7 @@
    "settings": "Pinned complete core evaluator defaults; no app solver override"
   },
   "numerical_profile_hash": "7e048c3d32165f8aab7d33d553ddb6f5cede26200512030d3d767ef386984b44",
-  "physical_request_hash": "40d7af83b67b96976968c6a2c5420a17f487a0cf166c6b4388b728aa8e070854",
+  "physical_request_hash": "88e5a41d65b96220afa1815154962de2d4057aef23587b6ed43ac8c8efa0f6de",
   "physics": "v1.8.0",
   "physics_settings": {
    "annulus_model": "herschel-bulkley-erge",
@@ -9448,7 +9491,7 @@
      "transitions": "abrupt"
     },
     "site": {
-     "content": "# Newberry / NWG 55-29 (USA)\n# Generated by tools/build_site_files.py from borethm.comparative_sites.NEWBERRY.\n# Snapshot of the built-in inputs in the generation environment.\n# Recomputed numerical fits can differ in their last digits across platforms.\n# Edit a copy for your site; regenerate this file from the Python definition.\n# Units: depths m; temperatures C; gradients Pa/m or C/m as named;\n# stresses and strengths Pa; conductivity W/(m K); ratios dimensionless.\n# Stress and pore pressure use gauge values relative to 0.1 MPa absolute.\n# Temperature points: borethm.crosscheck_newberry.geotherm, static survey in TVD.\n# Deep gradient: numpy.polyfit on the deepest 1,500 ft of that survey,\n# as defined in borethm.crosscheck_newberry.GRAD_DEEP.\n# Target depth: borethm.crosscheck_newberry.target_depth.\n# Stress cases and Sv_grad: borethm.crosscheck_newberry.profile.\n# Pore-pressure fit: borethm.crosscheck_newberry.pore_pressure_fit.\n# Strength cases: borethm.crosscheck_newberry.granodiorite_strengths.\n\nname = \"Newberry / NWG 55-29 (USA)\"\ntarget_depth = 3629.54044732043\ntarget_T = 400.0\nSv_grad = 24172.021866508036\nK0_min = 0.53\nSHmax_over_Sv = 0.85\nrho_fluid_grad = 10000.0\nk_rock = 2.14\nE_rock = 50000000000.0\nUCS = 79000000.0\nT_inj = 40.0\nstress_basis = \"measured range\"\nstrength_cases = [[\"log-derived granodiorite p10\", 64849999.60810307], [\"log-derived granodiorite median\", 79076351.455963], [\"log-derived granodiorite p90\", 85855472.73371783]]\ntemperature_data_to = 2989.0821600000004\nmu = 0.55\ncoupled = false\n\n[geotherm]\nform = \"points\"\ngradient_below = 0.10704834546968486\npoints = [\n    [0.0, 12.28],\n    [9.144, 12.22],\n    [18.288, 12.17],\n    [27.432000000000002, 12.11],\n    [36.576, 12.11],\n    [45.72, 12.06],\n    [54.864000000000004, 12.06],\n    [64.00800000000001, 12.06],\n    [73.152, 12.0],\n    [82.296, 12.0],\n    [91.44, 12.06],\n    [100.584, 12.06],\n    [109.72800000000001, 12.06],\n    [118.872, 12.0],\n    [128.01600000000002, 12.0],\n    [137.16, 12.22],\n    [146.304, 12.67],\n    [155.41752, 15.61],\n    [164.56152, 16.72],\n    [173.70552, 17.22],\n    [182.84952, 17.94],\n    [191.99352, 18.78],\n    [201.13752, 19.67],\n    [210.25104, 20.39],\n    [219.39504, 21.28],\n    [228.53904, 21.89],\n    [237.68304, 22.94],\n    [246.82704, 23.72],\n    [255.97104, 25.56],\n    [265.08456, 26.56],\n    [274.22856, 27.89],\n    [283.37256, 29.33],\n    [292.51656, 30.39],\n    [301.63008, 31.94],\n    [310.77408, 33.39],\n    [319.91808, 34.06],\n    [329.0316, 34.83],\n    [338.17560000000003, 36.0],\n    [347.31960000000004, 36.67],\n    [356.43312000000003, 37.5],\n    [365.57712000000004, 38.78],\n    [374.72112000000004, 40.06],\n    [383.86512000000005, 41.06],\n    [392.97864, 42.17],\n    [402.12264, 43.72],\n    [411.23616000000004, 45.06],\n    [420.38016000000005, 46.17],\n    [429.52416000000005, 47.0],\n    [438.63768, 48.22],\n    [447.78168, 49.5],\n    [456.92568, 50.28],\n    [466.06968, 51.44],\n    [475.1832, 52.56],\n    [484.3272, 53.72],\n    [493.44072000000006, 54.67],\n    [502.58472000000006, 55.78],\n    [511.69824, 57.11],\n    [520.8422400000001, 58.5],\n    [529.95576, 59.5],\n    [539.0997600000001, 60.17],\n    [548.2437600000001, 61.44],\n    [557.35728, 62.39],\n    [566.50128, 63.06],\n    [575.64528, 63.78],\n    [584.7588000000001, 64.56],\n    [593.9028000000001, 65.61],\n    [603.0468000000001, 67.33],\n    [612.1603200000001, 69.39],\n    [621.3043200000001, 70.5],\n    [630.4178400000001, 71.67],\n    [639.5618400000001, 73.0],\n    [648.67536, 74.06],\n    [657.78888, 75.33],\n    [666.9024000000001, 76.72],\n    [676.0464000000001, 77.67],\n    [685.15992, 78.89],\n    [694.2429599999999, 79.72],\n    [703.35648, 80.61],\n    [712.47, 81.56],\n    [721.5530400000001, 82.5],\n    [730.63608, 83.94],\n    [739.7191200000001, 85.67],\n    [748.80216, 86.89],\n    [757.8852, 87.72],\n    [766.9682400000002, 89.11],\n    [776.05128, 90.56],\n    [785.1038400000001, 92.0],\n    [794.18688, 93.22],\n    [803.2394400000001, 94.0],\n    [812.26152, 94.94],\n    [821.31408, 95.89],\n    [830.33616, 97.17],\n    [839.38872, 98.56],\n    [848.4108, 99.94],\n    [857.4024000000001, 101.06],\n    [866.394, 102.44],\n    [875.3856000000001, 103.61],\n    [884.3772, 104.67],\n    [893.3383200000001, 105.61],\n    [902.2994400000001, 106.5],\n    [911.2605599999999, 107.33],\n    [920.25216, 108.5],\n    [929.21328, 109.89],\n    [938.1744, 111.22],\n    [947.166, 112.28],\n    [956.0966400000001, 113.39],\n    [965.05776, 114.56],\n    [973.9884000000001, 115.78],\n    [982.9190400000001, 117.0],\n    [991.84968, 118.17],\n    [1000.8108000000001, 119.28],\n    [1009.7414400000001, 120.28],\n    [1018.67208, 121.22],\n    [1027.60272, 122.17],\n    [1036.53336, 123.67],\n    [1045.464, 124.56],\n    [1054.3946400000002, 125.67],\n    [1063.2948000000001, 126.89],\n    [1072.19496, 128.0],\n    [1081.0951200000002, 128.89],\n    [1089.99528, 129.89],\n    [1098.89544, 131.39],\n    [1107.7956000000001, 132.39],\n    [1116.69576, 133.5],\n    [1125.59592, 134.61],\n    [1134.4960800000001, 135.72],\n    [1143.39624, 136.78],\n    [1152.2964, 137.67],\n    [1161.16608, 138.67],\n    [1170.09672, 139.61],\n    [1178.99688, 140.78],\n    [1187.9275200000002, 141.61],\n    [1196.82768, 142.33],\n    [1205.7583200000001, 143.89],\n    [1213.46976, 145.56],\n    [1221.7908, 146.33],\n    [1230.11184, 147.39],\n    [1238.46336, 148.33],\n    [1246.84536, 149.33],\n    [1255.22736, 150.11],\n    [1263.60936, 151.67],\n    [1271.99136, 153.28],\n    [1280.4038400000002, 154.56],\n    [1288.78584, 155.61],\n    [1297.19832, 156.56],\n    [1305.6108000000002, 157.56],\n    [1313.9928, 158.44],\n    [1322.4052800000002, 159.33],\n    [1330.81776, 160.22],\n    [1339.23024, 161.17],\n    [1347.64272, 162.06],\n    [1356.0552, 163.06],\n    [1364.4676800000002, 163.94],\n    [1372.8496800000003, 164.89],\n    [1381.26216, 165.83],\n    [1389.6746400000002, 166.67],\n    [1398.08712, 167.5],\n    [1406.46912, 168.44],\n    [1414.8816000000002, 169.33],\n    [1423.2636, 170.28],\n    [1431.6456, 171.17],\n    [1440.0580800000002, 172.0],\n    [1448.44008, 172.83],\n    [1456.8220800000001, 173.67],\n    [1465.2040800000002, 174.61],\n    [1473.5860800000003, 175.5],\n    [1481.96808, 176.28],\n    [1490.38056, 177.11],\n    [1498.7625600000001, 178.0],\n    [1507.14456, 178.89],\n    [1515.4960800000001, 179.89],\n    [1523.8780800000002, 180.67],\n    [1532.2600800000002, 181.56],\n    [1540.6116000000002, 182.5],\n    [1548.96312, 183.33],\n    [1557.31464, 184.28],\n    [1565.66616, 185.11],\n    [1573.9872, 185.94],\n    [1582.33872, 186.83],\n    [1590.65976, 187.72],\n    [1598.9808, 188.5],\n    [1607.30184, 189.39],\n    [1615.6228800000001, 190.33],\n    [1623.94392, 191.22],\n    [1632.26496, 192.06],\n    [1640.586, 193.0],\n    [1648.87656, 193.89],\n    [1657.1976000000002, 194.67],\n    [1665.48816, 195.5],\n    [1673.8092000000001, 196.39],\n    [1682.09976, 197.33],\n    [1690.35984, 198.33],\n    [1698.6504, 199.22],\n    [1706.9104800000002, 200.0],\n    [1715.2010400000001, 201.22],\n    [1723.46112, 201.72],\n    [1731.7516800000003, 202.56],\n    [1740.01176, 203.39],\n    [1748.27184, 204.0],\n    [1756.5624, 205.0],\n    [1764.85296, 205.89],\n    [1773.14352, 206.61],\n    [1781.4036, 207.61],\n    [1789.7246400000001, 208.39],\n    [1798.0152, 209.22],\n    [1806.30576, 210.11],\n    [1814.5963199999999, 211.0],\n    [1822.9173600000001, 211.78],\n    [1831.20792, 212.67],\n    [1839.4984800000002, 213.39],\n    [1847.78904, 214.39],\n    [1856.1100800000002, 215.33],\n    [1864.40064, 216.17],\n    [1872.72168, 217.11],\n    [1881.0122400000002, 217.94],\n    [1889.3332800000003, 218.83],\n    [1897.65432, 219.78],\n    [1905.9448800000002, 220.67],\n    [1914.26592, 221.56],\n    [1922.58696, 222.39],\n    [1930.9384800000003, 223.33],\n    [1939.25952, 224.22],\n    [1947.6110400000002, 225.11],\n    [1955.96256, 225.72],\n    [1964.31408, 226.17],\n    [1972.63512, 227.11],\n    [1980.98664, 228.17],\n    [1989.33816, 229.17],\n    [1997.6896800000002, 230.0],\n    [2006.0412000000001, 230.78],\n    [2014.39272, 231.67],\n    [2022.7442400000002, 232.56],\n    [2031.0957600000002, 233.56],\n    [2039.4472800000003, 234.33],\n    [2047.7988, 235.06],\n    [2056.15032, 235.94],\n    [2064.5018400000004, 236.89],\n    [2072.85336, 237.39],\n    [2081.1744, 238.39],\n    [2089.52592, 239.11],\n    [2097.84696, 240.0],\n    [2106.168, 240.78],\n    [2114.4890400000004, 241.67],\n    [2124.05976, 242.56],\n    [2134.4534400000002, 243.39],\n    [2144.81664, 244.28],\n    [2155.21032, 245.06],\n    [2164.75056, 245.94],\n    [2170.35888, 247.0],\n    [2175.9672, 247.78],\n    [2181.57552, 248.72],\n    [2189.43936, 249.5],\n    [2197.79088, 250.44],\n    [2206.11192, 251.28],\n    [2214.46344, 252.17],\n    [2222.7844800000003, 252.78],\n    [2231.10552, 253.61],\n    [2239.4570400000002, 254.5],\n    [2247.77808, 255.33],\n    [2256.1296, 256.28],\n    [2264.45064, 257.11],\n    [2272.80216, 257.94],\n    [2281.1232, 258.72],\n    [2289.47472, 259.61],\n    [2297.79576, 260.5],\n    [2306.14728, 261.17],\n    [2314.4988000000003, 262.17],\n    [2322.81984, 263.0],\n    [2331.1713600000003, 263.78],\n    [2339.4924, 264.72],\n    [2347.8134400000004, 265.56],\n    [2356.16496, 266.39],\n    [2364.4860000000003, 267.22],\n    [2372.83752, 268.11],\n    [2381.15856, 268.89],\n    [2389.4796, 269.83],\n    [2397.8006400000004, 270.61],\n    [2406.15216, 271.33],\n    [2414.4732, 272.28],\n    [2422.82472, 273.17],\n    [2431.14576, 274.11],\n    [2439.4668, 274.89],\n    [2447.81832, 275.61],\n    [2456.13936, 276.44],\n    [2464.4908800000003, 277.33],\n    [2472.81192, 278.17],\n    [2481.1634400000003, 278.83],\n    [2489.48448, 279.61],\n    [2497.80552, 280.39],\n    [2506.12656, 281.39],\n    [2514.4780800000003, 282.39],\n    [2522.79912, 283.22],\n    [2531.1201600000004, 284.22],\n    [2539.4412, 285.11],\n    [2547.79272, 285.94],\n    [2556.11376, 286.67],\n    [2564.4652800000003, 287.44],\n    [2572.8168, 288.17],\n    [2581.1988, 288.89],\n    [2589.55032, 289.72],\n    [2597.93232, 290.61],\n    [2606.31432, 291.44],\n    [2614.66584, 292.39],\n    [2623.0478399999997, 293.17],\n    [2631.3993600000003, 294.11],\n    [2639.7813600000004, 295.11],\n    [2648.13288, 295.94],\n    [2656.51488, 296.94],\n    [2664.8968800000002, 297.83],\n    [2673.2484, 298.61],\n    [2681.6304, 299.56],\n    [2690.0124, 300.5],\n    [2698.3639200000002, 301.28],\n    [2706.74592, 302.17],\n    [2715.1584000000003, 303.06],\n    [2723.5404000000003, 303.89],\n    [2731.9224, 304.83],\n    [2740.27392, 305.56],\n    [2748.5949600000004, 306.39],\n    [2756.916, 307.17],\n    [2765.26752, 308.0],\n    [2773.5580800000002, 308.83],\n    [2781.8486399999997, 309.61],\n    [2790.10872, 310.5],\n    [2798.3688, 311.44],\n    [2806.5984000000003, 312.39],\n    [2814.828, 313.33],\n    [2823.02712, 314.17],\n    [2831.1957600000005, 314.78],\n    [2839.33392, 315.5],\n    [2847.4720800000005, 316.33],\n    [2855.61024, 317.28],\n    [2863.71792, 318.5],\n    [2871.8560800000005, 319.56],\n    [2879.99424, 320.56],\n    [2885.694, 321.61],\n    [2900.934, 322.67],\n    [2914.92432, 323.78],\n    [2918.27712, 324.94],\n    [2921.59944, 326.0],\n    [2928.8841600000005, 326.94],\n    [2937.02232, 327.94],\n    [2945.13, 328.89],\n    [2953.2072000000003, 329.78],\n    [2961.2844, 330.56],\n    [2969.30064, 331.06],\n    [2977.34736, 331.33],\n    [2989.0821600000004, 331.44],\n]\n\n[[stress_cases]]\nlabel = \"Davatzes & Hickman (2011), mu 0.55\"\nSv_grad = 24172.021866508036\nShmin_grad = 13446.146031109016\nSHmax_grad = 17463.09843832021\nSv_int = 0.0\nShmin_int = 1333517.5654764164\nSHmax_int = 7671106.638199999\nPp_grad = 7680.7808474350495\nPp_datum = -266.94017492314265\nsource = \"Davatzes and Hickman (2011); static survey Oct 2008 (GDR 271)\"\nz_data = [1961.3880000000001, 2656.5097465263157]\nmu = 0.55\n\n[[stress_cases]]\nlabel = \"Davatzes & Hickman (2011), mu 0.7\"\nSv_grad = 24172.021866508036\nShmin_grad = 12151.262971149892\nSHmax_grad = 17267.656507611548\nSv_int = 0.0\nShmin_int = 1494506.684891214\nSHmax_int = 7543553.633699999\nPp_grad = 7680.7808474350495\nPp_datum = -266.94017492314265\nsource = \"Davatzes and Hickman (2011); static survey Oct 2008 (GDR 271)\"\nz_data = [1961.3880000000001, 2656.5097465263157]\nmu = 0.7\n\n[data_basis]\n\"stress\" = [\"measured range\", \"Davatzes & Hickman (2011): Sv and pore pressure measured; Shmin at frictional equilibrium (mu 0.55, 0.70); SHmax from breakout widths, to 8,860 ft MD\"]\n\"strength\" = [\"log-derived\", \"UCS-porosity relation of Davatzes & Hickman on the neutron log, granodiorite 8,807 ft to TD (GDR 271)\"]\n\"pore pressure\" = [\"measured\", \"static survey, October 2008 (GDR 271); underpressured, Pf/Sv ~0.34\"]\n\"temperature\" = [\"extrapolated\", \"331 C at 2989 m TVD (static survey 2008); 107 C/km below\"]\n\"well check\" = [\"not reproduced\", \"NWG 55-29 (crosscheck_newberry.py): the volcanic breakout width is reproduced at 25-35 K of wall cooling, but breakouts are predicted in the granodiorite, where none were logged\"]\n\n# Operations: optional. Each key states a choice the evaluator otherwise\n# makes by its own rule; leave a key out to keep that rule. Remove the\n# leading \"# \" from [operations] and from each key you state. A stated\n# flow, connection practice, staging, rate of penetration or fluid is used\n# as given: if it fails a check, the result reports the failure and the\n# evaluator does not search for another value.\n# [operations]\n# Pipe candidates, tried in order. Default: the four below. Also accepted:\n# \"dual-wall\" and \"vacuum-insulated (sensitivity)\", which are not on sale.\n# pipes = [\"TK-Drakon coated\", \"internally coated\", \"externally coated\", \"conventional\"]\n# One fixed flow, kg/s with water or L/s at surface with a weighted fluid,\n# 1 to 300. Default: the search over flows below. Give flow or flows.\n# flow = 30.0\n# The flows the search tries, rising. Default:\n# flows = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100]\n# Downhole tool temperature limit, C, 50 to 400. Default 200.\n# tool_limit_C = 200.0\n# Standpipe pressure limit, Pa, 1e6 to 150e6. Default 51.7e6 (7,500 psi).\n# pump_pressure_limit_Pa = 51.7e6\n# Rig pumps, 1 to 10. Default 3 (each 1,980 hydraulic hp, 7,475 psi).\n# rig_pumps = 3\n# Hole-cleaning annular velocity, m/s, 0.05 to 5. Default 1.245.\n# min_annular_velocity_m_s = 1.245\n# Circulation after the last new hole before a connection, min, 0 to 240.\n# Default 0.33 (FORGE 16B, 10th percentile). Stating it or\n# connection_p90_min ends the connection schedule search.\n# precirculation_min = 0.33\n# Connection with the pumps off, min, 0.1 to 480. Defaults: FORGE 16B\n# median 2.83 and 90th percentile 6.33.\n# connection_median_min = 2.83\n# connection_p90_min = 6.33\n# Time the bottom of the hole is static for a trip, h, 0.5 to 500.\n# Default: FORGE 16B tripping speeds and surface time, scaled to the\n# target depth. trip_scale, 0.05 to 20, multiplies that rule. Give one.\n# trip_hours = 17.5\n# trip_scale = 1.0\n# Run-in staging: interval, m, 10 to 10,000, and circulation at each\n# stage, min, 0.5 to 600. Defaults: FORGE 16B 144.88 m and 15.51 min,\n# then a search over shorter intervals and longer stages. Stating either\n# ends the search.\n# stage_spacing_m = 144.88\n# stage_minutes = 15.51\n# Rate of penetration, m/h, 0.1 to 100. Default: Model 3, iterated with\n# the wall's exposure for a coupled site.\n# rop_m_h = 10.0\n# Drilling and trip fluid surface densities at 20 C, kg/m3, 990 to 2,600.\n# Defaults: the common windows' lower bounds, iterated with the\n# circulation. A value below water's 998.2 is water.\n# drilling_fluid_kg_m3 = 1100.0\n# trip_fluid_kg_m3 = 1150.0\n# Coating ratings, C, by pipe name. Default: TK-Drakon coated 204. A\n# stated table replaces the default, so a pipe left out has no rating.\n# [operations.coating_ratings_C]\n# \"TK-Drakon coated\" = 204.0\n# Sources for stated values, [basis, source], with the data_basis labels.\n# [operations.sources]\n# tool_limit_C = [\"assumed\", \"Replace with the tool's rating sheet\"]\n\n[operations]\nflow = 20.0\ntool_limit_C = 90.0\n\n[operations.sources]\nflow = [\"assumed\", \"Fixture: a fixed flow\"]\ntool_limit_C = [\"assumed\", \"Fixture: a low tool limit\"]\n",
+     "content": "# Newberry / NWG 55-29 (USA)\n# Generated by tools/build_site_files.py from borethm.comparative_sites.NEWBERRY.\n# Snapshot of the built-in inputs in the generation environment.\n# Recomputed numerical fits can differ in their last digits across platforms.\n# Edit a copy for your site; regenerate this file from the Python definition.\n# Units: depths m; temperatures C; gradients Pa/m or C/m as named;\n# stresses and strengths Pa; conductivity W/(m K); ratios dimensionless.\n# Stress and pore pressure use gauge values relative to 0.1 MPa absolute.\n# Temperature points: borethm.crosscheck_newberry.geotherm, static survey in TVD.\n# Deep gradient: numpy.polyfit on the deepest 1,500 ft of that survey,\n# as defined in borethm.crosscheck_newberry.GRAD_DEEP.\n# Target depth: borethm.crosscheck_newberry.target_depth.\n# Stress cases and Sv_grad: borethm.crosscheck_newberry.profile.\n# Pore-pressure fit: borethm.crosscheck_newberry.pore_pressure_fit.\n# Strength cases: borethm.crosscheck_newberry.granodiorite_strengths.\n\nname = \"Newberry / NWG 55-29 (USA)\"\ntarget_depth = 3629.54044732043\ntarget_T = 400.0\nSv_grad = 24172.021866508036\nK0_min = 0.53\nSHmax_over_Sv = 0.85\nrho_fluid_grad = 10000.0\nk_rock = 2.14\nE_rock = 50000000000.0\nUCS = 79000000.0\nT_inj = 40.0\nstress_basis = \"measured range\"\nstrength_cases = [[\"log-derived granodiorite p10\", 64849999.60810307], [\"log-derived granodiorite median\", 79076351.455963], [\"log-derived granodiorite p90\", 85855472.73371783]]\ntemperature_data_to = 2989.0821600000004\nmu = 0.55\ncoupled = false\n\n[geotherm]\nform = \"points\"\ngradient_below = 0.10704834546968486\npoints = [\n    [0.0, 12.28],\n    [9.144, 12.22],\n    [18.288, 12.17],\n    [27.432000000000002, 12.11],\n    [36.576, 12.11],\n    [45.72, 12.06],\n    [54.864000000000004, 12.06],\n    [64.00800000000001, 12.06],\n    [73.152, 12.0],\n    [82.296, 12.0],\n    [91.44, 12.06],\n    [100.584, 12.06],\n    [109.72800000000001, 12.06],\n    [118.872, 12.0],\n    [128.01600000000002, 12.0],\n    [137.16, 12.22],\n    [146.304, 12.67],\n    [155.41752, 15.61],\n    [164.56152, 16.72],\n    [173.70552, 17.22],\n    [182.84952, 17.94],\n    [191.99352, 18.78],\n    [201.13752, 19.67],\n    [210.25104, 20.39],\n    [219.39504, 21.28],\n    [228.53904, 21.89],\n    [237.68304, 22.94],\n    [246.82704, 23.72],\n    [255.97104, 25.56],\n    [265.08456, 26.56],\n    [274.22856, 27.89],\n    [283.37256, 29.33],\n    [292.51656, 30.39],\n    [301.63008, 31.94],\n    [310.77408, 33.39],\n    [319.91808, 34.06],\n    [329.0316, 34.83],\n    [338.17560000000003, 36.0],\n    [347.31960000000004, 36.67],\n    [356.43312000000003, 37.5],\n    [365.57712000000004, 38.78],\n    [374.72112000000004, 40.06],\n    [383.86512000000005, 41.06],\n    [392.97864, 42.17],\n    [402.12264, 43.72],\n    [411.23616000000004, 45.06],\n    [420.38016000000005, 46.17],\n    [429.52416000000005, 47.0],\n    [438.63768, 48.22],\n    [447.78168, 49.5],\n    [456.92568, 50.28],\n    [466.06968, 51.44],\n    [475.1832, 52.56],\n    [484.3272, 53.72],\n    [493.44072000000006, 54.67],\n    [502.58472000000006, 55.78],\n    [511.69824, 57.11],\n    [520.8422400000001, 58.5],\n    [529.95576, 59.5],\n    [539.0997600000001, 60.17],\n    [548.2437600000001, 61.44],\n    [557.35728, 62.39],\n    [566.50128, 63.06],\n    [575.64528, 63.78],\n    [584.7588000000001, 64.56],\n    [593.9028000000001, 65.61],\n    [603.0468000000001, 67.33],\n    [612.1603200000001, 69.39],\n    [621.3043200000001, 70.5],\n    [630.4178400000001, 71.67],\n    [639.5618400000001, 73.0],\n    [648.67536, 74.06],\n    [657.78888, 75.33],\n    [666.9024000000001, 76.72],\n    [676.0464000000001, 77.67],\n    [685.15992, 78.89],\n    [694.2429599999999, 79.72],\n    [703.35648, 80.61],\n    [712.47, 81.56],\n    [721.5530400000001, 82.5],\n    [730.63608, 83.94],\n    [739.7191200000001, 85.67],\n    [748.80216, 86.89],\n    [757.8852, 87.72],\n    [766.9682400000002, 89.11],\n    [776.05128, 90.56],\n    [785.1038400000001, 92.0],\n    [794.18688, 93.22],\n    [803.2394400000001, 94.0],\n    [812.26152, 94.94],\n    [821.31408, 95.89],\n    [830.33616, 97.17],\n    [839.38872, 98.56],\n    [848.4108, 99.94],\n    [857.4024000000001, 101.06],\n    [866.394, 102.44],\n    [875.3856000000001, 103.61],\n    [884.3772, 104.67],\n    [893.3383200000001, 105.61],\n    [902.2994400000001, 106.5],\n    [911.2605599999999, 107.33],\n    [920.25216, 108.5],\n    [929.21328, 109.89],\n    [938.1744, 111.22],\n    [947.166, 112.28],\n    [956.0966400000001, 113.39],\n    [965.05776, 114.56],\n    [973.9884000000001, 115.78],\n    [982.9190400000001, 117.0],\n    [991.84968, 118.17],\n    [1000.8108000000001, 119.28],\n    [1009.7414400000001, 120.28],\n    [1018.67208, 121.22],\n    [1027.60272, 122.17],\n    [1036.53336, 123.67],\n    [1045.464, 124.56],\n    [1054.3946400000002, 125.67],\n    [1063.2948000000001, 126.89],\n    [1072.19496, 128.0],\n    [1081.0951200000002, 128.89],\n    [1089.99528, 129.89],\n    [1098.89544, 131.39],\n    [1107.7956000000001, 132.39],\n    [1116.69576, 133.5],\n    [1125.59592, 134.61],\n    [1134.4960800000001, 135.72],\n    [1143.39624, 136.78],\n    [1152.2964, 137.67],\n    [1161.16608, 138.67],\n    [1170.09672, 139.61],\n    [1178.99688, 140.78],\n    [1187.9275200000002, 141.61],\n    [1196.82768, 142.33],\n    [1205.7583200000001, 143.89],\n    [1213.46976, 145.56],\n    [1221.7908, 146.33],\n    [1230.11184, 147.39],\n    [1238.46336, 148.33],\n    [1246.84536, 149.33],\n    [1255.22736, 150.11],\n    [1263.60936, 151.67],\n    [1271.99136, 153.28],\n    [1280.4038400000002, 154.56],\n    [1288.78584, 155.61],\n    [1297.19832, 156.56],\n    [1305.6108000000002, 157.56],\n    [1313.9928, 158.44],\n    [1322.4052800000002, 159.33],\n    [1330.81776, 160.22],\n    [1339.23024, 161.17],\n    [1347.64272, 162.06],\n    [1356.0552, 163.06],\n    [1364.4676800000002, 163.94],\n    [1372.8496800000003, 164.89],\n    [1381.26216, 165.83],\n    [1389.6746400000002, 166.67],\n    [1398.08712, 167.5],\n    [1406.46912, 168.44],\n    [1414.8816000000002, 169.33],\n    [1423.2636, 170.28],\n    [1431.6456, 171.17],\n    [1440.0580800000002, 172.0],\n    [1448.44008, 172.83],\n    [1456.8220800000001, 173.67],\n    [1465.2040800000002, 174.61],\n    [1473.5860800000003, 175.5],\n    [1481.96808, 176.28],\n    [1490.38056, 177.11],\n    [1498.7625600000001, 178.0],\n    [1507.14456, 178.89],\n    [1515.4960800000001, 179.89],\n    [1523.8780800000002, 180.67],\n    [1532.2600800000002, 181.56],\n    [1540.6116000000002, 182.5],\n    [1548.96312, 183.33],\n    [1557.31464, 184.28],\n    [1565.66616, 185.11],\n    [1573.9872, 185.94],\n    [1582.33872, 186.83],\n    [1590.65976, 187.72],\n    [1598.9808, 188.5],\n    [1607.30184, 189.39],\n    [1615.6228800000001, 190.33],\n    [1623.94392, 191.22],\n    [1632.26496, 192.06],\n    [1640.586, 193.0],\n    [1648.87656, 193.89],\n    [1657.1976000000002, 194.67],\n    [1665.48816, 195.5],\n    [1673.8092000000001, 196.39],\n    [1682.09976, 197.33],\n    [1690.35984, 198.33],\n    [1698.6504, 199.22],\n    [1706.9104800000002, 200.0],\n    [1715.2010400000001, 201.22],\n    [1723.46112, 201.72],\n    [1731.7516800000003, 202.56],\n    [1740.01176, 203.39],\n    [1748.27184, 204.0],\n    [1756.5624, 205.0],\n    [1764.85296, 205.89],\n    [1773.14352, 206.61],\n    [1781.4036, 207.61],\n    [1789.7246400000001, 208.39],\n    [1798.0152, 209.22],\n    [1806.30576, 210.11],\n    [1814.5963199999999, 211.0],\n    [1822.9173600000001, 211.78],\n    [1831.20792, 212.67],\n    [1839.4984800000002, 213.39],\n    [1847.78904, 214.39],\n    [1856.1100800000002, 215.33],\n    [1864.40064, 216.17],\n    [1872.72168, 217.11],\n    [1881.0122400000002, 217.94],\n    [1889.3332800000003, 218.83],\n    [1897.65432, 219.78],\n    [1905.9448800000002, 220.67],\n    [1914.26592, 221.56],\n    [1922.58696, 222.39],\n    [1930.9384800000003, 223.33],\n    [1939.25952, 224.22],\n    [1947.6110400000002, 225.11],\n    [1955.96256, 225.72],\n    [1964.31408, 226.17],\n    [1972.63512, 227.11],\n    [1980.98664, 228.17],\n    [1989.33816, 229.17],\n    [1997.6896800000002, 230.0],\n    [2006.0412000000001, 230.78],\n    [2014.39272, 231.67],\n    [2022.7442400000002, 232.56],\n    [2031.0957600000002, 233.56],\n    [2039.4472800000003, 234.33],\n    [2047.7988, 235.06],\n    [2056.15032, 235.94],\n    [2064.5018400000004, 236.89],\n    [2072.85336, 237.39],\n    [2081.1744, 238.39],\n    [2089.52592, 239.11],\n    [2097.84696, 240.0],\n    [2106.168, 240.78],\n    [2114.4890400000004, 241.67],\n    [2124.05976, 242.56],\n    [2134.4534400000002, 243.39],\n    [2144.81664, 244.28],\n    [2155.21032, 245.06],\n    [2164.75056, 245.94],\n    [2170.35888, 247.0],\n    [2175.9672, 247.78],\n    [2181.57552, 248.72],\n    [2189.43936, 249.5],\n    [2197.79088, 250.44],\n    [2206.11192, 251.28],\n    [2214.46344, 252.17],\n    [2222.7844800000003, 252.78],\n    [2231.10552, 253.61],\n    [2239.4570400000002, 254.5],\n    [2247.77808, 255.33],\n    [2256.1296, 256.28],\n    [2264.45064, 257.11],\n    [2272.80216, 257.94],\n    [2281.1232, 258.72],\n    [2289.47472, 259.61],\n    [2297.79576, 260.5],\n    [2306.14728, 261.17],\n    [2314.4988000000003, 262.17],\n    [2322.81984, 263.0],\n    [2331.1713600000003, 263.78],\n    [2339.4924, 264.72],\n    [2347.8134400000004, 265.56],\n    [2356.16496, 266.39],\n    [2364.4860000000003, 267.22],\n    [2372.83752, 268.11],\n    [2381.15856, 268.89],\n    [2389.4796, 269.83],\n    [2397.8006400000004, 270.61],\n    [2406.15216, 271.33],\n    [2414.4732, 272.28],\n    [2422.82472, 273.17],\n    [2431.14576, 274.11],\n    [2439.4668, 274.89],\n    [2447.81832, 275.61],\n    [2456.13936, 276.44],\n    [2464.4908800000003, 277.33],\n    [2472.81192, 278.17],\n    [2481.1634400000003, 278.83],\n    [2489.48448, 279.61],\n    [2497.80552, 280.39],\n    [2506.12656, 281.39],\n    [2514.4780800000003, 282.39],\n    [2522.79912, 283.22],\n    [2531.1201600000004, 284.22],\n    [2539.4412, 285.11],\n    [2547.79272, 285.94],\n    [2556.11376, 286.67],\n    [2564.4652800000003, 287.44],\n    [2572.8168, 288.17],\n    [2581.1988, 288.89],\n    [2589.55032, 289.72],\n    [2597.93232, 290.61],\n    [2606.31432, 291.44],\n    [2614.66584, 292.39],\n    [2623.0478399999997, 293.17],\n    [2631.3993600000003, 294.11],\n    [2639.7813600000004, 295.11],\n    [2648.13288, 295.94],\n    [2656.51488, 296.94],\n    [2664.8968800000002, 297.83],\n    [2673.2484, 298.61],\n    [2681.6304, 299.56],\n    [2690.0124, 300.5],\n    [2698.3639200000002, 301.28],\n    [2706.74592, 302.17],\n    [2715.1584000000003, 303.06],\n    [2723.5404000000003, 303.89],\n    [2731.9224, 304.83],\n    [2740.27392, 305.56],\n    [2748.5949600000004, 306.39],\n    [2756.916, 307.17],\n    [2765.26752, 308.0],\n    [2773.5580800000002, 308.83],\n    [2781.8486399999997, 309.61],\n    [2790.10872, 310.5],\n    [2798.3688, 311.44],\n    [2806.5984000000003, 312.39],\n    [2814.828, 313.33],\n    [2823.02712, 314.17],\n    [2831.1957600000005, 314.78],\n    [2839.33392, 315.5],\n    [2847.4720800000005, 316.33],\n    [2855.61024, 317.28],\n    [2863.71792, 318.5],\n    [2871.8560800000005, 319.56],\n    [2879.99424, 320.56],\n    [2885.694, 321.61],\n    [2900.934, 322.67],\n    [2914.92432, 323.78],\n    [2918.27712, 324.94],\n    [2921.59944, 326.0],\n    [2928.8841600000005, 326.94],\n    [2937.02232, 327.94],\n    [2945.13, 328.89],\n    [2953.2072000000003, 329.78],\n    [2961.2844, 330.56],\n    [2969.30064, 331.06],\n    [2977.34736, 331.33],\n    [2989.0821600000004, 331.44],\n]\n\n[[stress_cases]]\nlabel = \"Davatzes & Hickman (2011), mu 0.55\"\nSv_grad = 24172.021866508036\nShmin_grad = 13446.146031109016\nSHmax_grad = 17463.09843832021\nSv_int = 0.0\nShmin_int = 1333517.5654764164\nSHmax_int = 7671106.638199999\nPp_grad = 7680.7808474350495\nPp_datum = -266.94017492314265\nsource = \"Davatzes and Hickman (2011); static survey Oct 2008 (GDR 271)\"\nz_data = [1961.3880000000001, 2656.5097465263157]\nmu = 0.55\n\n[[stress_cases]]\nlabel = \"Davatzes & Hickman (2011), mu 0.7\"\nSv_grad = 24172.021866508036\nShmin_grad = 12151.262971149892\nSHmax_grad = 17267.656507611548\nSv_int = 0.0\nShmin_int = 1494506.684891214\nSHmax_int = 7543553.633699999\nPp_grad = 7680.7808474350495\nPp_datum = -266.94017492314265\nsource = \"Davatzes and Hickman (2011); static survey Oct 2008 (GDR 271)\"\nz_data = [1961.3880000000001, 2656.5097465263157]\nmu = 0.7\n\n[data_basis]\n\"stress\" = [\"measured range\", \"Davatzes & Hickman (2011): Sv and pore pressure measured; Shmin at frictional equilibrium (mu 0.55, 0.70); SHmax from breakout widths, to 8,860 ft MD\"]\n\"strength\" = [\"log-derived\", \"UCS-porosity relation of Davatzes & Hickman on the neutron log, granodiorite 8,807 ft to TD (GDR 271)\"]\n\"pore pressure\" = [\"measured\", \"static survey, October 2008 (GDR 271); underpressured, Pf/Sv ~0.34\"]\n\"temperature\" = [\"extrapolated\", \"331 C at 2989 m TVD (static survey 2008); 107 C/km below\"]\n\"well check\" = [\"not reproduced\", \"NWG 55-29 (crosscheck_newberry.py): the volcanic breakout width is reproduced at 25-35 K of wall cooling, but breakouts are predicted in the granodiorite, where none were logged\"]\n\n# Operations: optional. Each key states a choice the evaluator otherwise\n# makes by its own rule; leave a key out to keep that rule. Remove the\n# leading \"# \" from [operations] and from each key you state. A stated\n# flow, connection practice, staging, rate of penetration or fluid is used\n# as given: if it fails a check, the result reports the failure and the\n# evaluator does not search for another value.\n# [operations]\n# Pipe candidates, tried in order. Default: the four below. Also accepted:\n# \"dual-wall\" and \"vacuum-insulated (sensitivity)\", which are not on sale.\n# pipes = [\"TK-Drakon coated\", \"internally coated\", \"externally coated\", \"conventional\"]\n# One fixed flow, 1 to 300: a mass flow in kg/s, or a volume flow in L/s\n# at surface (at the fluid's density at 20 C). Default: the flow search.\n# Give at most one of the four flow keys.\n# mass_flow_kg_s = 30.0\n# volume_flow_L_s = 30.0\n# The flows the search tries, rising, as mass or volume flows. Default:\n# 5 to 50 in steps of 5, then 60 to 100 in steps of 10, in kg/s with\n# water and in L/s with a weighted fluid.\n# mass_flows_kg_s = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100]\n# volume_flows_L_s = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100]\n# Downhole tool temperature limit, C, 50 to 400. Default 200.\n# tool_limit_C = 200.0\n# Standpipe pressure limit, Pa, 1e6 to 150e6. Default 51.7e6 (7,500 psi).\n# pump_pressure_limit_Pa = 51.7e6\n# Rig pumps, 1 to 10. Default 3 (each 1,980 hydraulic hp, 7,475 psi).\n# rig_pumps = 3\n# Hole-cleaning annular velocity, m/s, 0.05 to 5. Default 1.245.\n# min_annular_velocity_m_s = 1.245\n# Circulation after the last new hole before a connection, min, 0 to 240.\n# Default 0.33 (FORGE 16B, 10th percentile). Stating it or\n# connection_p90_min ends the connection schedule search.\n# precirculation_min = 0.33\n# Connection with the pumps off, min, 0.1 to 480. Defaults: FORGE 16B\n# median 2.83 and 90th percentile 6.33.\n# connection_median_min = 2.83\n# connection_p90_min = 6.33\n# Time the bottom of the hole is static for a trip, h, 0.5 to 500.\n# Default: FORGE 16B tripping speeds and surface time, scaled to the\n# target depth. trip_scale, 0.05 to 20, multiplies that rule. Give one.\n# trip_hours = 17.5\n# trip_scale = 1.0\n# Run-in staging: interval, m, 10 to 10,000, and circulation at each\n# stage, min, 0.5 to 600. Defaults: FORGE 16B 144.88 m and 15.51 min,\n# then a search over shorter intervals and longer stages. Stating either\n# ends the search.\n# stage_spacing_m = 144.88\n# stage_minutes = 15.51\n# Rate of penetration, m/h, 0.1 to 100. Default: Model 3, iterated with\n# the wall's exposure for a coupled site.\n# rop_m_h = 10.0\n# Drilling and trip fluid surface densities at 20 C, kg/m3, 990 to 2,600.\n# Defaults: the common windows' lower bounds, iterated with the\n# circulation. A value below water's 998.2 is water.\n# drilling_fluid_kg_m3 = 1100.0\n# trip_fluid_kg_m3 = 1150.0\n# Coating ratings, C, by pipe name. Default: TK-Drakon coated 204. A\n# stated table replaces the default, so a pipe left out has no rating.\n# [operations.coating_ratings_C]\n# \"TK-Drakon coated\" = 204.0\n# Sources for stated values, [basis, source], with the data_basis labels.\n# [operations.sources]\n# tool_limit_C = [\"assumed\", \"Replace with the tool's rating sheet\"]\n\n# Hydraulic programme: optional. Without it the evaluator uses its\n# reference string and casing scenario. A custom string lists its segments\n# from surface to bit; their lengths must add up to the target depth.\n# Each segment gives either pipe, naming one of the model's pipe types\n# (\"TK-Drakon coated\", \"internally coated\", \"externally coated\",\n# \"conventional\", \"dual-wall\" or \"vacuum-insulated (sensitivity)\"), or a\n# single wall layer through bore_diameter and outer_diameter [m] and\n# conductivity [W/(m K)], with an optional name and source. pipe cannot be\n# combined with those keys. A segment may also give hydraulic_joint,\n# local_loss, tool_loss and tools. Without hole intervals the reference\n# casing scenario applies. The example's lengths add up to 10,700 m.\n# [programme]\n# [[programme.segments]]\n# length = 1000.0\n# pipe = \"vacuum-insulated (sensitivity)\"\n# [[programme.segments]]\n# length = 9233.2\n# pipe = \"TK-Drakon coated\"\n# [[programme.segments]]\n# length = 466.8\n# name = \"drill collar\"\n# bore_diameter = 0.0714\n# outer_diameter = 0.1714\n# conductivity = 45.0\n\n[operations]\nmass_flow_kg_s = 20.0\ntool_limit_C = 90.0\n\n[operations.sources]\nmass_flow_kg_s = [\"assumed\", \"Fixture: a fixed flow\"]\ntool_limit_C = [\"assumed\", \"Fixture: a low tool limit\"]\n",
      "kind": "toml",
      "source": "BoreTHM built-in site newberry"
     }
@@ -9481,7 +9524,7 @@
    "schema_version": "1.1",
    "title": "newberry site assessment, stated programme"
   },
-  "resolved_scenario_hash": "3433e4aa1186f971060f9243d6bd134ad9f68d9e0c86097d22f1b967eee0ac6d",
+  "resolved_scenario_hash": "ffdf23255fd1a2c8ba8fb45beb66865aba545955405cac6520945ffef217d5dc",
   "run_id": "run-fixture-interface-stated",
   "schema_version": "1.0",
   "summary": {
@@ -9557,7 +9600,7 @@
    "fields_finite": true,
    "solver_converged": true
   },
-  "wall_clock_duration_s": 32.9585813449994,
+  "wall_clock_duration_s": 26.220399227997405,
   "warnings": [
    {
     "code": "SITE_INPUT_QUALIFICATION",

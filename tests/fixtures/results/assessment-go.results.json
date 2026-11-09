@@ -389,6 +389,7 @@
       "ok": null,
       "peak_C": 95.06306179982953,
       "rating_C": 204.0,
+      "sets_status": null,
       "state": "circulating"
      },
      {
@@ -398,6 +399,7 @@
       "ok": null,
       "peak_C": 96.12572917546298,
       "rating_C": 204.0,
+      "sets_status": null,
       "state": "connection"
      },
      {
@@ -407,6 +409,7 @@
       "ok": null,
       "peak_C": 141.4365886633772,
       "rating_C": 204.0,
+      "sets_status": null,
       "state": "run_in"
      }
     ],
@@ -422,6 +425,7 @@
      "ok": true,
      "peak_C": 92.31315069036607,
      "rating_C": 200.0,
+     "sets_status": null,
      "state": "drilling"
     },
     {
@@ -431,6 +435,7 @@
      "ok": true,
      "peak_C": 92.43109289119361,
      "rating_C": 200.0,
+     "sets_status": null,
      "state": "connection"
     },
     {
@@ -446,6 +451,7 @@
      "ok": true,
      "peak_C": 97.25631822531182,
      "rating_C": 200.0,
+     "sets_status": null,
      "state": "run_in_staged"
     },
     {
@@ -457,6 +463,7 @@
      "ok": null,
      "peak_C": 175.69427785452768,
      "rating_C": 200.0,
+     "sets_status": null,
      "state": "run_in_unstaged"
     }
    ],

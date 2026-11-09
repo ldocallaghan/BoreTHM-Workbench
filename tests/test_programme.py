@@ -94,41 +94,57 @@ def test_a_site_without_the_new_tables_gives_the_earlier_assessment(label):
 
 # ---------------------------------------------------------------- operations
 @needs_interface
-def test_operation_defaults_are_the_models_own():
-    from borethm import site_evaluation as se
-    from borethm import model1_coupled as m1
-    from borethm import geo_constants as C
+def test_operation_fields_come_from_operation_defaults():
+    from borethm import operation_defaults
 
-    fields = P.operation_fields("oilfield")
-    names = [row["name"] for row in fields["fields"]]
-    assert names == [name for name, _, _ in P.FIELDS]
-    defaults = fields["defaults"]
-    assert defaults["tool_limit_C"] == C.BHA_SURVIVAL_TEMP
-    assert defaults["pump_pressure_limit_Pa"] == m1.PUMP_LIMIT
-    assert defaults["flows"] == list(se.SITE_FLOWS)
-    assert defaults["pipes"] == [p.name for p in se.SITE_PIPES]
-    rules = {row["name"]: row["rule"] for row in fields["fields"]}
-    assert "392.0 °F" in rules["tool_limit_C"]
-    assert "7,498 psi" in rules["pump_pressure_limit_Pa"]
-    assert all(rule.endswith(".") for rule in rules.values())
-    flow = next(row for row in fields["fields"] if row["name"] == "flow")
-    assert flow["quantity"] == "model_flow" and flow["unit_note"] == P.FLOW_UNIT
+    model = operation_defaults()
+    fields = P.operation_fields()
+    assert [row["name"] for row in fields["fields"]] == [name for name, _, _ in P.FIELDS]
+    assert {row["name"] for row in fields["fields"]} == set(model)
+    for row in fields["fields"]:
+        entry = model[row["name"]]
+        assert row["default"] == entry["value"] and row["source"] == entry["source"] and row["unit"] == entry["unit"]
+        assert row["rule"].rstrip(".").lower() == entry["rule"].rstrip(".").lower()
+    assert fields["groups"] == {"flow": ("mass_flow_kg_s", "volume_flow_L_s"),
+                                "flows": ("mass_flows_kg_s", "volume_flows_L_s")}
+    quantities = {row["name"]: row["quantity"] for row in fields["fields"]}
+    assert quantities["mass_flow_kg_s"] == "mass_flow" and quantities["volume_flow_L_s"] == "volume_flow"
+
+
+def test_the_application_reads_no_internal_model_constants():
+    """Defaults come from operation_defaults; the application names none of
+    the model's internal constants."""
+    import ast
+
+    banned = {"SITE_FLOWS", "SITE_PIPES", "COATING_RATINGS", "RIG_PUMPS", "BHA_SURVIVAL_TEMP",
+              "PUMP_LIMIT", "HOLE_CLEANING_V", "forge_timings"}
+    found = []
+    for path in sorted((ROOT / "src/borethm_workbench").rglob("*.py")):
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+            name = node.attr if isinstance(node, ast.Attribute) else node.id if isinstance(node, ast.Name) else None
+            if isinstance(node, ast.ImportFrom):
+                found += [(path.name, a.name) for a in node.names if a.name in banned]
+            if name in banned:
+                found.append((path.name, name))
+    assert found == []
 
 
 @needs_interface
 @pytest.mark.parametrize(
     "table,kind,field",
     [
-        ({"flow": 0.5}, "errors", "flow"),
-        ({"trip_hours": 3.0, "trip_scale": 2.0}, "errors", "trip_hours"),
+        ({"mass_flow_kg_s": 0.5}, "errors", "mass_flow_kg_s"),
+        ({"mass_flow_kg_s": 30.0, "volume_flow_L_s": 30.0}, "errors", "operations"),
+        ({"trip_hours": 3.0, "trip_scale": 2.0}, "errors", "operations"),
         ({"pipes": ["steel"]}, "errors", "pipes"),
+        ({"flow": 30.0}, "errors", ""),
         ({"tool_limit_C": 175.0}, "warnings", "tool_limit_C"),
         ({"pump_pressure_limit_Pa": 60e6, "sources": {"pump_pressure_limit_Pa": ["assumed", "x"]}}, "warnings", "pump_pressure_limit_Pa"),
-        ({"flow": 150.0, "sources": {"flow": ["assumed", "x"]}}, "warnings", "flow"),
+        ({"volume_flow_L_s": 150.0, "sources": {"volume_flow_L_s": ["assumed", "x"]}}, "warnings", "volume_flow_L_s"),
         ({"coating_ratings_C": {"dual-wall": 150.0}, "sources": {"coating_ratings_C": ["assumed", "x"]}}, "warnings", "coating_ratings_C"),
     ],
 )
-def test_operation_messages_name_their_field(table, kind, field):
+def test_operation_messages_carry_the_models_field_names(table, kind, field):
     result = P.check_operations(table)
     assert result[kind], result
     assert result[kind][0]["field"] == field
@@ -137,14 +153,15 @@ def test_operation_messages_name_their_field(table, kind, field):
 @needs_interface
 def test_site_check_attaches_operation_messages():
     document = sites.document_from_toml(site_toml())
-    document["operations"] = {"tool_limit_C": 175.0, "flow": 20.0, "sources": {"flow": ["assumed", "pump sheet"]}}
+    document["operations"] = {"tool_limit_C": 175.0, "mass_flow_kg_s": 20.0, "sources": {"mass_flow_kg_s": ["assumed", "pump sheet"]}}
     result = sites.check(document)
     assert result["valid"]
-    assert {"field": "operations.tool_limit_C", "message": "operations.tool_limit_C has no source"} in result["warnings"]
-    document["operations"] = {"flow": 0.5}
+    assert {"field": "operations.tool_limit_C", "message": "no source is given"} in result["warnings"]
+    assert not any(w["message"].startswith("operations.") for w in result["warnings"])
+    document["operations"] = {"mass_flow_kg_s": 0.5}
     result = sites.check(document)
     assert not result["valid"]
-    assert result["errors"][0]["field"] == "operations.flow"
+    assert result["errors"] == [{"field": "operations.mass_flow_kg_s", "message": "0.5 is outside 1 to 300 kg/s"}]
     document["operations"] = {"tool_limit": 175.0}
     result = sites.check(document)
     assert result["errors"] == [{"field": "operations", "message": "tool_limit: unknown key"}]
@@ -156,7 +173,7 @@ def test_operations_round_trip_through_the_site_file():
 
     table = {
         "pipes": ["TK-Drakon coated", "conventional"],
-        "flow": 25.0,
+        "volume_flow_L_s": 25.0,
         "tool_limit_C": 180.0,
         "pump_pressure_limit_Pa": 45e6,
         "rig_pumps": 2,
@@ -165,7 +182,7 @@ def test_operations_round_trip_through_the_site_file():
         "stage_minutes": 10.0,
         "drilling_fluid_kg_m3": 1050.0,
         "coating_ratings_C": {"TK-Drakon coated": 190.0},
-        "sources": {"flow": ["assumed", "pump sheet"], "tool_limit_C": ["measured", 'rating "sheet"']},
+        "sources": {"volume_flow_L_s": ["assumed", "pump sheet"], "tool_limit_C": ["measured", 'rating "sheet"']},
     }
     document = sites.document_from_toml(site_toml())
     document["operations"] = table
@@ -221,13 +238,61 @@ def test_programme_round_trips_through_the_site_file(definition):
     assert P.build(ProgrammeDefinition.model_validate(back)) == site.programme
 
 
+def named_string(top_length=1000.0):
+    """The walkthrough's string: vacuum-insulated pipe over the top, then
+    TK-Drakon coated pipe and the reference assembly below it, from the well
+    the model builds for the reference programme at Soultz."""
+    reference = P.check(ProgrammeDefinition(kind="reference"), site_toml())["drawing"]
+    top = reference["string"][0]
+    vacuum = next(p for p in P.model_pipes() if p["name"].startswith("vacuum-insulated"))
+    insulated = {**top, "length_m": top_length,
+                 "pipe": {**top["pipe"], **{k: vacuum[k] for k in ("name", "layers", "thermal_joint_fraction", "source")}}}
+    return [insulated, {**top, "length_m": top["length_m"] - top_length}, *reference["string"][1:]], reference["hole"]
+
+
 @needs_interface
-def test_a_pipe_with_two_layers_cannot_be_written_to_the_site_file():
-    reference = P.check(ProgrammeDefinition(kind="reference"), site_toml())
-    definition = ProgrammeDefinition.model_validate({"kind": "custom", "string": reference["drawing"]["string"]})
+def test_a_string_of_named_pipes_round_trips_through_the_site_file():
+    """The walkthrough's vacuum-insulated and TK-Drakon sections are written
+    with the pipe key and read back as the model's named pipes."""
+    string, hole = named_string()
+    definition = ProgrammeDefinition.model_validate({"kind": "custom", "string": string[:2] + [
+        {**string[2], "length_m": sum(s["length_m"] for s in string[2:])}], "hole": hole})
+    table = P.to_table(definition)
+    assert [s.get("pipe") for s in table["segments"]] == ["vacuum-insulated (sensitivity)", "TK-Drakon coated", None]
+    assert "bore_diameter" not in table["segments"][0] and "hydraulic_joint" in table["segments"][1]
+    document = sites.document_from_toml(site_toml())
+    document["programme"] = table
+    site = sites.load_text(sites.document_to_toml(document))
+    assert site.programme == P.build(definition)
+    vacuum = P.named_pipes()["vacuum-insulated (sensitivity)"]
+    top = site.programme.segments[0].pipe
+    assert (top.name, top.layers, top.joint_fraction, top.source) == (vacuum.name, vacuum.layers, vacuum.joint_fraction, vacuum.source)
+    back, notes = P.from_site(site.programme)
+    assert notes == [] and P.build(ProgrammeDefinition.model_validate(back)) == site.programme
+    result = P.check(definition, site_toml())
+    assert result["valid"] and result["toml_table"] == table and result["toml_note"] is None
+
+
+@needs_interface
+def test_the_reference_pulser_keeps_the_walkthrough_string_in_the_scenario():
+    """The reference assembly's MWD pulser is declared over two sections with
+    the total-internal basis, which a site file's tools entry cannot state."""
+    string, hole = named_string()
+    definition = ProgrammeDefinition.model_validate({"kind": "custom", "string": string, "hole": hole})
     result = P.check(definition, site_toml())
     assert result["valid"] and result["toml_table"] is None
-    assert "TK-Drakon coated has 2" in result["toml_note"]
+    assert "mwd pulser with the total internal basis over 2 sections" in result["toml_note"]
+    assert "cannot state a tool's basis or span" in result["toml_note"]
+
+
+@needs_interface
+def test_user_layers_cannot_be_written_to_the_site_file():
+    two = custom_definition()
+    two.string[1].pipe.layers.append(two.string[1].pipe.layers[0].model_copy(
+        update={"r_in_m": 0.0635, "r_out_m": 0.07, "conductivity_W_m_K": 0.2}))
+    result = P.check(two, site_toml())
+    assert result["valid"] and result["toml_table"] is None
+    assert "steel has 2 user layers" in result["toml_note"]
 
 
 @needs_interface
@@ -263,12 +328,12 @@ def test_programme_routes(client):
     assert [p["name"] for p in pipes][:4] == ["TK-Drakon coated", "internally coated", "externally coated", "conventional"]
     assert pipes[0]["coating_rating_C"] == 204.0
     assert len(pipes[0]["layers"]) == 2
-    text = site_toml() + '\n[operations]\nflow = 30.0\n'
+    text = site_toml() + '\n[operations]\nmass_flow_kg_s = 30.0\n'
     document = sites.document_from_toml(site_toml())
     document["programme"] = P.to_table(custom_definition())
     imported = client.post("/api/v1/programme/import", json={"toml": sites.document_to_toml(document)}).json()
     assert imported["programme"]["kind"] == "custom" and imported["operations"] is None
     imported = client.post("/api/v1/programme/import", json={"toml": text}).json()
-    assert imported["programme"] is None and imported["operations"] == {"flow": 30.0}
+    assert imported["programme"] is None and imported["operations"] == {"mass_flow_kg_s": 30.0}
     checked = client.post("/api/v1/programme/check", json={"programme": {"kind": "reference"}, "site_toml": text}).json()
     assert checked["valid"] and checked["toml_table"] == {"surface": {"case": 5}, "joints": True, "tools": True}

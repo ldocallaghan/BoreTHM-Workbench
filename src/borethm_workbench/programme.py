@@ -2,33 +2,42 @@
 
 BoreTHM 1.8.0 evaluates a site with its own pipe, flow, limits, timings and
 fluids. A later BoreTHM accepts an ``Operations`` record and a site file's
-``[operations]`` table, which state those choices. This module detects that
-interface, describes each operating choice with the model's own default
-and builds the model's ``HydraulicProgramme`` from an assessment's
-programme definition. Defaults are read from the installed model; nothing
-here calculates a physical value.
+``[operations]`` table, which state those choices, and describes each
+choice's default with ``operation_defaults``. This module detects that
+interface, lists the model's named pipes and builds the model's
+``HydraulicProgramme`` from an assessment's programme definition. Defaults,
+rules and sources come from ``operation_defaults``; validation messages
+come from ``validate_operations`` with their field names. Nothing here
+calculates a physical value.
 """
-
-import re
 
 from .adapter import core_hole, core_segment, core_surface
 
 UNAVAILABLE = (
     "The installed BoreTHM does not accept a drilling programme or operating "
-    "choices. Install a BoreTHM release with Operations to state them."
+    "choices. Install a BoreTHM release with Operations and operation_defaults "
+    "to state them."
 )
+# Operations fields of the settled interface; an earlier interface lacks them.
+REQUIRED_FIELDS = ("mass_flow_kg_s", "volume_flow_L_s", "mass_flows_kg_s", "volume_flows_L_s")
 
 
 def interface_available():
-    """True when the installed BoreTHM accepts Operations."""
+    """True when the installed BoreTHM provides the settled operations
+    interface: Operations with mass and volume flows, operation_defaults,
+    validation records and evaluate's operations argument."""
     try:
         import inspect
 
         import borethm
 
-        return hasattr(borethm, "Operations") and "operations" in inspect.signature(
-            borethm.evaluate
-        ).parameters
+        fields = getattr(getattr(borethm, "Operations", None), "__dataclass_fields__", {})
+        return (
+            hasattr(borethm, "operation_defaults")
+            and hasattr(borethm, "validate_operations")
+            and all(name in fields for name in REQUIRED_FIELDS)
+            and "operations" in inspect.signature(borethm.evaluate).parameters
+        )
     except (ImportError, AttributeError, ValueError, TypeError):
         return False
 
@@ -41,6 +50,13 @@ def capability():
     }
 
 
+def defaults(site=None):
+    """operation_defaults of the installed model, for a site where given."""
+    from borethm import operation_defaults
+
+    return operation_defaults(site)
+
+
 # ---------------------------------------------------------------- model pipes
 def _layers(pipe):
     return [
@@ -49,41 +65,42 @@ def _layers(pipe):
     ]
 
 
-def model_pipes():
-    """The model's named drill pipes, with their layers and coating ratings."""
-    from borethm import site_evaluation as se
-    from borethm import well_geometry as wg
+def named_pipes():
+    """The model's named pipe types, as the site file's pipe key names them."""
+    from borethm.programme import NAMED_PIPES
 
-    commercial = {p.name for p in se.SITE_PIPES}
-    pipes = []
-    for pipe in (
-        wg.TK_DRAKON,
-        wg.INTERNALLY_COATED,
-        wg.EXTERNALLY_COATED,
-        wg.CONVENTIONAL,
-        wg.DUAL_WALL,
-        wg.VACUUM_INSULATED,
-    ):
-        pipes.append(
-            {
-                "name": pipe.name,
-                "layers": _layers(pipe),
-                "thermal_joint_fraction": pipe.joint_fraction,
-                "source": pipe.source,
-                "commercial": pipe.name in commercial,
-                "coating_rating_C": se.COATING_RATINGS.get(pipe.name),
-            }
-        )
-    return pipes
+    return NAMED_PIPES
+
+
+def model_pipes():
+    """The model's named drill pipes, with their layers and coating ratings.
+    A pipe counts as on sale where the model's default candidates list it."""
+    d = defaults()
+    commercial = set(d["pipes"]["value"])
+    ratings = d["coating_ratings_C"]["value"]
+    return [
+        {
+            "name": pipe.name,
+            "layers": _layers(pipe),
+            "thermal_joint_fraction": pipe.joint_fraction,
+            "source": pipe.source,
+            "commercial": pipe.name in commercial,
+            "coating_rating_C": ratings.get(pipe.name),
+        }
+        for pipe in named_pipes().values()
+    ]
 
 
 # ---------------------------------------------------------------- operations
-# Each operating choice: its quantity for display units (None: no conversion)
-# and how the model chooses it when it is not stated.
+# Each operating choice: its display quantity (None: shown as given) and
+# label. Values are SI; volume flows are L/s, which the page converts to the
+# volume_flow quantity's m3/s.
 FIELDS = (
     ("pipes", "pipes", "Pipe candidates, tried in order"),
-    ("flow", "model_flow", "Flow"),
-    ("flows", "model_flow", "Flows the search tries"),
+    ("mass_flow_kg_s", "mass_flow", "Flow, as a mass flow"),
+    ("volume_flow_L_s", "volume_flow", "Flow, as a volume flow at surface"),
+    ("mass_flows_kg_s", "mass_flow", "Flows the search tries, as mass flows"),
+    ("volume_flows_L_s", "volume_flow", "Flows the search tries, as volume flows at surface"),
     ("tool_limit_C", "temperature", "Tool temperature limit"),
     ("coating_ratings_C", "temperature", "Coating ratings"),
     ("pump_pressure_limit_Pa", "pressure", "Standpipe pressure limit"),
@@ -100,114 +117,45 @@ FIELDS = (
     ("drilling_fluid_kg_m3", "density", "Drilling fluid density at 20 °C"),
     ("trip_fluid_kg_m3", "density", "Trip fluid density at 20 °C"),
 )
-FLOW_UNIT = "kg/s with water; L/s at surface with a weighted fluid"
+# Fields shown together in one row, with a choice between them.
+GROUPS = {"flow": ("mass_flow_kg_s", "volume_flow_L_s"),
+          "flows": ("mass_flows_kg_s", "volume_flows_L_s")}
 
 
-def model_defaults():
-    """The model's own values for the operating choices it makes by a fixed value."""
-    from borethm import drilling_cycle as dc
-    from borethm import geo_constants as C
-    from borethm import model1_coupled as m1
-    from borethm import site_evaluation as se
-
-    t = dc.forge_timings()
-    return {
-        "pipes": [p.name for p in se.SITE_PIPES],
-        "flows": list(se.SITE_FLOWS),
-        "tool_limit_C": C.BHA_SURVIVAL_TEMP,
-        "coating_ratings_C": dict(se.COATING_RATINGS),
-        "pump_pressure_limit_Pa": m1.PUMP_LIMIT,
-        "rig_pumps": se.RIG_PUMPS,
-        "min_annular_velocity_m_s": m1.HOLE_CLEANING_V,
-        "precirculation_min": t.fresh_circ_p10_min,
-        "connection_median_min": t.connection_median_min,
-        "connection_p90_min": t.connection_p90_min,
-        "stage_spacing_ft": t.stage_spacing_ft,
-        "stage_minutes": t.stage_minutes,
-    }
+def _sentence(rule):
+    return rule[:1].upper() + rule[1:].rstrip(".") + "."
 
 
-def _rules(d, fmt):
-    pipes = ", ".join(d["pipes"])
-    flows = ", ".join(f"{f:g}" for f in d["flows"])
-    ratings = "; ".join(f"{k} {fmt(v, 'temperature')}" for k, v in d["coating_ratings_C"].items())
-    return {
-        "pipes": f"The model tries {pipes}, in that order, and takes the first for which a flow passes.",
-        "flow": "The model takes the lowest flow on its grid that keeps the tool below its limit and cleans the hole within the pump limit.",
-        "flows": f"The model's flow grid: {flows}.",
-        "tool_limit_C": f"{fmt(d['tool_limit_C'], 'temperature')}, the model's high-temperature tool class.",
-        "coating_ratings_C": f"{ratings}, the coating maker's rating.",
-        "pump_pressure_limit_Pa": f"{fmt(d['pump_pressure_limit_Pa'], 'pressure')}, the limit of the model's reference well design.",
-        "rig_pumps": f"{d['rig_pumps']} pumps of the reference rig's model.",
-        "min_annular_velocity_m_s": f"{fmt(d['min_annular_velocity_m_s'], 'velocity')}, the annular velocity around the drill pipe at FORGE 16B.",
-        "precirculation_min": f"{d['precirculation_min']:g} min, the FORGE 16B 10th percentile; if the tool needs it, the model then searches longer circulation and shorter connections.",
-        "connection_median_min": f"{d['connection_median_min']:g} min, the FORGE 16B median.",
-        "connection_p90_min": f"{d['connection_p90_min']:g} min, the FORGE 16B 90th percentile.",
-        "trip_hours": "FORGE 16B tripping speeds and surface time, scaled to the target depth.",
-        "trip_scale": "No factor on the trip-time rule.",
-        "stage_spacing_m": f"Every {fmt(d['stage_spacing_ft'] * 0.3048, 'length')}, as at FORGE 16B; if the tool needs it, the model then searches closer and longer stages.",
-        "stage_minutes": f"{d['stage_minutes']:g} min, as at FORGE 16B; if the tool needs it, the model then searches longer stages.",
-        "rop_m_h": "The model's rate of penetration for the circulation, iterated with the wall's exposure for a coupled site.",
-        "drilling_fluid_kg_m3": "The lower bound of the drilling fluid's common window, never below water, iterated with the circulation.",
-        "trip_fluid_kg_m3": "The larger of the drilling fluid and the lower bound of the trip fluid's common window.",
-    }
-
-
-def operation_fields(system="SI"):
-    """One row per operating choice: name, label, quantity and the model's rule."""
-    from . import units
-
-    defaults = model_defaults()
-    rules = _rules(defaults, lambda v, q: units.fmt(v, q, system))
-    from borethm.operations import PIPES, RANGES
-
+def operation_fields(site=None):
+    """One row per operating choice: name, label, quantity, and the model's
+    default value, rule and source from operation_defaults."""
+    d = defaults(site)
     rows = []
     for name, quantity, label in FIELDS:
+        entry = d[name]
         rows.append(
             {
                 "name": name,
                 "label": label,
                 "quantity": quantity,
-                "unit_note": FLOW_UNIT if quantity == "model_flow" else None,
-                "rule": rules[name],
-                "range_si": list(RANGES[name]) if name in RANGES else None,
+                "unit": entry["unit"],
+                "rule": _sentence(entry["rule"]),
+                "source": entry["source"],
+                "default": entry["value"],
             }
         )
     return {
         "fields": rows,
-        "pipe_names": list(PIPES),
-        "defaults": {
-            k: v for k, v in defaults.items() if k != "stage_spacing_ft"
-        },
+        "groups": GROUPS,
+        "pipe_names": list(named_pipes()),
     }
-
-
-_FIELD_NAMES = [name for name, _, _ in FIELDS]
-_PHRASES = (
-    ("coating rating", "coating_ratings_C"),
-    ("tool limit", "tool_limit_C"),
-    ("pump limit", "pump_pressure_limit_Pa"),
-    ("operations pipe", "pipes"),
-    ("operations flow", "flow"),
-    ("flows", "flows"),
-)
-
-
-def operation_field(message):
-    """The operating choice a validation message is about, or ''."""
-    for name in sorted(_FIELD_NAMES, key=len, reverse=True):
-        if re.search(rf"(?<![A-Za-z_]){re.escape(name)}(?![A-Za-z_])", message):
-            return name
-    for phrase, name in _PHRASES:
-        if phrase in message:
-            return name
-    return ""
 
 
 def check_operations(table):
     """Parse and validate an [operations] table with the model.
 
-    Returns field-attached errors and warnings. Errors never raise.
+    Returns errors and warnings, each with the field the model names.
+    Errors never raise.
     """
     from borethm.operations import operations_from_dict, validate_operations
 
@@ -215,19 +163,16 @@ def check_operations(table):
     try:
         operations = operations_from_dict(table)
     except (ValueError, TypeError) as error:
+        # The site-file parser names the key first: "<key>: <message>".
         message = str(error)
-        result["errors"].append({"field": operation_field(message), "message": message})
+        key = message.split(":", 1)[0].split("[", 1)[0].split(".", 1)[0]
+        known = {name for name, _, _ in FIELDS} | {"sources"}
+        result["errors"].append({"field": key if key in known else "", "message": message})
         return result
     result["stated"] = list(operations.stated())
-    try:
-        warnings = validate_operations(operations)
-    except ValueError as error:
-        for part in str(error).removeprefix("operations: ").split("; "):
-            result["errors"].append({"field": operation_field(part), "message": part})
-        return result
-    result["warnings"] = [
-        {"field": operation_field(w), "message": w} for w in warnings
-    ]
+    for record in validate_operations(operations):
+        kind = "errors" if record["level"] == "error" else "warnings"
+        result[kind].append({"field": record["field"], "message": record["message"]})
     return result
 
 
@@ -262,8 +207,12 @@ def geometry(site, programme):
     the first candidate pipe where the model chooses the pipe."""
     from borethm import site_evaluation as se
 
-    pipes = (site.operations.pipes if getattr(site, "operations", None) and site.operations.pipes else se.SITE_PIPES)
-    return se.site_well(site.target(), pipes[0], programme)
+    operations = getattr(site, "operations", None)
+    if operations is not None and operations.pipes:
+        pipe = operations.pipes[0]
+    else:
+        pipe = named_pipes()[defaults(site)["pipes"]["value"][0]]
+    return se.site_well(site.target(), pipe, programme)
 
 
 def _joint_dict(j):
@@ -392,24 +341,42 @@ def _surface_table(surface_loss):
     return {"coefficient": surface_loss.coefficient, "source": surface_loss.source}
 
 
+def _named(pipe):
+    """The model's pipe type name a contract pipe matches, or None."""
+    model = named_pipes().get(pipe.name)
+    if model is None:
+        return None
+    same = (
+        [(l.r_in_m, l.r_out_m, l.conductivity_W_m_K) for l in pipe.layers]
+        == [(l.r_in, l.r_out, l.k) for l in model.layers]
+        and pipe.thermal_joint_fraction == model.joint_fraction
+        and pipe.source == model.source
+    )
+    return pipe.name if same else None
+
+
 def _segment_table(segment):
     pipe = segment.pipe
-    if len(pipe.layers) != 1:
+    name = _named(pipe)
+    if name is not None:
+        table = {"length": segment.length_m, "pipe": name}
+    elif len(pipe.layers) != 1:
         raise ValueError(
-            f"A site file's [programme] table gives each pipe one wall layer; "
-            f"{pipe.name} has {len(pipe.layers)}. The programme is kept with the "
-            "assessment and cannot be written to the site file."
+            f"A site file's [programme] table gives a pipe one wall layer or a model pipe name; "
+            f"{pipe.name} has {len(pipe.layers)} user layers. The programme is kept with the "
+            "assessment."
         )
-    layer = pipe.layers[0]
-    table = {
-        "length": segment.length_m,
-        "name": pipe.name,
-        "bore_diameter": 2 * layer.r_in_m,
-        "outer_diameter": 2 * layer.r_out_m,
-        "conductivity": layer.conductivity_W_m_K,
-        "source": pipe.source or "site-supplied geometry",
-        "joint_fraction": pipe.thermal_joint_fraction,
-    }
+    else:
+        layer = pipe.layers[0]
+        table = {
+            "length": segment.length_m,
+            "name": pipe.name,
+            "bore_diameter": 2 * layer.r_in_m,
+            "outer_diameter": 2 * layer.r_out_m,
+            "conductivity": layer.conductivity_W_m_K,
+            "source": pipe.source,
+            "joint_fraction": pipe.thermal_joint_fraction,
+        }
     if pipe.hydraulic_joint is not None:
         j = pipe.hydraulic_joint
         joint = {
@@ -435,19 +402,30 @@ def _segment_table(segment):
             local["annulus_reference_area"] = l.annulus_reference_area_m2
         table["local_loss"] = local
     if segment.tool_loss is not None:
-        raise ValueError(
-            "A tool pressure-loss curve entered on a section cannot be written to the "
-            "site file's [programme] table by this application. The programme is kept "
-            "with the assessment."
-        )
+        t = segment.tool_loss
+        if not t.include_boundary_changes or t.unresolved:
+            raise ValueError(
+                f"Section {segment.id} has a tool loss curve with include_boundary_changes or unresolved "
+                "set, which a site file's [programme] table cannot state. The programme is kept with "
+                "the assessment."
+            )
+        loss = {"dp_ref": t.reference_pressure_Pa, "flow_ref": t.reference_flow_m3_s,
+                "density_ref": t.reference_density_kg_m3, "basis": t.basis,
+                "span_segments": t.span_segments, "source": t.source}
+        if t.flow_range_m3_s is not None:
+            loss["flow_range"] = list(t.flow_range_m3_s)
+        if t.temperature_max_C is not None:
+            loss["temperature_max_C"] = t.temperature_max_C
+        table["tool_loss"] = loss
     if segment.tool_class is not None:
-        tool = {"tool_class": segment.tool_class, "collar_in": segment.collar_in}
         if segment.tool_basis != "additional" or segment.tool_span_segments != 1:
             raise ValueError(
-                "A named tool with a stated basis or span cannot be written to the site "
-                "file's [programme] table. The programme is kept with the assessment."
+                f"Section {segment.id} names a {segment.tool_class.replace('_', ' ')} with the "
+                f"{segment.tool_basis.replace('_', ' ')} basis over {segment.tool_span_segments} sections. "
+                "A site file's [programme] tools entry cannot state a tool's basis or span, so the "
+                "programme is kept with the assessment."
             )
-        table["tools"] = [tool]
+        table["tools"] = [{"tool_class": segment.tool_class, "collar_in": segment.collar_in}]
     return table
 
 

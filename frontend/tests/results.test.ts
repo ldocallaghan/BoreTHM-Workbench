@@ -46,7 +46,10 @@ for (const [name, status] of [['go', 'GO'], ['conditional', 'CONDITIONAL'], ['st
     assert.ok(html.includes(`Pump pressure limit ${limit.toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2})} MPa; ${report.pump_check.pumps} rig pumps.`));
     const margin = report.tool_check.run_in_unstaged.margin_C;
     assert.ok(html.includes(`${margin.toLocaleString('en-GB', {minimumFractionDigits: 1, maximumFractionDigits: 1})} °C`), 'unstaged margin');
-    assert.ok(html.includes('Tool on run-in without staging'));
+    assert.ok(html.includes('Tool on run-in without staging<small> (for comparison; does not set the status)</small>'));
+    assert.equal((html.match(/for comparison; does not set the status/g) || []).length, report.tool_check.run_in_unstaged.sets_status === false ? 1 : 0);
+    const litres = report.pump_check.drilling.flow_L_s;
+    assert.ok(html.includes(`${litres.toLocaleString('en-GB', {minimumFractionDigits: 1, maximumFractionDigits: 1})} L/s`), 'pump flow from the model in L/s');
     assert.ok(html.includes('Mud-weight window against depth'));
     assert.ok(html.includes('<title>'), 'hover text for each bound');
     assert.ok(html.includes('Common windows at each evaluated depth'));
@@ -58,8 +61,8 @@ test('stated values and the constraint they set are shown', () => {
   const {html} = render('stated', 'oilfield', 'interface');
   assert.ok(html.includes('Hydraulic programme: a stated custom string.'));
   assert.ok(html.includes('<td>Tool temperature limit</td><td>194.0 °F</td><td>assumed</td>'));
-  assert.ok(html.includes('<td>Flow</td><td>20 kg/s</td>'));
-  assert.ok(html.includes('A stated value is used in the check behind the controlling constraint. In the model&#x27;s wording: Stated operations used in this check: tool limit 90 C; flow 20 kg/s.'));
+  assert.ok(html.includes('<td>Flow, as a mass flow</td><td>44.1 lb/s</td>'));
+  assert.ok(html.includes('A stated value is used in the check behind the controlling constraint. In the model&#x27;s wording: Stated operations used in this check: tool limit 90 C; mass flow 20 kg/s.'));
   const go = render('go', 'SI', 'interface').html;
   assert.ok(go.includes('No operating value is stated; the model chose each one.'));
   assert.ok(go.includes('No stated value is used in the check behind the controlling constraint.'));

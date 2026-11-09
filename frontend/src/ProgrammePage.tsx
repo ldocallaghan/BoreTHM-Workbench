@@ -2,6 +2,7 @@ import React, {useEffect, useMemo, useRef, useState} from 'react';
 import type {components} from './api.generated';
 import {api} from './apiClient';
 import {NumberInput, UnitInput, useFormat} from './UnitsContext';
+import {format as formatUnit, fromSI, roundSignificant, symbol as unitSymbol, toSI, type UnitSystem} from './units';
 import {WellView} from './WellView';
 import type {Quantity} from './units';
 import type {SiteCheck, SiteDocument} from './SiteEditor';
@@ -12,15 +13,15 @@ type Segment = components['schemas']['Segment'];
 type Hole = components['schemas']['Hole'];
 type Layer = components['schemas']['Layer'];
 type Issue = {field: string; message: string};
-export type FieldRow = {name: string; label: string; quantity: string; unit_note: string | null; rule: string; range_si: number[] | null};
-type Fields = {fields: FieldRow[]; pipe_names: string[]; defaults: Record<string, unknown>};
+export type FieldRow = {name: string; label: string; quantity: string; unit: string | null; rule: string; source: string; default: unknown};
+type Fields = {fields: FieldRow[]; groups: Record<string, string[]>; pipe_names: string[]};
 type ModelPipe = {name: string; layers: Layer[]; thermal_joint_fraction: number; source: string; commercial: boolean; coating_rating_C: number | null};
 type Drawing = {bit_md_m: number; string: Segment[]; hole: Hole[]};
 type ProgrammeCheck = {valid: boolean; errors: string[]; drawing: Drawing | null; toml_table: Record<string, unknown> | null; toml_note: string | null; target_depth_m: number | null};
 type OperationsCheck = {errors: Issue[]; warnings: Issue[]; stated: string[]};
 type Operations = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
-const UNIT_QUANTITIES = new Set(['temperature', 'pressure', 'velocity', 'minutes', 'hours', 'length', 'rate_of_penetration', 'density']);
+const UNIT_TABLE_QUANTITIES: Record<string, true> = {temperature: true, pressure: true, velocity: true, minutes: true, hours: true, length: true, rate_of_penetration: true, density: true, mass_flow: true, volume_flow: true};
 const TOOL_CLASSES = ['mwd_pulser', 'rotary_steerable', 'mud_motor', 'filter_sub', 'float_sub'];
 
 export const defaultReference = (): Programme => ({kind: 'reference', string: [], hole: [], transitions: 'abrupt', surface_loss: {kind: 'api_case', case: 5}, joints: true, tools: true, bha_tools: []});
@@ -83,14 +84,8 @@ function SectionRow({segment, index, count, pipes, change, remove, move, split}:
   </tr>;
 }
 
-function HydraulicProgramme({scenario, draft, siteHasProgramme, pipes, check, adopt}: {scenario: Scenario; draft: (s: Scenario) => void; siteHasProgramme: boolean; pipes: ModelPipe[]; check: ProgrammeCheck | null; adopt: () => void}) {
+function HydraulicProgramme({programme, set, inSite, pipes, check}: {programme: Programme | null; set: (next: Programme | null) => void; inSite: boolean; pipes: ModelPipe[]; check: ProgrammeCheck | null}) {
   const {format} = useFormat();
-  const programme = scenario.definition.programme ?? null;
-  const set = (next: Programme | null) => {
-    const definition = {...scenario.definition};
-    if (next) definition.programme = next; else delete definition.programme;
-    draft({...scenario, definition});
-  };
   const kind = programme?.kind ?? 'site';
   const string = programme?.string ?? [];
   const setString = (next: Segment[]) => programme && set({...programme, string: next.map((s, i) => ({...s, id: `section-${i + 1}`}))});
@@ -109,10 +104,11 @@ function HydraulicProgramme({scenario, draft, siteHasProgramme, pipes, check, ad
   return <section className="result-section programme-section" aria-labelledby="programme-hydraulic">
     <div className="section-heading"><h2 id="programme-hydraulic">Hydraulic programme</h2></div>
     <div className="choice-row" role="radiogroup" aria-label="Hydraulic programme">
-      {([['site', siteHasProgramme ? "The site file's [programme] table" : "The model's reference programme"], ['reference', 'Reference programme with options'], ['custom', 'Custom string and hole']] as [string, string][]).map(([key, label]) =>
+      {([['site', "The model's reference programme"], ['reference', 'Reference programme with options'], ['custom', 'Custom string and hole']] as [string, string][]).map(([key, label]) =>
         <label key={key} className="choice"><input type="radio" name="programme-kind" checked={kind === key} onChange={() => void choose(key)} />{label}</label>)}
     </div>
-    {kind === 'site' && <p className="small">{siteHasProgramme ? 'The assessment uses the programme table in the site file, as before.' : 'The assessment uses the model\'s reference string and casing scenario, as before.'} {siteHasProgramme && <button className="text-button" onClick={adopt}>Edit it here</button>}</p>}
+    {kind === 'site' && <p className="small">The assessment uses the model's reference string and casing scenario, and the site file has no [programme] table.</p>}
+    {programme && check?.valid && <p className="small">{inSite ? "Stored in the site file's [programme] table." : check.toml_note}</p>}
     {programme && <div className="programme-options">
       <label className="field"><span className="field-label">Surface losses</span>
         <select aria-label="Surface losses" value={surface.kind === 'api_case' ? `case-${surface.case}` : surface.kind} onChange={e => {
@@ -162,36 +158,61 @@ function HydraulicProgramme({scenario, draft, siteHasProgramme, pipes, check, ad
 }
 
 // ------------------------------------------------------------ operations
+// Volume flows are L/s in the model's operations and m3/s in the volume_flow quantity.
+const SCALE: Record<string, number> = {volume_flow_L_s: 1000, volume_flows_L_s: 1000};
+const toQuantity = (name: string, v: number) => v / (SCALE[name] ?? 1);
+const fromQuantity = (name: string, v: number) => roundSignificant(v * (SCALE[name] ?? 1));
+
+function GridInput({row, value, change}: {row: FieldRow; value: number[] | null; change: (v: number[]) => void}) {
+  const {system} = useFormat();
+  const q = row.quantity as Quantity;
+  const shown = (value ?? []).map(v => Number(fromSI(toQuantity(row.name, v), q, system).toPrecision(10))).join(', ');
+  const [text, setText] = useState(shown);
+  useEffect(() => setText(shown), [system]);
+  return <><input aria-label={`${row.label} (${unitSymbol(q, system)})`} value={text} onChange={e => {
+    setText(e.target.value);
+    const v = e.target.value.split(/[,\s]+/).filter(Boolean).map(Number);
+    if (v.length && v.every(Number.isFinite)) change(v.map(x => fromQuantity(row.name, toSI(x, q, system))));
+  }} /><small>{unitSymbol(q, system)}, rising, separated by commas.</small></>;
+}
+
 function OperationInput({row, value, change, pipeNames}: {row: FieldRow; value: unknown; change: (v: unknown) => void; pipeNames: string[]}) {
-  const [text, setText] = useState(Array.isArray(value) ? (value as number[]).join(', ') : '');
   if (row.name === 'pipes') {
     const chosen = (value as string[]) ?? [];
     return <div className="pipe-order">{pipeNames.map(name => <label key={name} className="choice"><input type="checkbox" checked={chosen.includes(name)} onChange={e => change(e.target.checked ? [...chosen, name] : chosen.filter(n => n !== name))} />{name}{chosen.includes(name) ? ` (${chosen.indexOf(name) + 1})` : ''}</label>)}<small>Tried in the order ticked.</small></div>;
   }
-  if (row.name === 'flows') return <><input aria-label="Flows the search tries" value={text} onChange={e => { setText(e.target.value); const v = e.target.value.split(/[,\s]+/).filter(Boolean).map(Number); if (v.length && v.every(Number.isFinite)) change(v); }} /><small>{row.unit_note}; separated by commas.</small></>;
+  if (row.name.endsWith('_flows_kg_s') || row.name.endsWith('_flows_L_s')) return <GridInput row={row} value={value as number[] | null} change={change} />;
   if (row.name === 'coating_ratings_C') {
     const ratings = (value as Record<string, number>) ?? {};
     return <div>{pipeNames.map(name => <div key={name} className="number-row small"><label className="choice"><input type="checkbox" checked={name in ratings} onChange={e => { const next = {...ratings}; if (e.target.checked) next[name] = 204; else delete next[name]; change(next); }} />{name}</label>
       {name in ratings && <UnitInput label={`Coating rating for ${name}`} value={ratings[name]} quantity="temperature" change={v => change({...ratings, [name]: v})} />}</div>)}<small>Pipes not ticked have no rating. {Object.keys(ratings).length ? '' : 'None ticked: no pipe has a rating.'}</small></div>;
   }
-  if (UNIT_QUANTITIES.has(row.quantity)) return <UnitInput label={row.label} value={value as number} quantity={row.quantity as Quantity} change={change} />;
-  return <><NumberInput ariaLabel={row.label} step={row.quantity === 'count' ? 1 : 'any'} integer={row.quantity === 'count'} value={value as number | null} change={change} />{row.unit_note && <small>{row.unit_note}</small>}</>;
+  if (row.quantity in UNIT_TABLE_QUANTITIES) return <UnitInput label={row.label} value={value == null ? null : toQuantity(row.name, value as number)} quantity={row.quantity as Quantity} change={v => change(fromQuantity(row.name, v))} />;
+  return <NumberInput ariaLabel={row.label} step={row.quantity === 'count' ? 1 : 'any'} integer={row.quantity === 'count'} value={value as number | null} change={change} />;
 }
 
-function initial(row: FieldRow, defaults: Record<string, unknown>): unknown {
-  if (row.name in defaults) return defaults[row.name];
-  if (row.name === 'flow') return 30;
-  if (row.name === 'trip_hours') return 20;
-  if (row.name === 'trip_scale') return 1;
-  if (row.name === 'stage_spacing_m') return 150;
-  if (row.name === 'rop_m_h') return 5;
-  if (row.name.endsWith('fluid_kg_m3')) return 1050;
-  return null;
+// The value a row takes when it is first stated: the model's default, or a
+// starting value where the model searches.
+function initial(row: FieldRow): unknown {
+  if (row.default != null) return row.default;
+  const start: Record<string, unknown> = {mass_flow_kg_s: 30, volume_flow_L_s: 30, trip_hours: 20, rop_m_h: 5, drilling_fluid_kg_m3: 1050, trip_fluid_kg_m3: 1050};
+  return start[row.name] ?? null;
+}
+
+function defaultText(row: FieldRow, system: UnitSystem): string {
+  const v = row.default;
+  if (v == null) return '';
+  const q = row.quantity in UNIT_TABLE_QUANTITIES ? row.quantity as Quantity : null;
+  if (Array.isArray(v)) return q ? v.map(x => formatUnit(toQuantity(row.name, x as number), q, system, 1)).join(', ') : v.join(', ');
+  if (typeof v === 'object') return Object.entries(v as Record<string, number>).map(([k, x]) => `${k} ${formatUnit(x, 'temperature', system)}`).join('; ');
+  return q ? formatUnit(toQuantity(row.name, v as number), q, system) : String(v);
 }
 
 function OperationsTable({site, editSite, siteCheck, bases, fields}: {site: SiteDocument; editSite: (next: SiteDocument) => void; siteCheck: SiteCheck | null; bases: string[]; fields: Fields}) {
+  const {system} = useFormat();
   const operations: Operations = (site.operations as Operations) ?? {};
   const [check, setCheck] = useState<OperationsCheck | null>(null);
+  const [choice, setChoice] = useState<Record<string, string>>({});
   useEffect(() => {
     const controller = new AbortController();
     const timer = setTimeout(() => { void api<OperationsCheck>('/operations/check', {method: 'POST', body: JSON.stringify({operations}), signal: controller.signal}).then(setCheck).catch(() => undefined); }, 250);
@@ -204,35 +225,54 @@ function OperationsTable({site, editSite, siteCheck, bases, fields}: {site: Site
     editSite(document);
   };
   const sources: Record<string, [string, string]> = operations.sources ?? {};
+  // Messages are attached by the field names in the model's validation records.
   const issues = (name: string) => {
-    const fromCheck = check ? check : {errors: [], warnings: []};
-    const site_ = siteCheck ? siteCheck : {errors: [], warnings: []};
     const match = (i: Issue) => i.field === name || i.field === `operations.${name}`;
-    return {errors: [...fromCheck.errors.filter(match)], warnings: [...fromCheck.warnings.filter(match), ...site_.warnings.filter(i => i.field === `operations.${name}` && !fromCheck.warnings.some(w => w.message === i.message))]};
+    const errors = [...(check?.errors ?? []).filter(match)];
+    const warnings = [...(check?.warnings ?? []).filter(match)];
+    for (const w of siteCheck?.warnings ?? []) if (match(w) && !warnings.some(x => x.message === w.message)) warnings.push(w);
+    return {errors, warnings};
   };
-  const general = [...(check?.errors ?? []).filter(i => !i.field), ...(siteCheck?.errors ?? []).filter(i => i.field === 'operations')];
+  const general = [...(check?.errors ?? []).filter(i => !i.field || i.field === 'operations' || i.field === 'sources'),
+    ...(siteCheck?.errors ?? []).filter(i => i.field === 'operations' || i.field === 'operations.operations' || i.field === 'operations.sources')];
+  const byName = Object.fromEntries(fields.fields.map(f => [f.name, f]));
+  const grouped = new Set(Object.values(fields.groups).flat());
+  const rows: {key: string; members: FieldRow[]}[] = [];
+  for (const f of fields.fields) {
+    if (!grouped.has(f.name)) rows.push({key: f.name, members: [f]});
+    else if (Object.values(fields.groups).find(g => g[0] === f.name)) rows.push({key: f.name, members: Object.values(fields.groups).find(g => g[0] === f.name)!.map(n => byName[n])});
+  }
   return <section className="result-section" aria-labelledby="programme-operations">
     <div className="section-heading"><h2 id="programme-operations">Operations</h2><span>{check ? `${check.stated.length} stated` : ''}</span></div>
-    <p className="small">Each row is either chosen by the model, by the rule given, or stated here. A stated value is used as given: if it fails a check, the result reports the failure and the model does not look for another value.</p>
+    <p className="small">Each row is either chosen by the model, by the rule given, or stated here. A stated value is used as given: if it fails a check, the result reports the failure and the model does not look for another value. Defaults, rules and sources are the model's own.</p>
     <Messages kind="error" items={general} />
     <div className="table-scroll"><table className="result-table operations-table"><thead><tr><th>Choice</th><th>Model chooses</th><th>Stated value</th><th>Basis and source</th></tr></thead><tbody>
-      {fields.fields.map(row => {
-        const stated = row.name in operations;
+      {rows.map(({key, members}) => {
+        const statedName = members.find(m => m.name in operations)?.name;
+        const row = byName[statedName ?? choice[key] ?? members[0].name];
+        const stated = !!statedName;
+        const label = members.length > 1 ? (key === 'mass_flow_kg_s' ? 'Flow' : 'Flows the search tries') : row.label;
         const msgs = issues(row.name);
         const pair = sources[row.name] ?? ['assumed', ''];
-        return <tr key={row.name} className={stated ? 'stated' : ''} data-field={row.name}>
-          <th scope="row">{row.label}</th>
-          <td><label className="choice"><input type="checkbox" aria-label={`${row.label}: model chooses`} checked={!stated} onChange={e => {
-            const next = {...operations};
-            if (e.target.checked) { delete next[row.name]; if (next.sources) { const s = {...next.sources}; delete s[row.name]; next.sources = s; } }
-            else next[row.name] = initial(row, fields.defaults);
+        const others = (next: Operations) => { for (const m of members) if (m.name !== row.name) { delete next[m.name]; if (next.sources) { const s2 = {...next.sources}; delete s2[m.name]; next.sources = s2; } } return next; };
+        const shown = defaultText(row, system);
+        return <tr key={key} className={stated ? 'stated' : ''} data-field={row.name}>
+          <th scope="row">{label}
+            {members.length > 1 && <div><select aria-label={`${label}: mass or volume`} value={row.name} onChange={e => {
+              const name = e.target.value; setChoice({...choice, [key]: name});
+              if (stated) { const next = others({...operations}); delete next[row.name]; next[name] = initial(byName[name]); if (sources[row.name]) next.sources = {...(next.sources ?? {}), [name]: sources[row.name]}; if (next.sources) delete next.sources[row.name]; write(next); }
+            }}>{members.map(m => <option key={m.name} value={m.name}>{m.quantity === 'mass_flow' ? 'Mass flow' : 'Volume flow at surface'}</option>)}</select></div>}</th>
+          <td><label className="choice"><input type="checkbox" aria-label={`${label}: model chooses`} checked={!stated} onChange={e => {
+            const next = others({...operations});
+            if (e.target.checked) { delete next[row.name]; if (next.sources) { const s2 = {...next.sources}; delete s2[row.name]; next.sources = s2; } }
+            else next[row.name] = initial(row);
             write(next);
-          }} />Model chooses</label><p className="small muted">{row.rule}</p></td>
+          }} />Model chooses</label><p className="small muted">{row.rule}{shown ? ` Default: ${shown}.` : ''}</p><p className="small muted">Source: {row.source}</p></td>
           <td>{stated ? <OperationInput row={row} value={operations[row.name]} pipeNames={fields.pipe_names} change={v => write({...operations, [row.name]: v})} /> : <span className="muted">Not stated</span>}
             <Messages kind="error" items={msgs.errors} /><Messages kind="warning" items={msgs.warnings} /></td>
           <td>{stated && <div className="basis-row">
-            <select aria-label={`${row.label} basis`} value={pair[0]} onChange={e => write({...operations, sources: {...sources, [row.name]: [e.target.value, pair[1]]}})}>{bases.map(b => <option key={b} value={b}>{b}</option>)}</select>
-            <input aria-label={`${row.label} source`} placeholder="Source" value={pair[1]} onChange={e => write({...operations, sources: {...sources, [row.name]: [pair[0], e.target.value]}})} />
+            <select aria-label={`${label} basis`} value={pair[0]} onChange={e => write({...operations, sources: {...sources, [row.name]: [e.target.value, pair[1]]}})}>{bases.map(b => <option key={b} value={b}>{b}</option>)}</select>
+            <input aria-label={`${label} source`} placeholder="Source" value={pair[1]} onChange={e => write({...operations, sources: {...sources, [row.name]: [pair[0], e.target.value]}})} />
           </div>}</td>
         </tr>;
       })}
@@ -242,38 +282,55 @@ function OperationsTable({site, editSite, siteCheck, bases, fields}: {site: Site
 
 // ------------------------------------------------------------ page
 export function ProgrammePage({scenario, draft, site, editSite, siteCheck}: {scenario: Scenario; draft: (s: Scenario) => void; site: SiteDocument; editSite: (next: SiteDocument) => void; siteCheck: SiteCheck | null}) {
-  const {system} = useFormat();
   const [fields, setFields] = useState<Fields | null>(null);
   const [pipes, setPipes] = useState<ModelPipe[]>([]);
   const [bases, setBases] = useState<string[]>([]);
-  const [check, setCheck] = useState<ProgrammeCheck | null>(null);
+  const [check, setCheck] = useState<(ProgrammeCheck & {request: string}) | null>(null);
   const [error, setError] = useState('');
   const [notes, setNotes] = useState<string[]>([]);
+  // The programme being edited. It is stored in the site file's [programme]
+  // table when that table can hold it, and in the scenario otherwise.
+  const [form, setForm] = useState<Programme | null | undefined>(undefined);
+  const written = useRef('');
   const upload = useRef<HTMLInputElement>(null);
-  useEffect(() => { void api<Fields>('/operations/fields?units=' + system).then(setFields).catch(e => setError((e as Error).message)); }, [system]);
+  useEffect(() => { void api<Fields>('/operations/fields').then(setFields).catch(e => setError((e as Error).message)); }, []);
   useEffect(() => {
     void api<{pipes: ModelPipe[]}>('/programme/pipes').then(v => setPipes(v.pipes)).catch(e => setError((e as Error).message));
     void api<{bases: string[]}>('/sites/templates').then(v => setBases(v.bases)).catch(() => undefined);
   }, []);
-  const programme = scenario.definition.programme ?? null;
   const content = scenario.definition.site.content;
-  const request = useMemo(() => JSON.stringify({programme: programme ?? defaultReference(), site_toml: content}), [programme, content]);
+  const siteTable = JSON.stringify(site.programme ?? null);
+  // Load the form from the scenario or the site file, unless the table is the one this page wrote.
   useEffect(() => {
-    if (site.programme && !programme) { setCheck(null); return; }
+    if (scenario.definition.programme) { if (form === undefined) setForm(scenario.definition.programme); return; }
+    if (!site.programme) { if (form === undefined) setForm(null); return; }
+    if (siteTable === written.current && form !== undefined) return;
+    void api<{programme: Programme | null; notes: string[]}>('/programme/import', {method: 'POST', body: JSON.stringify({toml: content})})
+      .then(v => { written.current = siteTable; setForm(v.programme); setNotes(v.notes); })
+      .catch(e => setError((e as Error).message));
+  }, [siteTable]);
+  const request = useMemo(() => JSON.stringify({programme: form ?? defaultReference(), site_toml: content}), [form, content]);
+  useEffect(() => {
+    if (form === undefined) return;
     const controller = new AbortController();
-    const timer = setTimeout(() => { void api<ProgrammeCheck>('/programme/check', {method: 'POST', body: request, signal: controller.signal}).then(setCheck).catch(e => { if ((e as Error).name !== 'AbortError') setError((e as Error).message); }); }, 300);
+    const timer = setTimeout(() => { void api<ProgrammeCheck>('/programme/check', {method: 'POST', body: request, signal: controller.signal}).then(c => setCheck({...c, request})).catch(e => { if ((e as Error).name !== 'AbortError') setError((e as Error).message); }); }, 300);
     return () => { clearTimeout(timer); controller.abort(); };
-  }, [request, !!site.programme]);
-  const adopt = async () => {
-    try {
-      const value = await api<{programme: Programme | null; notes: string[]}>('/programme/import', {method: 'POST', body: JSON.stringify({toml: content})});
-      if (value.programme) {
-        const next = {...site}; delete next.programme; editSite(next);
-        draft({...scenario, definition: {...scenario.definition, programme: value.programme}});
-      }
-      setNotes(value.notes);
-    } catch (e) { setError((e as Error).message); }
-  };
+  }, [request]);
+  // Store the checked form: in the site file where its table can hold it.
+  useEffect(() => {
+    if (form === undefined || !check || check.request !== request) return;
+    const table = form && check.valid ? check.toml_table : null;
+    const nextSite = {...site};
+    if (table) nextSite.programme = table; else delete nextSite.programme;
+    if (JSON.stringify(nextSite.programme ?? null) !== siteTable) { written.current = JSON.stringify(nextSite.programme ?? null); editSite(nextSite); }
+    const keep = form && !table ? form : null;
+    if (JSON.stringify(scenario.definition.programme ?? null) !== JSON.stringify(keep)) {
+      const definition = {...scenario.definition};
+      if (keep) definition.programme = keep; else delete definition.programme;
+      draft({...scenario, definition});
+    }
+  }, [check]);
+  const programme = form ?? null;
   const importFile = async (file: File) => {
     try {
       const text = await file.text();
@@ -282,19 +339,14 @@ export function ProgrammePage({scenario, draft, site, editSite, siteCheck}: {sce
       delete next.operations;
       if (value.operations) next.operations = value.operations;
       editSite(next);
-      const definition = {...scenario.definition};
-      if (value.programme) definition.programme = value.programme; else delete definition.programme;
-      draft({...scenario, definition});
+      setForm(value.programme);
       setNotes([`Read the programme and operations tables from ${file.name}. The site inputs on the Site page are unchanged.`, ...value.notes]);
     } catch (e) { setError((e as Error).message); }
   };
   const exportFile = async () => {
     try {
       const document = {...site};
-      if (programme) {
-        if (!check?.toml_table) { setError(check?.toml_note || 'Check the programme first.'); return; }
-        document.programme = check.toml_table;
-      }
+      if (programme && !check?.toml_table) { setError(check?.toml_note || 'Check the programme first.'); return; }
       const response = await fetch('/api/v1/sites/export', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({document})});
       if (!response.ok) throw new Error(await response.text());
       download(`${String(site.name || 'site').replace(/[^A-Za-z0-9_-]+/g, '-').toLowerCase()}.toml`, await response.text());
@@ -308,7 +360,7 @@ export function ProgrammePage({scenario, draft, site, editSite, siteCheck}: {sce
     </div>
     {error && <p className="field-error" role="alert">{error}</p>}
     {notes.map((n, i) => <p key={i} className="notice">{n}</p>)}
-    <HydraulicProgramme scenario={scenario} draft={draft} siteHasProgramme={!!site.programme} pipes={pipes} check={check} adopt={() => void adopt()} />
+    {form === undefined ? <p role="status">Loading the programme…</p> : <HydraulicProgramme programme={programme} set={setForm} inSite={!!site.programme} pipes={pipes} check={check} />}
     {fields ? <OperationsTable site={site} editSite={editSite} siteCheck={siteCheck} bases={bases} fields={fields} /> : <p role="status">Loading the operating choices…</p>}
   </div>;
 }

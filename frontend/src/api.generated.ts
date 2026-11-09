@@ -4403,9 +4403,7 @@ export interface operations {
     };
     operation_fields_api_v1_operations_fields_get: {
         parameters: {
-            query?: {
-                units?: "SI" | "oilfield";
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;

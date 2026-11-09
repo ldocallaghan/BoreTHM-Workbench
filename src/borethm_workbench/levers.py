@@ -31,9 +31,11 @@ INTERPRETATION = (
     "not an optimisation and gives no probability."
 )
 
-# key: label, quantity for display units (None: shown as given), kind of value
+# key: label, quantity for display units, kind of value. Values are SI in the
+# quantity's internal unit (mass flow kg/s, volume flow m3/s).
 LEVERS = {
-    "flow": ("Flow", None, "number"),
+    "mass_flow": ("Flow, as a mass flow", "mass_flow", "number"),
+    "volume_flow": ("Flow, as a volume flow at surface", "volume_flow", "number"),
     "inlet_temperature": ("Pump inlet temperature", "temperature", "number"),
     "pipe": ("Pipe type", None, "pipe"),
     "insulated_length": ("Length of the top string section", "length", "number"),
@@ -43,14 +45,18 @@ LEVERS = {
     "stage_minutes": ("Circulation at each run-in stage", "minutes", "number"),
     "tool_limit": ("Tool temperature limit", "temperature", "number"),
 }
+# Operations field each lever states, and the factor from the lever's SI
+# value to that field's unit (volume flows are stated in L/s).
 OPERATION_FIELD = {
-    "flow": "flow",
-    "drilling_fluid": "drilling_fluid_kg_m3",
-    "connection": "connection_p90_min",
-    "stage_spacing": "stage_spacing_m",
-    "stage_minutes": "stage_minutes",
-    "tool_limit": "tool_limit_C",
+    "mass_flow": ("mass_flow_kg_s", 1.0),
+    "volume_flow": ("volume_flow_L_s", 1000.0),
+    "drilling_fluid": ("drilling_fluid_kg_m3", 1.0),
+    "connection": ("connection_p90_min", 1.0),
+    "stage_spacing": ("stage_spacing_m", 1.0),
+    "stage_minutes": ("stage_minutes", 1.0),
+    "tool_limit": ("tool_limit_C", 1.0),
 }
+FLOW_FIELDS = ("mass_flow_kg_s", "volume_flow_L_s", "mass_flows_kg_s", "volume_flows_L_s")
 METRICS = (
     ("tool_margin_C", "Tool margin", "temperature_difference"),
     ("drilling_window_width_kg_m3", "Drilling fluid window width", "density"),
@@ -65,27 +71,41 @@ def _site_document(scenario):
     return tomllib.loads(scenario["definition"]["site"]["content"])
 
 
+def _custom_string(scenario):
+    """The custom string of a scenario as [(length, pipe name)], from the
+    site file's [programme] segments or the scenario's programme, and where
+    it is held ('site' or 'scenario'); ([], None) without one."""
+    programme = scenario["definition"].get("programme")
+    if programme is not None and programme.get("kind") == "custom":
+        return [(s["length_m"], s["pipe"]["name"]) for s in programme["string"]], "scenario"
+    segments = (_site_document(scenario).get("programme") or {}).get("segments")
+    if segments:
+        return [(s["length"], s.get("pipe") or s.get("name", "segment")) for s in segments], "site"
+    return [], None
+
+
 def base_values(manifest):
     """Each lever's value in the base run, from the saved result and inputs,
     with whether the lever applies to that base."""
     scenario = manifest["resolved_scenario"]
     report = manifest["assessment"]
     operations = report.get("operations")
-    programme = scenario["definition"].get("programme")
     document = _site_document(scenario)
-    custom = programme is not None and programme.get("kind") == "custom"
-    string = (programme or {}).get("string") or []
+    string, _ = _custom_string(scenario)
 
-    def op(name):
-        return None if operations is None else operations[name]["value"]
+    def op(name, factor=1.0):
+        if operations is None or name not in operations:
+            return None
+        value = operations[name]["value"]
+        return None if value is None else value / factor
 
     values = {
-        "flow": {"value": (report.get("programme") or {}).get("flow"),
-                 "unit": (report.get("programme") or {}).get("flow_unit")},
+        "mass_flow": {"value": op("mass_flow_kg_s")},
+        "volume_flow": {"value": op("volume_flow_L_s", 1000.0)},
         "inlet_temperature": {"value": document.get("T_inj", report["site"].get("T_inj_C"))},
         "pipe": {"value": (report.get("programme") or {}).get("pipe")},
-        "insulated_length": {"value": string[0]["length_m"] if custom and len(string) > 1 else None,
-                             "pipe": string[0]["pipe"]["name"] if custom and string else None},
+        "insulated_length": {"value": string[0][0] if len(string) > 1 else None,
+                             "pipe": string[0][1] if string else None},
         "drilling_fluid": {"value": op("drilling_fluid_kg_m3")},
         "connection": {"value": op("connection_p90_min")},
         "stage_spacing": {"value": op("stage_spacing_m")},
@@ -93,11 +113,10 @@ def base_values(manifest):
         "tool_limit": {"value": op("tool_limit_C")},
     }
     reasons = {}
-    if operations is None:
-        for key in OPERATION_FIELD:
-            reasons[key] = "The base run was made without the operations interface."
-        reasons["pipe"] = reasons["flow"]
-    if not (custom and len(string) > 1):
+    if operations is None or "mass_flow_kg_s" not in operations:
+        for key in list(OPERATION_FIELD) + ["pipe"]:
+            reasons[key] = "The base run was made without the settled operations interface."
+    if len(string) < 2:
         reasons["insulated_length"] = (
             "Needs a base run with a custom string of two or more sections; the "
             "top section's length changes and the next section takes up the difference."
@@ -117,34 +136,55 @@ def _apply(scenario, lever, value):
 
     scenario = copy.deepcopy(scenario)
     definition = scenario["definition"]
-    if lever == "insulated_length" or (lever == "pipe" and (definition.get("programme") or {}).get("kind") == "custom"):
-        string = definition["programme"]["string"]
+    _, held = _custom_string(scenario)
+    document = tomllib.loads(definition["site"]["content"])
+    if lever in ("insulated_length", "pipe") and held is not None:
+        if held == "scenario":
+            string = definition["programme"]["string"]
+            lengths = lambda i: string[i]["length_m"]
+        else:
+            string = document["programme"]["segments"]
+            lengths = lambda i: string[i]["length"]
         if lever == "pipe":
             pipe = next((p for p in model_pipes() if p["name"] == value), None)
             if pipe is None:
                 raise CalculationError("LEVER_INVALID", f"Unknown model pipe {value!r}")
-            string[0]["pipe"].update(name=pipe["name"], layers=pipe["layers"],
-                                     thermal_joint_fraction=pipe["thermal_joint_fraction"],
-                                     source=pipe["source"])
+            if held == "scenario":
+                string[0]["pipe"].update(name=pipe["name"], layers=pipe["layers"],
+                                         thermal_joint_fraction=pipe["thermal_joint_fraction"],
+                                         source=pipe["source"])
+            else:
+                top = {k: v for k, v in string[0].items()
+                       if k not in ("name", "bore_diameter", "outer_diameter", "conductivity",
+                                    "joint_fraction", "source")}
+                string[0] = {**top, "pipe": pipe["name"]}
         else:
-            total = string[0]["length_m"] + string[1]["length_m"]
+            total = lengths(0) + lengths(1)
             if not 0 < value < total:
                 raise CalculationError(
                     "LEVER_INVALID",
                     f"The top section's length must lie between 0 and {total:g} m, the length of the top two sections.",
                 )
-            string[0]["length_m"] = float(value)
-            string[1]["length_m"] = total - float(value)
-        return scenario
-    document = tomllib.loads(definition["site"]["content"])
-    if lever == "inlet_temperature":
+            key = "length_m" if held == "scenario" else "length"
+            string[0][key] = float(value)
+            string[1][key] = total - float(value)
+        if held == "scenario":
+            return scenario
+    elif lever == "insulated_length":
+        raise CalculationError("LEVER_INVALID", "The base run has no custom string of two or more sections")
+    elif lever == "inlet_temperature":
         document["T_inj"] = float(value)
     else:
         operations = dict(document.get("operations") or {})
         if lever == "pipe":
             operations["pipes"] = [value]
         else:
-            operations[OPERATION_FIELD[lever]] = float(value)
+            field, factor = OPERATION_FIELD[lever]
+            if field in FLOW_FIELDS:
+                for name in FLOW_FIELDS:
+                    operations.pop(name, None)
+                    (operations.get("sources") or {}).pop(name, None)
+            operations[field] = units.round_significant(float(value) * factor)
         document["operations"] = operations
     definition["site"] = {**definition["site"], "content": document_to_toml(document),
                           "source": "Design lever case"}
@@ -154,7 +194,7 @@ def _apply(scenario, lever, value):
 def _label_value(lever, value, system="SI"):
     _, quantity, kind = LEVERS[lever]
     if kind == "pipe" or quantity is None:
-        return str(value) if kind == "pipe" else f"{value:g}"
+        return str(value)
     return units.fmt(value, quantity, system)
 
 
@@ -485,7 +525,7 @@ def report_html(study, system="SI"):
         if entry.get("value") is None:
             continue
         value = entry["value"]
-        shown = (f"{value} {entry.get('unit') or ''}".strip() if entry.get("quantity") is None or entry.get("kind") == "pipe"
+        shown = (str(value) if entry.get("quantity") is None or entry.get("kind") == "pipe"
                  else units.fmt(value, entry["quantity"], system))
         parts.append(f"<tr><th>{escape(entry['label'])}</th><td>{escape(shown)}</td></tr>")
     parts.append("</tbody></table>")

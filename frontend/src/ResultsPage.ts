@@ -7,11 +7,11 @@ import {format, type UnitSystem} from './units.ts';
 
 type Bound = {state: string; case: string; md_m: number | null} | null;
 type Fluid = {label: string; open: boolean | null; lower_kg_m3: number | null; upper_kg_m3: number | null; upper_unbounded?: boolean; width_kg_m3: number | null; lower_by: Bound; upper_by: Bound; chosen_kg_m3: number | null; note: string | null};
-type ToolRow = {item: string; state?: string; peak_C: number | null; rating_C: number | null; margin_C: number | null; ok?: boolean | null; minutes_above_rating?: number | null};
+type ToolRow = {item: string; state?: string; peak_C: number | null; rating_C: number | null; margin_C: number | null; ok?: boolean | null; sets_status?: boolean | null; minutes_above_rating?: number | null};
 type By = {state: string; case: string; mechanism: string} | null;
 type Common = {label: string; lower_kg_m3: (number | null)[]; upper_kg_m3: (number | null)[]; width_kg_m3: (number | null)[]; lower_by: By[]; upper_by: By[]};
 type Profile = {depths_m: number[]; common: Record<string, Common>; states: {state: string; case: string; lower_kg_m3: (number | null)[]; lower_mechanism: (string | null)[]; upper_kg_m3: (number | null)[]; upper_mechanism: (string | null)[]}[]};
-type Pumping = {standpipe_Pa: number | null; margin_Pa: number | null; ok: boolean | null; flow_gpm: number | null; rig_capacity_gpm: number | null; flow_m3_s: number | null; rig_capacity_m3_s: number | null; within_rig: boolean | null; separate_circulation?: boolean};
+type Pumping = {standpipe_Pa: number | null; margin_Pa: number | null; ok: boolean | null; flow_m3_s: number | null; rig_capacity_m3_s: number | null; within_rig: boolean | null; separate_circulation?: boolean};
 type Stated = {returned: boolean; items: {name: string; label: string; quantity: string | null; value: unknown; unit: string | null; basis: string | null; source: string | null}[]; programme: string | null; sets_controlling_constraint: boolean; controlling_sentence: string | null};
 export type AssessmentSummary = {
   verdict: {status: string | null; reasons: string[]; controlling_constraint: string | null; reading: Record<string, string>};
@@ -60,6 +60,7 @@ function stated(item: Stated['items'][number], system: UnitSystem) {
   const v = item.value;
   const q = item.quantity as Parameters<typeof format>[1] | null;
   if (q && typeof v === 'number') return format(v, q, system);
+  if (q && Array.isArray(v)) return v.map(x => format(x as number, q, system)).join(', ');
   if (q && v && typeof v === 'object' && !Array.isArray(v)) return Object.entries(v as Record<string, number>).map(([k, x]) => `${k} ${format(x, q, system)}`).join('; ') || 'No pipe rated';
   if (Array.isArray(v)) return `${v.join(', ')}${item.unit ? ' ' + item.unit : ''}`;
   return `${String(v)}${item.unit ? ' ' + item.unit : ''}`;
@@ -131,13 +132,13 @@ export function ResultsPage({payload, system, onDetails, reportHref}: {payload: 
       h('p', null, `Tool check: ${s.tools.status ?? 'not returned'}. Coating (${s.tools.coating.pipe ?? 'none'}): ${s.tools.coating.status ?? 'not returned'}.`),
       h('div', {className: 'table-scroll'}, h('table', {className: 'result-table'},
         h('thead', null, h('tr', null, ['Item', 'Peak', 'Rating', 'Margin', 'Check'].map(t => h('th', {key: t}, t)))),
-        h('tbody', null, toolRows.map(r => h('tr', {key: r.item},
-          h('td', null, r.item),
+        h('tbody', null, toolRows.map(r => h('tr', {key: r.item, className: r.sets_status === false ? 'comparison' : ''},
+          h('td', null, r.item, r.sets_status === false ? h('small', null, ' (for comparison; does not set the status)') : null),
           h('td', {className: 'n'}, format(r.peak_C, 'temperature', system)),
           h('td', {className: 'n'}, format(r.rating_C, 'temperature', system)),
           h('td', {className: `n ${r.ok === false ? 'fail' : ''}`}, r.margin_C == null ? (r.rating_C == null ? 'No rating' : NOT_RETURNED) : format(r.margin_C, 'temperature_difference', system)),
           h('td', {className: r.ok === false ? 'fail' : r.ok ? 'ok' : ''}, r.ok == null ? '' : r.ok ? 'Pass' : 'Fail')))))),
-      h('p', {className: 'small muted'}, s.tools.margins_returned ? "Limits, margins and pass flags are the model's results. The unstaged run-in is reported for comparison; the staged run-in sets the tool status." : 'The installed BoreTHM does not return margins or a pass flag for the unstaged run-in.'),
+      h('p', {className: 'small muted'}, s.tools.margins_returned ? "Limits, margins and pass flags are the model's results. Rows the model marks for comparison do not set the tool or coating status." : 'The installed BoreTHM does not return margins or a pass flag for the unstaged run-in.'),
       payload.figures.tools ? h(Figure, {svg: payload.figures.tools}) : null),
     h(Section, {id: 'results-stability', title: 'Stability at the target', detail: 'cases', onDetails},
       h('div', {className: 'table-scroll'}, h('table', {className: 'result-table'},

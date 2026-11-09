@@ -205,9 +205,10 @@ def _tools(summary, system):
     rows = []
     for row in summary["tools"]["rows"] + summary["tools"]["coating"]["rows"]:
         ok = row.get("ok")
+        note = " <small>(for comparison; does not set the status)</small>" if row.get("sets_status") is False else ""
         rows.append(
             "<tr>"
-            f"<td>{_t(row['item'])}</td>"
+            f"<td>{_t(row['item'])}{note}</td>"
             f"<td class=n>{_t(_fmt(row['peak_C'], 'temperature', system))}</td>"
             f"<td class=n>{_t(_fmt(row['rating_C'], 'temperature', system))}</td>"
             f"<td class=n>{_t(_fmt(row['margin_C'], 'temperature_difference', system))}</td>"
@@ -220,7 +221,7 @@ def _tools(summary, system):
         "<table><tr><th>Item</th><th>Peak</th><th>Rating</th><th>Margin</th><th>Check</th></tr>"
         + "".join(rows)
         + "</table><p class=meta>"
-        + ("Limits, margins and pass flags are the model's results."
+        + ("Limits, margins and pass flags are the model's results. Rows the model marks for comparison do not set the tool or coating status."
            if summary["tools"]["margins_returned"] else
            "The installed BoreTHM does not return margins or a pass flag for the unstaged run-in.")
         + "</p>"
@@ -295,6 +296,8 @@ def _value(item, system):
     value, unit, quantity = item["value"], item.get("unit"), item.get("quantity")
     if quantity and isinstance(value, (int, float)):
         return _fmt(value, quantity, system)
+    if quantity and isinstance(value, list):
+        return ", ".join(_fmt(v, quantity, system) for v in value)
     if quantity and isinstance(value, dict):
         return "; ".join(f"{k} {_fmt(v, quantity, system)}" for k, v in value.items()) or "no pipe rated"
     if isinstance(value, list):

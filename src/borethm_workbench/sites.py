@@ -233,10 +233,13 @@ def _schema_field(message):
     if len(parts) == 3 and parts[0] == "site.toml":
         key = parts[1]
         if key == "operations":
-            from .programme import operation_field
+            # The model's parser names the key first; an unknown key belongs
+            # to the table as a whole.
+            from .programme import FIELDS
 
-            name = operation_field(parts[2].split(":", 1)[0])
-            return (f"operations.{name}" if name else "operations"), parts[2]
+            name = parts[2].split(":", 1)[0].split("[", 1)[0].split(".", 1)[0]
+            known = {field for field, _, _ in FIELDS} | {"sources"}
+            return (f"operations.{name}" if name in known else "operations"), parts[2]
         return ("" if key in ("TOML", "file", "site") else key), parts[2]
     return "", message
 
@@ -248,25 +251,7 @@ def _stress_index(document, label):
     return "stress_rule" if "stress_rule" in document else "stress_cases"
 
 
-def _operations_field(document, message):
-    """operations.<field> for a message about the [operations] table, or None."""
-    if "operations" not in document:
-        return None
-    from .programme import FIELDS, operation_field
-
-    if message.startswith("operations"):
-        name = operation_field(message.removeprefix("operations: "))
-        return f"operations.{name}" if name else "operations"
-    for name, _, _ in FIELDS:
-        if re.search(rf"(?<![A-Za-z_]){re.escape(name)}(?![A-Za-z_])", message):
-            return f"operations.{name}"
-    return None
-
-
 def _validation_field(document, message):
-    field = _operations_field(document, message)
-    if field is not None:
-        return field
     match = re.match(r"^(\w+) = ", message)
     if match:
         name = match.group(1)
@@ -390,21 +375,35 @@ def check(document):
     result["missing"] = [
         {"input": name, "basis": basis} for name, basis in site.missing()
     ]
+    # validate_site reports operations messages as "operations.<field>: ...";
+    # those are taken from the model's records below, with their field names.
+    own = lambda message: not str(message).startswith("operations.")
     try:
-        warnings = validate_site(site)
+        warnings = [w for w in validate_site(site) if own(w)]
     except ValueError as error:
         for part in _split_validation(site.name, str(error)):
-            result["errors"].append(
-                {"field": _validation_field(document, part), "message": part}
-            )
+            if own(part):
+                result["errors"].append(
+                    {"field": _validation_field(document, part), "message": part}
+                )
         warnings = []
     except (TypeError, IndexError, KeyError) as error:
         result["errors"].append({"field": "", "message": str(error)})
         warnings = []
+    operation_warnings = []
+    if getattr(site, "operations", None) is not None:
+        from borethm import validate_operations
+
+        for record in validate_operations(site.operations):
+            entry = {"field": f"operations.{record['field']}", "message": record["message"]}
+            if record["level"] == "error":
+                result["errors"].append(entry)
+            else:
+                operation_warnings.append(entry)
     result["warnings"] = [
         {"field": _validation_field(document, str(w)), "message": str(w)}
         for w in warnings
-    ]
+    ] + operation_warnings
     result["valid"] = not result["errors"]
     try:
         result["profiles"] = _profiles(site)

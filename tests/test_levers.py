@@ -47,13 +47,15 @@ def store(tmp_path):
 # ---------------------------------------------------------------- base values
 def test_base_values_come_from_the_saved_run():
     stated = L.base_values(fixture("stated"))
-    assert stated["flow"]["value"] == 20.0 and stated["flow"]["unit"] == "kg/s"
+    assert stated["mass_flow"]["value"] == 20.0 and stated["mass_flow"]["quantity"] == "mass_flow"
+    assert stated["volume_flow"]["quantity"] == "volume_flow"
+    assert stated["volume_flow"]["value"] == pytest.approx(20.0 / 998.2012723757281)
     assert stated["tool_limit"]["value"] == 90.0
     assert stated["insulated_length"]["value"] == 1000.0
     assert stated["insulated_length"]["pipe"].startswith("vacuum-insulated")
     assert all(entry["available"] for entry in stated.values())
     go = L.base_values(fixture("go"))
-    assert go["flow"]["value"] == 30 and go["connection"]["value"] == 6.33
+    assert go["mass_flow"]["value"] == 30 and go["connection"]["value"] == 6.33
     assert go["inlet_temperature"]["value"] == 40.0
     assert not go["insulated_length"]["available"]
     assert "custom string" in go["insulated_length"]["reason"]
@@ -63,7 +65,7 @@ def test_base_values_without_the_interface_result():
     earlier = json.loads((FIXTURES / "assessment-go.json").read_text())["manifest"]
     values = L.base_values(earlier)
     assert not values["tool_limit"]["available"]
-    assert "without the operations interface" in values["tool_limit"]["reason"]
+    assert "without the settled operations interface" in values["tool_limit"]["reason"]
 
 
 # ---------------------------------------------------------------- planning
@@ -73,10 +75,10 @@ def request(mode, *levers):
 
 def test_one_at_a_time_cases_change_one_input_each():
     base = fixture("stated")
-    plan = L.plan(request("one_at_a_time", ("flow", [15.0, 25.0, 30.0]), ("insulated_length", [500.0, 2000.0]),
+    plan = L.plan(request("one_at_a_time", ("mass_flow", [15.0, 25.0, 30.0]), ("insulated_length", [500.0, 2000.0]),
                           ("drilling_fluid", [1050.0, 1100.0]), ("inlet_temperature", [20.0, 30.0])), base)
     assert plan["case_count"] == 9
-    assert [list(c["levers"]) for c in plan["cases"]] == [["flow"]] * 3 + [["insulated_length"]] * 2 + [["drilling_fluid"]] * 2 + [["inlet_temperature"]] * 2
+    assert [list(c["levers"]) for c in plan["cases"]] == [["mass_flow"]] * 3 + [["insulated_length"]] * 2 + [["drilling_fluid"]] * 2 + [["inlet_temperature"]] * 2
     base_site = tomllib.loads(base["resolved_scenario"]["definition"]["site"]["content"])
     base_string = base["resolved_scenario"]["definition"]["programme"]["string"]
     for case in plan["cases"]:
@@ -84,8 +86,8 @@ def test_one_at_a_time_cases_change_one_input_each():
         site = tomllib.loads(scenario["definition"]["site"]["content"])
         string = scenario["definition"]["programme"]["string"]
         (lever, value), = case["levers"].items()
-        expected_flow = value if lever == "flow" else 20.0
-        assert site["operations"]["flow"] == expected_flow
+        expected_flow = value if lever == "mass_flow" else 20.0
+        assert site["operations"]["mass_flow_kg_s"] == expected_flow
         assert site["operations"]["tool_limit_C"] == 90.0
         assert site.get("T_inj") == (value if lever == "inlet_temperature" else base_site["T_inj"])
         assert site["operations"].get("drilling_fluid_kg_m3") == (value if lever == "drilling_fluid" else None)
@@ -99,7 +101,7 @@ def test_one_at_a_time_cases_change_one_input_each():
 
 
 def test_grid_cases_are_every_pair():
-    plan = L.plan(request("grid", ("flow", [15.0, 25.0, 30.0]), ("insulated_length", [500.0, 1000.0, 2000.0])), fixture("stated"))
+    plan = L.plan(request("grid", ("mass_flow", [15.0, 25.0, 30.0]), ("insulated_length", [500.0, 1000.0, 2000.0])), fixture("stated"))
     assert plan["case_count"] == 9
     assert [tuple(c["levers"].values()) for c in plan["cases"]] == [
         (f, l) for f in (15.0, 25.0, 30.0) for l in (500.0, 1000.0, 2000.0)]
@@ -121,11 +123,11 @@ def test_pipe_lever_on_a_custom_string_changes_the_top_section():
 
 @pytest.mark.parametrize("mode,levers,message", [
     ("one_at_a_time", [], "at least one lever"),
-    ("one_at_a_time", [("flow", [20.0])], "2 to 5 values"),
-    ("one_at_a_time", [("flow", [10.0, 15.0, 20.0, 25.0, 30.0, 35.0])], "2 to 5 values"),
-    ("one_at_a_time", [("flow", [20.0, 20.0])], "repeat"),
-    ("grid", [("flow", [20.0, 25.0])], "exactly two levers"),
-    ("grid", [("flow", [10.0, 15.0, 20.0, 25.0, 30.0]), ("tool_limit", [100.0, 120.0, 140.0, 160.0, 180.0]),
+    ("one_at_a_time", [("mass_flow", [20.0])], "2 to 5 values"),
+    ("one_at_a_time", [("mass_flow", [10.0, 15.0, 20.0, 25.0, 30.0, 35.0])], "2 to 5 values"),
+    ("one_at_a_time", [("mass_flow", [20.0, 20.0])], "repeat"),
+    ("grid", [("mass_flow", [20.0, 25.0])], "exactly two levers"),
+    ("grid", [("mass_flow", [10.0, 15.0, 20.0, 25.0, 30.0]), ("tool_limit", [100.0, 120.0, 140.0, 160.0, 180.0]),
               ], None),
     ("one_at_a_time", [("speed", [1.0, 2.0])], "Unknown lever"),
     ("one_at_a_time", [("insulated_length", [0.0, 500.0])], "must lie between"),
@@ -139,7 +141,7 @@ def test_plan_limits(mode, levers, message):
 
 
 def test_more_than_25_cases_are_refused():
-    levers = [(k, v) for k, v in (("flow", [10.0, 15.0, 20.0, 25.0, 30.0]), ("tool_limit", [100.0, 110.0, 120.0, 130.0, 140.0]),
+    levers = [(k, v) for k, v in (("mass_flow", [10.0, 15.0, 20.0, 25.0, 30.0]), ("tool_limit", [100.0, 110.0, 120.0, 130.0, 140.0]),
                                   ("connection", [2.0, 4.0, 6.0, 8.0, 10.0]), ("stage_minutes", [5.0, 10.0, 15.0, 20.0, 25.0]),
                                   ("inlet_temperature", [20.0, 25.0, 30.0, 35.0, 45.0]), ("drilling_fluid", [1010.0, 1020.0]))]
     with pytest.raises(CalculationError, match="27 cases exceed the limit of 25"):
@@ -154,9 +156,9 @@ def test_a_case_the_model_rejects_stops_the_plan():
 # ---------------------------------------------------------------- queue and cancellation
 def test_cases_queue_in_plan_order_and_cancellation_keeps_finished_cases(store):
     base = put_completed(store, fixture("stated"))
-    sid, created = L.submit(store, request("one_at_a_time", ("flow", [15.0, 25.0, 30.0])), base, "key-1")
+    sid, created = L.submit(store, request("one_at_a_time", ("mass_flow", [15.0, 25.0, 30.0])), base, "key-1")
     assert created
-    assert L.submit(store, request("one_at_a_time", ("flow", [15.0, 25.0, 30.0])), base, "key-1") == (sid, False)
+    assert L.submit(store, request("one_at_a_time", ("mass_flow", [15.0, 25.0, 30.0])), base, "key-1") == (sid, False)
     study = L.read(store, sid)
     runs = [c["run_id"] for c in study["cases"]]
     assert [c["state"] for c in study["cases"]] == ["queued"] * 3
@@ -202,7 +204,7 @@ def shifted(manifest, tool=0.0, pump=0.0, verdict=None):
 def test_table_and_tornado_use_saved_values_only(store):
     base_manifest = fixture("stated")
     outcomes = [shifted(base_manifest, tool=-5.0), shifted(base_manifest, tool=7.0, pump=-1e5), shifted(base_manifest, pump=2e5)]
-    base, sid = finished_study(store, "one_at_a_time", [("flow", [15.0, 25.0]), ("tool_limit", [95.0, 150.0])], outcomes)
+    base, sid = finished_study(store, "one_at_a_time", [("mass_flow", [15.0, 25.0]), ("tool_limit", [95.0, 150.0])], outcomes)
     study = L.read(store, sid)
     base_outcome = L.outcome(base_manifest)
     assert study["base_outcome"] == base_outcome
@@ -213,7 +215,7 @@ def test_table_and_tornado_use_saved_values_only(store):
     assert first["change_from_base"]["tool_margin_C"] == pytest.approx(-5.0)
     assert first["change_from_base"]["drilling_window_width_kg_m3"] == 0.0
     assert study["cases"][3]["state"] == "queued" and study["cases"][3]["outcome"] is None
-    flow = next(r for r in study["tornado"]["tool_margin_C"]["rows"] if r["lever"] == "flow")
+    flow = next(r for r in study["tornado"]["tool_margin_C"]["rows"] if r["lever"] == "mass_flow")
     assert (flow["low"], flow["high"], flow["computed"]) == (pytest.approx(-5.0), pytest.approx(7.0), 2)
     limit = next(r for r in study["tornado"]["pump_margin_Pa"]["rows"] if r["lever"] == "tool_limit")
     assert (limit["low"], limit["high"], limit["computed"]) == (pytest.approx(2e5), pytest.approx(2e5), 1)
@@ -225,7 +227,7 @@ def test_table_and_tornado_use_saved_values_only(store):
 def test_grid_cells_carry_verdict_and_constraint(store):
     base_manifest = fixture("stated")
     outcomes = [shifted(base_manifest, verdict=v) for v in ("GO", "CONDITIONAL", "NO-GO", "GO")]
-    _, sid = finished_study(store, "grid", [("flow", [15.0, 25.0]), ("insulated_length", [500.0, 2000.0])], outcomes)
+    _, sid = finished_study(store, "grid", [("mass_flow", [15.0, 25.0]), ("insulated_length", [500.0, 2000.0])], outcomes)
     study = L.read(store, sid)
     grid = study["grid"]
     assert [[c["verdict"] for c in row] for row in grid["cells"]] == [["GO", "CONDITIONAL"], ["NO-GO", "GO"]]
@@ -236,7 +238,7 @@ def test_grid_cells_carry_verdict_and_constraint(store):
 
 def test_report_and_archive_are_deterministic(store):
     base_manifest = fixture("stated")
-    _, sid = finished_study(store, "one_at_a_time", [("flow", [15.0, 25.0])], [shifted(base_manifest, tool=-1.0), shifted(base_manifest)])
+    _, sid = finished_study(store, "one_at_a_time", [("mass_flow", [15.0, 25.0])], [shifted(base_manifest, tool=-1.0), shifted(base_manifest)])
     study = L.read(store, sid)
     first, second = L.report_html(study, "oilfield"), L.report_html(L.read(store, sid), "oilfield")
     assert first == second
@@ -253,3 +255,38 @@ def test_report_and_archive_are_deterministic(store):
     assert a == b
     names = zipfile.ZipFile(io.BytesIO(a)).namelist()
     assert names == sorted(["README.md", "SHA256SUMS.json", "case-1.zip", "case-2.zip", "frozen-plan.json", "report.html", "study.json"])
+
+
+def test_a_volume_flow_lever_states_litres_per_second_and_replaces_the_mass_flow():
+    base = fixture("stated")
+    plan = L.plan(request("one_at_a_time", ("volume_flow", [0.025, 0.0315450982])), base)
+    for case, litres in zip(plan["cases"], (25.0, 31.5450982)):
+        operations = tomllib.loads(case["scenario"]["definition"]["site"]["content"])["operations"]
+        assert operations["volume_flow_L_s"] == litres and "mass_flow_kg_s" not in operations
+        assert "mass_flow_kg_s" not in operations.get("sources", {})
+    assert L._label_value("volume_flow", 0.0315450982, "oilfield") == "500 gpm"
+    assert L._label_value("mass_flow", 20.0, "oilfield") == "44.1 lb/s"
+
+
+def test_string_levers_change_a_programme_held_in_the_site_file():
+    from borethm_workbench.sites import document_from_toml, document_to_toml
+
+    base = copy.deepcopy(fixture("go"))
+    document = document_from_toml(base["resolved_scenario"]["definition"]["site"]["content"])
+    document["programme"] = {"surface": {"case": 5}, "segments": [
+        {"length": 1000.0, "pipe": "vacuum-insulated (sensitivity)"},
+        {"length": 2400.0, "pipe": "TK-Drakon coated"},
+        {"length": base["assessment"]["z_m"] - 3400.0, "name": "collar", "bore_diameter": 0.0714,
+         "outer_diameter": 0.1714, "conductivity": 45.0, "source": "test"}]}
+    base["resolved_scenario"]["definition"]["site"]["content"] = document_to_toml(document)
+    values = L.base_values(base)
+    assert values["insulated_length"]["available"] and values["insulated_length"]["value"] == 1000.0
+    assert values["insulated_length"]["pipe"] == "vacuum-insulated (sensitivity)"
+    case = L._apply(base["resolved_scenario"], "insulated_length", 2000.0)
+    segments = tomllib.loads(case["definition"]["site"]["content"])["programme"]["segments"]
+    assert [s["length"] for s in segments[:2]] == [2000.0, 1400.0]
+    case = L._apply(base["resolved_scenario"], "pipe", "conventional")
+    segments = tomllib.loads(case["definition"]["site"]["content"])["programme"]["segments"]
+    assert segments[0] == {"length": 1000.0, "pipe": "conventional"}
+    assert "programme" not in case["definition"]
+

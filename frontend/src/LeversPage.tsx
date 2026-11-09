@@ -3,7 +3,7 @@ import {api} from './apiClient';
 import {NumberInput, UnitInput, useFormat} from './UnitsContext';
 import type {Quantity} from './units';
 
-type Lever = {key: string; label: string; quantity: string | null; kind: 'number' | 'pipe'; value: number | string | null; unit?: string | null; pipe?: string | null; available: boolean; reason: string | null};
+type Lever = {key: string; label: string; quantity: string | null; kind: 'number' | 'pipe'; value: number | string | null; pipe?: string | null; available: boolean; reason: string | null};
 type Options = {levers: Lever[]; interpretation: string; max_cases: number; base_duration_s: number | null};
 type Outcome = {verdict: string | null; controlling_constraint: string | null; tool_margin_C: number | null; tool_margin_state: string | null; drilling_window_width_kg_m3: number | null; trip_window_width_kg_m3: number | null; pump_margin_Pa: number | null; pump_margin_state: string | null; flow: number | null; flow_unit: string | null};
 type Case = {index: number; run_id: string; levers: Record<string, number | string>; state: string; outcome: Outcome | null; change_from_base: Record<string, number | null>; duration_s: number | null; failure: {code: string; message: string} | null};
@@ -19,7 +19,7 @@ const minutes = (s: number | null | undefined) => s == null ? 'unknown' : s < 90
 function leverValue(lever: Lever | undefined, value: number | string | null | undefined, format: (v: number, q: Quantity) => string) {
   if (value == null) return 'Not returned';
   if (!lever || lever.kind === 'pipe' || typeof value === 'string') return String(value);
-  if (!lever.quantity) return `${value} ${lever.unit ?? ''}`.trim();
+  if (!lever.quantity) return String(value);
   return format(value, lever.quantity as Quantity);
 }
 
