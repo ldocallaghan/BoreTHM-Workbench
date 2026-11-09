@@ -73,3 +73,22 @@ export function useFormat() {
     symbol: (quantity: Quantity) => symbol(quantity, system),
   };
 }
+
+// A number box without a unit conversion. Like UnitInput it keeps the typed
+// text while editing, so the box can be cleared and retyped; only a finite
+// number is passed on.
+export function NumberInput({value, change, ariaLabel, step = 'any', integer = false}: {value: number | null | undefined; change: (value: number) => void; ariaLabel: string; step?: number | 'any'; integer?: boolean}) {
+  const shown = value == null ? '' : String(value);
+  const [text, setText] = useState(shown);
+  const focused = useRef(false);
+  useEffect(() => { if (!focused.current) setText(shown); }, [shown]);
+  return <input type="number" step={step} aria-label={ariaLabel} value={text}
+    onFocus={() => { focused.current = true; }}
+    onBlur={() => { focused.current = false; setText(shown); }}
+    onChange={e => {
+      setText(e.currentTarget.value);
+      const next = e.currentTarget.valueAsNumber;
+      if (Number.isFinite(next)) change(integer ? Math.round(next) : next);
+    }} />;
+}
+

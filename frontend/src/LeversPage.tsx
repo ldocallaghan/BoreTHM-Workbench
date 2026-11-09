@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {api} from './apiClient';
-import {UnitInput, useFormat} from './UnitsContext';
+import {NumberInput, UnitInput, useFormat} from './UnitsContext';
 import type {Quantity} from './units';
 
 type Lever = {key: string; label: string; quantity: string | null; kind: 'number' | 'pipe'; value: number | string | null; unit?: string | null; pipe?: string | null; available: boolean; reason: string | null};
@@ -30,7 +30,7 @@ function ValueInputs({lever, choice, change, pipes}: {lever: Lever; choice: Choi
       ? <select aria-label={`${lever.label} value ${i + 1}`} value={String(v ?? '')} onChange={e => set(i, e.target.value)}><option value="">Choose</option>{pipes.map(p => <option key={p} value={p}>{p}</option>)}</select>
       : lever.quantity
         ? <UnitInput label={`${lever.label} value ${i + 1}`} value={v as number | null} quantity={lever.quantity as Quantity} change={x => set(i, x)} />
-        : <input aria-label={`${lever.label} value ${i + 1}`} type="number" step="any" value={v == null ? '' : String(v)} onChange={e => Number.isFinite(e.target.valueAsNumber) && set(i, e.target.valueAsNumber)} />}
+        : <NumberInput ariaLabel={`${lever.label} value ${i + 1}`} value={v as number | null} change={x => set(i, x)} />}
     <button className="text-button" disabled={choice.values.length <= 2} onClick={() => change({...choice, values: choice.values.filter((_, j) => j !== i)})} aria-label={`Remove ${lever.label} value ${i + 1}`}>Remove</button>
   </span>)}
     <button className="text-button" disabled={choice.values.length >= 5} onClick={() => change({...choice, values: [...choice.values, null]})}>Add a value</button>

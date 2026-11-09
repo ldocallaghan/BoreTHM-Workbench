@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 import type {components} from './api.generated';
 import {api} from './apiClient';
-import {UnitInput, useFormat} from './UnitsContext';
+import {NumberInput, UnitInput, useFormat} from './UnitsContext';
 import {WellView} from './WellView';
 import type {Quantity} from './units';
 import type {SiteCheck, SiteDocument} from './SiteEditor';
@@ -71,7 +71,7 @@ function SectionRow({segment, index, count, pipes, change, remove, move, split}:
     <td>{segment.pipe.hydraulic_joint ? `${segment.pipe.hydraulic_joint.kind} joints` : 'No joints'}</td>
     <td><select aria-label={`Section ${index + 1} tool`} value={segment.tool_class ?? ''} onChange={e => change(e.target.value ? {...segment, tool_class: e.target.value as Segment['tool_class'], collar_in: segment.collar_in ?? 6.75} : {...segment, tool_class: null, collar_in: null})}>
       <option value="">None</option>{TOOL_CLASSES.map(t => <option key={t} value={t}>{t.replace('_', ' ')}</option>)}</select>
-      {segment.tool_class && <input aria-label={`Section ${index + 1} collar size (in)`} type="number" step="any" value={segment.collar_in ?? ''} onChange={e => Number.isFinite(e.target.valueAsNumber) && change({...segment, collar_in: e.target.valueAsNumber})} />}</td>
+      {segment.tool_class && <NumberInput ariaLabel={`Section ${index + 1} collar size (in)`} value={segment.collar_in} change={v => change({...segment, collar_in: v})} />}</td>
     <td className="row-actions">
       <button className="text-button" disabled={index === 0} onClick={() => move(-1)} aria-label={`Move section ${index + 1} up`}>Up</button>
       <button className="text-button" disabled={index === count - 1} onClick={() => move(1)} aria-label={`Move section ${index + 1} down`}>Down</button>
@@ -119,7 +119,7 @@ function HydraulicProgramme({scenario, draft, siteHasProgramme, pipes, check, ad
           const v = e.target.value;
           set({...programme, surface_loss: v === 'none' ? {kind: 'none'} : v === 'coefficient' ? {kind: 'coefficient', coefficient: 0, unit_convention: 'psi_ppg_US_gpm', source: 'User-supplied surface coefficient'} : {kind: 'api_case', case: Number(v.split('-')[1])}});
         }}>{[1, 2, 3, 4, 5].map(c => <option key={c} value={`case-${c}`}>API RP 13D surface case {c}</option>)}<option value="coefficient">Stated coefficient</option><option value="none">No surface loss</option></select></label>
-      {surface.kind === 'coefficient' && <label className="field"><span className="field-label">Surface coefficient (psi, ppg and US gal/min convention)</span><input type="number" step="any" aria-label="Surface coefficient" value={surface.coefficient} onChange={e => Number.isFinite(e.target.valueAsNumber) && set({...programme, surface_loss: {...surface, coefficient: e.target.valueAsNumber}})} /></label>}
+      {surface.kind === 'coefficient' && <label className="field"><span className="field-label">Surface coefficient (psi, ppg and US gal/min convention)</span><NumberInput ariaLabel="Surface coefficient" value={surface.coefficient} change={v => set({...programme, surface_loss: {...surface, coefficient: v}})} /></label>}
       <label className="field"><span className="field-label">Changes between sections</span><select aria-label="Section transitions" value={programme.transitions} onChange={e => set({...programme, transitions: e.target.value as Programme['transitions']})}><option value="abrupt">Abrupt</option><option value="gradual">Gradual</option></select></label>
       {programme.kind === 'reference' && <>
         <label className="choice"><input type="checkbox" checked={programme.joints} onChange={e => set({...programme, joints: e.target.checked})} />Tool joints on the reference pipe</label>
@@ -127,7 +127,7 @@ function HydraulicProgramme({scenario, draft, siteHasProgramme, pipes, check, ad
         <div className="field"><span className="field-label">Tools in the collar section</span>
           {programme.bha_tools.map((t, i) => <div className="number-row" key={i}>
             <select aria-label={`Collar tool ${i + 1}`} value={t.tool_class} onChange={e => set({...programme, bha_tools: programme.bha_tools.map((x, j) => j === i ? {...x, tool_class: e.target.value as typeof t.tool_class} : x)})}>{TOOL_CLASSES.map(c => <option key={c} value={c}>{c.replace('_', ' ')}</option>)}</select>
-            <input aria-label={`Collar tool ${i + 1} size (in)`} type="number" step="any" value={t.collar_in} onChange={e => Number.isFinite(e.target.valueAsNumber) && set({...programme, bha_tools: programme.bha_tools.map((x, j) => j === i ? {...x, collar_in: e.target.valueAsNumber} : x)})} /><span>in</span>
+            <NumberInput ariaLabel={`Collar tool ${i + 1} size (in)`} value={t.collar_in} change={v => set({...programme, bha_tools: programme.bha_tools.map((x, j) => j === i ? {...x, collar_in: v} : x)})} /><span>in</span>
             <button className="text-button" onClick={() => set({...programme, bha_tools: programme.bha_tools.filter((_, j) => j !== i)})}>Remove</button></div>)}
           <button className="text-button" onClick={() => set({...programme, bha_tools: [...programme.bha_tools, {tool_class: 'rotary_steerable', collar_in: 6.75}]})}>Add a tool</button></div>
       </>}
@@ -175,7 +175,7 @@ function OperationInput({row, value, change, pipeNames}: {row: FieldRow; value: 
       {name in ratings && <UnitInput label={`Coating rating for ${name}`} value={ratings[name]} quantity="temperature" change={v => change({...ratings, [name]: v})} />}</div>)}<small>Pipes not ticked have no rating. {Object.keys(ratings).length ? '' : 'None ticked: no pipe has a rating.'}</small></div>;
   }
   if (UNIT_QUANTITIES.has(row.quantity)) return <UnitInput label={row.label} value={value as number} quantity={row.quantity as Quantity} change={change} />;
-  return <><input type="number" step={row.quantity === 'count' ? 1 : 'any'} aria-label={row.label} value={value as number ?? ''} onChange={e => Number.isFinite(e.target.valueAsNumber) && change(row.quantity === 'count' ? Math.round(e.target.valueAsNumber) : e.target.valueAsNumber)} />{row.unit_note && <small>{row.unit_note}</small>}</>;
+  return <><NumberInput ariaLabel={row.label} step={row.quantity === 'count' ? 1 : 'any'} integer={row.quantity === 'count'} value={value as number | null} change={change} />{row.unit_note && <small>{row.unit_note}</small>}</>;
 }
 
 function initial(row: FieldRow, defaults: Record<string, unknown>): unknown {
