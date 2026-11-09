@@ -2,6 +2,14 @@
 
 ## 0.3.0.dev0
 
+With a BoreTHM that provides `Operations`, a site assessment has a Programme page. It states the hydraulic programme: the model's reference programme with options, or a custom string from surface to bit with the model's named pipes or user layers, joints and tools, hole and casing intervals and surface losses, drawn in the well view. It also states operating choices, one row per choice: each is either chosen by the model, with its rule and default from the installed model, or stated in the chosen units with a basis and a source, checked by the model's validator with warnings beside the row. The operating choices are written to the site file's `[operations]` table; the programme and operations import from and export to a site file. A site file without these tables, and a scenario without a programme, give the assessment and input hash they gave before. `/api/v1/capabilities` reports the interface; without it the new pages are hidden with a note.
+
+The assessment results page and report take window widths, the bounds against depth with the mechanism that sets each, the pump limit and margins, and tool and coating margins and pass flags from the model's result keys, including a pass flag for the unstaged run-in. The application no longer computes widths or margins. The page lists the stated values and whether one of them is used in the check behind the controlling constraint.
+
+A Design levers page runs computed assessments from an assessed site and programme: one lever at a time with 2 to 5 values, or a grid of two levers, up to 25 cases, queued one at a time with an estimate, progress and cancellation that keeps finished cases. It shows a table of verdicts, controlling constraints, margins and window widths, a tornado chart of the change of each margin from the base run, and a grid coloured by verdict. Each case is a saved run. A study exports as one archive and one HTML report.
+
+Display units add velocity, rate of penetration and durations in minutes and hours.
+
 Entry and display use SI or oilfield units throughout: editors, results, plots, tables, CSV downloads and reports. The choice is an application setting. Scenarios, archives, contracts and the model hold SI values, and a scenario's hash does not change with the unit choice. One module holds the unit table and its exact factors; `borethm-workbench contracts` writes it to `contracts/units.json` for the frontend.
 
 A site editor creates BoreTHM site files from a form: target, temperature profile, stress cases or the transition rule, strength cases, rock properties and provenance. It starts from a blank form or a built-in site, checks every change with the model's `validate_site`, shows each warning beside its field, reports the evidence tier, and imports and exports TOML. Circulation scenarios edit the formation temperature profile in a table with a plot.
