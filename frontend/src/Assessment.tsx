@@ -25,6 +25,12 @@ type View = 'site' | 'programme' | 'results' | 'details' | 'levers';
 type Interface = {available: boolean; message: string | null};
 const finished = new Set(['completed', 'failed', 'cancelled', 'timed_out']);
 const fmt = (n: number | null | undefined, decimals = 2) => n == null ? 'Unavailable' : n.toLocaleString('en-GB', { maximumFractionDigits: decimals, minimumFractionDigits: decimals });
+const PROGRAMME_LABEL: Record<string, string> = {
+  model: 'Programme chosen by the model',
+  reference: 'Reference programme with stated options',
+  custom: 'Custom string stated on the Programme page',
+};
+
 const identity = (value: unknown): string => {
   const normal = (x: unknown): unknown => Array.isArray(x) ? x.map(normal) : x && typeof x === 'object' ? Object.fromEntries(Object.entries(x).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => [k, normal(v)])) : x;
   return JSON.stringify(normal(value));
@@ -74,11 +80,14 @@ export function Assessment() {
   const [programmeInterface, setProgrammeInterface] = useState<Interface | null>(null);
   const [coreVersion, setCoreVersion] = useState('');
   const frozen = useRef('');
+  const frozenRun = useRef('');
   const active = useRef('');
   const draft = (next: AssessmentScenario) => { scenarioRef.current = next; setScenario(next); };
   const refresh = () => api<{ items: Job[] }>('/runs?limit=100').then(r => setHistory(r.items.filter(x => x.mode === 'site_assessment')));
   const busy = submitting || !!job && !finished.has(job.state);
-  const stale = !!manifest && identity(manifest.resolved_scenario) !== identity(scenario);
+  // A run started here is compared with the draft as it was sent: the
+  // resolved scenario adds the model's defaults that the forms leave out.
+  const stale = !!manifest && identity(scenario) !== (manifest.run_id === frozenRun.current ? frozen.current : identity(manifest.resolved_scenario));
   const siteReady = !siteEdited || !!siteCheck?.valid;
   const loadSite = async (content: string) => {
     try { const value = await api<{document: SiteDocument}>('/sites/import', {method: 'POST', body: JSON.stringify({toml: content})}); setSite(value.document); setSiteEdited(false); }
@@ -107,7 +116,7 @@ export function Assessment() {
         const stored = localStorage.getItem('borethm-assessment-active-v1');
         if (stored) {
           const remembered = JSON.parse(stored);
-          active.current = remembered.id; frozen.current = remembered.snapshot;
+          active.current = remembered.id; frozen.current = remembered.snapshot; frozenRun.current = remembered.id;
           const record = await api<Job>('/runs/' + remembered.id); setJob(record);
           if (record.state === 'completed' && record.manifest) { setManifest(record.manifest); setPage('results'); }
         }
@@ -175,7 +184,7 @@ export function Assessment() {
     try {
       frozen.current = identity(scenario);
       const next = await api<Job>('/runs', { method: 'POST', headers: { 'Idempotency-Key': crypto.randomUUID() }, body: JSON.stringify({ scenario }) });
-      active.current = next.id; setJob(next);
+      active.current = next.id; frozenRun.current = next.id; setJob(next);
       localStorage.setItem('borethm-assessment-active-v1', JSON.stringify({ id: next.id, snapshot: frozen.current }));
     } catch (e) { setError((e as Error).message); }
     finally { setSubmitting(false); }
@@ -194,6 +203,8 @@ export function Assessment() {
   const editSource = (content: string) => { if (scenario) { draft({ ...scenario, definition: { ...scenario.definition, site: { ...scenario.definition.site, content } } }); void loadSite(content); } };
   const openDetails = (section: DetailSection) => { setPage('details'); if (section === 'qualifications') setShowWarnings(true); else setView(section); };
   if (!scenario) return <div className="assessment-loading"><FlaskConical size={28} /><p>{error || 'Loading the site assessment…'}</p></div>;
+  const table = site?.programme as {segments?: unknown} | undefined;
+  const programmeKind = scenario.definition.programme?.kind ?? (table ? (table.segments ? 'custom' : 'reference') : 'model');
   const report = manifest?.assessment;
   const programme = report?.programme;
   const status = report?.status.label;
@@ -205,7 +216,7 @@ export function Assessment() {
 
   return <div className="assessment-workspace">
     <aside className="controls assessment-controls"><div className="control-heading"><span><ShieldCheck size={16} />Site assessment</span></div><div className="assessment-inputs"><PhysicsChoice model={scenario.model} message={scenario.metadata?.schema_loading} change={physics=>draft({...scenario,model:{...scenario.model,physics},metadata:{...scenario.metadata,schema_loading:null}})}/><div className="mode-box"><span className="eyebrow">WHAT THE ASSESSMENT CHECKS</span><div><FlaskConical size={16} /><strong>Drilling programme for this site</strong></div><p>{programmeInterface?.available ? 'The model chooses the pipe, flow and fluid unless the Programme page states them, then checks circulation, connections, trips, the mud-weight window and equipment ratings.' : 'The model chooses the pipe, flow and fluid, then checks circulation, connections, trips, the mud-weight window and equipment ratings.'}</p></div><label className="field"><span className="field-label">Site</span><div className="frozen-site-source">{(site?.name as string) || scenario.definition.site.source}</div></label><div className="inline-note"><span>Values on the circulation page are not used here.</span></div><label className="field"><span className="field-label">Thermal stress coupling</span><select value={scenario.definition.options.coupling} onChange={e => draft({ ...scenario, definition: { ...scenario.definition, options: { ...scenario.definition.options, coupling: e.target.value as 'evaluator_default' | 'coupled' | 'uncoupled' } } })}><option value="evaluator_default">Model default</option><option value="coupled">Coupled</option><option value="uncoupled">Uncoupled</option></select></label><div className="context-row"><span>BoreTHM</span><strong>{coreVersion || '1.8'}</strong></div><div className="context-row"><span>Calculation mode</span><strong>v1.3.4</strong></div><p className="small muted">The calculation mode is named separately from the BoreTHM version.</p>{warnings.length > 0 && <div className="input-qualifications"><span>{warnings.length} site input warnings</span>{warnings.map((w,i) => <p key={i}>{w.message}</p>)}</div>}<div className="assessment-resource-note">One assessment runs at a time, with a 30-minute limit. Progress is not reported during the calculation. Cancelling stops it.</div></div><div className="control-footer"><button className="run-button" title={runDisabledReason} disabled={!busy && (checking || !!validation || !siteReady)} onClick={() => busy && job ? void api(`/runs/${job.id}/cancel`, { method:'POST' }).then(() => setStage('Cancellation requested')) : void run()}>{busy ? <Square size={14} /> : <Play size={14} fill="currentColor" />}{busy ? 'Cancel assessment' : 'Run assessment'}{busy && <LoaderCircle size={15} className="spin" />}</button><div className="control-footer-meta"><span>{checking ? 'Checking site…' : runDisabledReason || 'Site inputs accepted'}</span></div></div></aside>
-    <main className="main assessment-main"><div className="breadcrumb">Workspace <span>/</span> Site assessment</div><div className="page-heading"><div><div className="eyebrow"><span className="tiny-line" />SITE ASSESSMENT</div><h1>{report?.site.name || (site?.name as string) || scenario.title}</h1><div className="page-subtitle"><span>Programme chosen by the model</span><span>·</span><span>Surface densities at 20 °C</span></div></div><div className="heading-actions">{reportHref && <a className="secondary-button" href={reportHref} download><ArrowDownToLine size={14} />Export report</a>}{manifest && !manifest.imported && <a className="secondary-button" href={`/api/v1/runs/${manifest.run_id}/export`}><ArrowDownToLine size={14} />Export run archive</a>}</div></div>
+    <main className="main assessment-main"><div className="breadcrumb">Workspace <span>/</span> Site assessment</div><div className="page-heading"><div><div className="eyebrow"><span className="tiny-line" />SITE ASSESSMENT</div><h1>{report?.site.name || (site?.name as string) || scenario.title}</h1><div className="page-subtitle"><span>{PROGRAMME_LABEL[programmeKind]}</span><span>·</span><span>Surface densities at 20 °C</span></div></div><div className="heading-actions">{reportHref && <a className="secondary-button" href={reportHref} download><ArrowDownToLine size={14} />Export report</a>}{manifest && !manifest.imported && <a className="secondary-button" href={`/api/v1/runs/${manifest.run_id}/export`}><ArrowDownToLine size={14} />Export run archive</a>}</div></div>
       {(validation || error) && <div className="error" role="alert"><TriangleAlert size={17} /><pre>{validation || error}</pre><button aria-label="Dismiss assessment error" onClick={() => setError('')}><X size={14} /></button></div>}
       {notice && <div className="notice">{notice}</div>}
       <div className="result-status"><div><span className={`status-light ${busy ? 'working' : manifest ? 'solved' : ''}`} /><strong>{busy ? stage || job?.state : stale ? 'Result is for earlier inputs' : manifest ? 'Assessment complete' : 'No assessment yet'}</strong>{manifest && <span>{fmt(manifest.wall_clock_duration_s)} s</span>}</div>{manifest && <button className="qualification-badge" onClick={() => setShowWarnings(!showWarnings)}><TriangleAlert size={12} />{manifest.warnings.length} qualifications<ChevronDown size={12} /></button>}</div>
