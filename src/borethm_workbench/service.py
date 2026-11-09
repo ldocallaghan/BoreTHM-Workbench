@@ -39,6 +39,7 @@ from .contracts import (
     parse_scenario_json,
 )
 from .jobs import Coordinator
+from .programme import capability as programme_capability
 from .contracts import (
     ErrorEnvelope,
     JobEvent,
@@ -230,6 +231,7 @@ def create_app(data_dir=None, start_jobs=True, deadline=30, policy=None):
                 if not app.state.engine["history_capabilities"][mode]
             },
             fluids=["iapws_water", "barite_mud", "constant_properties"],
+            programme_interface=programme_capability(),
             deployment="local_single_user",
             release_status="Local application; results have not been compared with field measurements",
             enabled={
@@ -250,6 +252,9 @@ def create_app(data_dir=None, start_jobs=True, deadline=30, policy=None):
                 ]["scheduled_interventions"],
                 "warm_start": True,
                 "continuation": True,
+                "programme": programme_capability()["available"],
+                "operations": programme_capability()["available"],
+                "design_levers": programme_capability()["available"],
             },
             checkpoint_scope="Fixed-domain open-hole wall events only; completed event boundaries; results have not been compared with field measurements",
             initialisation=dict(
@@ -828,6 +833,133 @@ def create_app(data_dir=None, start_jobs=True, deadline=30, policy=None):
         except (ValueError, TypeError) as error:
             raise CalculationError("SCHEMA_INVALID", str(error)) from error
         return Response(text, media_type="application/toml; charset=utf-8")
+
+    from .contracts import ProgrammeDefinition
+    from . import programme as programmes
+
+    class ProgrammeCheck(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        programme: ProgrammeDefinition
+        site_toml: str = Field(min_length=1, max_length=5 * 1024 * 1024)
+
+    class OperationsCheck(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        operations: dict
+
+    def programme_interface():
+        if not programmes.interface_available():
+            raise CalculationError("CAPABILITY_UNSUPPORTED", programmes.UNAVAILABLE)
+
+    @app.get("/api/v1/programme/pipes")
+    def programme_pipes():
+        programme_interface()
+        return {"pipes": programmes.model_pipes()}
+
+    @app.post("/api/v1/programme/check")
+    def programme_check(request: ProgrammeCheck):
+        programme_interface()
+        return programmes.check(request.programme, request.site_toml)
+
+    @app.post("/api/v1/programme/import")
+    def programme_import(request: SiteText):
+        programme_interface()
+        try:
+            site = site_files.load_text(request.toml)
+            document = site_files.document_from_toml(request.toml)
+        except ValueError as error:
+            raise CalculationError("SCHEMA_INVALID", str(error)) from error
+        definition, notes = (
+            programmes.from_site(site.programme) if site.programme is not None else (None, [])
+        )
+        return {
+            "programme": definition,
+            "notes": notes,
+            "operations": document.get("operations"),
+        }
+
+    @app.get("/api/v1/operations/fields")
+    def operation_fields(units: UnitChoice = "SI"):
+        programme_interface()
+        return programmes.operation_fields(units)
+
+    @app.post("/api/v1/operations/check")
+    def operations_check(request: OperationsCheck):
+        programme_interface()
+        return programmes.check_operations(request.operations)
+
+    from . import levers as lever_studies
+
+    class LeverChoice(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        lever: str
+        values: list[float | str] = Field(min_length=1, max_length=5)
+
+    class LeverRequest(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        base_run_id: str
+        mode: Literal["one_at_a_time", "grid"]
+        levers: list[LeverChoice] = Field(min_length=1, max_length=len(lever_studies.LEVERS))
+        title: str | None = Field(default=None, max_length=200)
+
+    def lever_base(rid):
+        programme_interface()
+        record = store.get(rid)
+        if record["state"] != "completed" or not record.get("manifest"):
+            raise HTTPException(409, "Design levers need a completed assessment")
+        if record["manifest"].get("mode") != "site_assessment":
+            raise HTTPException(422, "LEVER_INVALID: design levers start from a site assessment")
+        return record["manifest"]
+
+    @app.get("/api/v1/levers/options")
+    def lever_options(base_run_id: str):
+        manifest = lever_base(base_run_id)
+        return {"levers": list(lever_studies.base_values(manifest).values()),
+                "interpretation": lever_studies.INTERPRETATION,
+                "max_cases": lever_studies.MAX_CASES,
+                "base_duration_s": manifest.get("wall_clock_duration_s")}
+
+    @app.post("/api/v1/levers/plan")
+    def lever_plan(request: LeverRequest):
+        manifest = lever_base(request.base_run_id)
+        frozen = lever_studies.plan(request.model_dump(), manifest)
+        return {k: v for k, v in frozen.items() if k != "cases"} | {
+            "cases": [{"index": c["index"], "levers": c["levers"], "title": c["scenario"]["title"]} for c in frozen["cases"]]}
+
+    @app.post("/api/v1/levers", status_code=202)
+    def lever_submit(request: LeverRequest, idempotency_key: str | None = Header(default=None)):
+        manifest = lever_base(request.base_run_id)
+        sid, _ = lever_studies.submit(store, request.model_dump(), manifest, idempotency_key)
+        return lever_studies.read(store, sid)
+
+    @app.get("/api/v1/levers")
+    def lever_list():
+        return {"items": lever_studies.list_studies(store)}
+
+    @app.get("/api/v1/levers/{sid}")
+    def lever_read(sid: str, units: UnitChoice = "SI"):
+        study = lever_studies.read(store, sid)
+        study["figures"] = {
+            key: lever_studies.tornado_svg(chart, units)
+            for key, chart in (study["tornado"] or {}).items()
+        }
+        return study
+
+    @app.post("/api/v1/levers/{sid}/cancel")
+    def lever_cancel(sid: str):
+        lever_studies.cancel(store, sid)
+        return lever_studies.read(store, sid)
+
+    @app.get("/api/v1/levers/{sid}/report")
+    def lever_report(sid: str, units: UnitChoice = "SI"):
+        study = lever_studies.read(store, sid)
+        return Response(lever_studies.report_html(study, units), media_type="text/html; charset=utf-8",
+                        headers={"Content-Disposition": f'attachment; filename="{sid}-report.html"'})
+
+    @app.get("/api/v1/levers/{sid}/export")
+    def lever_export(sid: str, units: UnitChoice = "SI"):
+        data = lever_studies.export(store, sid, units)
+        return Response(data, media_type="application/zip",
+                        headers={"Content-Disposition": f'attachment; filename="{sid}.zip"'})
 
     @app.post("/api/v1/geotherm/preview")
     def geotherm_preview(request: GeothermPreview):

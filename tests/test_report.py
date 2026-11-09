@@ -35,14 +35,41 @@ def test_assessment_summary_uses_the_evaluator_result(name):
     for key in ("drilling_fluid", "trip_fluid"):
         window, shown = report["windows"][key], summary["windows"]["fluids"][key]
         assert (shown["lower_kg_m3"], shown["upper_kg_m3"], shown["open"]) == (window["lo"], window["hi"], window["open"])
-        assert shown["width_kg_m3"] == window["hi"] - window["lo"]
+        # BoreTHM 1.8.0 returns no width; the application computes none.
+        assert shown["width_kg_m3"] is None
         assert shown["upper_by"]["md_m"] == window["hi_by"]["md"]
     assert summary["windows"]["profiles_returned"] is False
     for row in summary["tools"]["rows"]:
         assert row["rating_C"] == report["tools"]["limit"]
-        assert row["margin_C"] == row["rating_C"] - row["peak_C"]
+        assert row["margin_C"] is None
     assert [c["verdict"] for c in summary["stability"]["cases"]] == [c["verdict"] for c in report["cycle"]["cases"]]
     assert summary["pressure"]["pump_limit_Pa"] is None
+    assert summary["stated"]["returned"] is False
+
+
+@pytest.mark.parametrize("name", ["interface-go", "interface-conditional", "interface-stated"])
+def test_widths_margins_and_pumps_are_the_models_result_keys(name):
+    manifest = record(name)["manifest"]
+    report = manifest["assessment"]
+    summary = results(manifest)["summary"]
+    for key in ("drilling_fluid", "trip_fluid"):
+        assert summary["windows"]["fluids"][key]["width_kg_m3"] == report["window_width"][key]["width_kg_m3"]
+    assert summary["windows"]["profile"]["depths_m"] == report["window_profile"]["depths_m"]
+    rows = {row["state"]: row for row in summary["tools"]["rows"]}
+    for state in ("drilling", "connection", "run_in_staged", "run_in_unstaged"):
+        check = report["tool_check"][state]
+        assert (rows[state]["peak_C"], rows[state]["margin_C"], rows[state]["ok"]) == (check["peak_C"], check["margin_C"], check["ok"])
+    coating = {row["state"]: row for row in summary["tools"]["coating"]["rows"]}
+    for state in ("circulating", "connection", "run_in"):
+        assert coating[state]["margin_C"] == report["coating_check"][state]["margin_C"]
+    pumps = summary["pressure"]
+    assert pumps["pump_limit_Pa"] == report["pump_check"]["limit_Pa"]
+    for state in ("drilling", "trip"):
+        assert pumps[state]["margin_Pa"] == report["pump_check"][state]["margin_Pa"]
+        assert pumps[state]["ok"] == report["pump_check"][state]["ok"]
+    stated = [i["name"] for i in summary["stated"]["items"]]
+    assert stated == [k for k, v in report["operations"].items() if v["stated"]]
+    assert summary["stated"]["sets_controlling_constraint"] == (name == "interface-stated")
 
 
 def test_verdicts_cover_go_conditional_and_no_go():
@@ -96,3 +123,16 @@ def test_report_and_results_routes(tmp_path):
         assert posted["summary"] == results(saved["manifest"])["summary"]
         assert client.get("/api/v1/runs/missing/report").status_code == 404
     app.state.store.close()
+
+
+@pytest.mark.parametrize("name", ["interface-go", "interface-stated"])
+@pytest.mark.parametrize("system", ["SI", "oilfield"])
+def test_report_with_the_new_result_keys_is_deterministic(name, system):
+    saved = record(name)
+    first = report_html(saved, system)
+    assert first == report_html(json.loads(json.dumps(saved)), system)
+    text = first.decode("utf-8")
+    for heading in ("Mud-weight window", "Common windows at each evaluated depth", "Pumps", "Stated values"):
+        assert heading in text
+    assert "Not returned by the installed BoreTHM" not in text
+    assert ("Stated operations used in this check" in text) == (name == "interface-stated")

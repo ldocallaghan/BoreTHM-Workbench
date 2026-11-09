@@ -142,89 +142,110 @@ def engine_identity():
     }
 
 
+def core_layers(items):
+    import borethm as core
+
+    return tuple(core.Layer(x.r_in_m, x.r_out_m, x.conductivity_W_m_K) for x in items)
+
+
+def core_segment(segment):
+    """The model's StringSegment for a contract Segment."""
+    import borethm as core
+    from borethm.hydraulic_losses import DownholeTool
+
+    p, j, local, tool = (
+        segment.pipe,
+        segment.pipe.hydraulic_joint,
+        segment.local_loss,
+        segment.tool_loss,
+    )
+    joint = (
+        None
+        if j is None
+        else core.HydraulicJoint(
+            j.outer_diameter_m,
+            j.bore_diameter_m,
+            j.restriction_length_m,
+            j.spacing_m,
+            j.transition,
+            j.source,
+            taper_angle_deg=j.taper_angle_deg,
+            kind=j.kind,
+        )
+    )
+    ll = (
+        None
+        if local is None
+        else core.LocalLoss(
+            local.bore_coefficient,
+            local.annulus_coefficient,
+            local.bore_reference_area_m2,
+            local.annulus_reference_area_m2,
+            local.source,
+        )
+    )
+    tl = (
+        None
+        if tool is None
+        else core.ReferenceToolLoss(
+            tool.reference_pressure_Pa,
+            tool.reference_flow_m3_s,
+            tool.reference_density_kg_m3,
+            tool.basis,
+            tool.span_segments,
+            tool.source,
+            tool.flow_range_m3_s,
+            tool.temperature_max_C,
+            tool.include_boundary_changes,
+            tool.unresolved,
+        )
+    )
+    pipe = core.PipeType(
+        p.name, core_layers(p.layers), p.thermal_joint_fraction, p.source, joint
+    )
+    tools = (
+        ()
+        if segment.tool_class is None or tl is not None
+        else (
+            DownholeTool(
+                segment.tool_class,
+                segment.collar_in,
+                basis=segment.tool_basis,
+                span_segments=segment.tool_span_segments,
+            ),
+        )
+    )
+    return core.StringSegment(segment.length_m, pipe, ll, tl, tools)
+
+
+def core_hole(h):
+    import borethm as core
+
+    return core.HoleInterval(h.md_top_m, h.md_bottom_m, h.r_wall_m, core_layers(h.layers))
+
+
+def core_surface(sl):
+    """The model's SurfaceLoss for a contract surface-loss choice."""
+    import borethm as core
+
+    if sl.kind == "none":
+        return core.SurfaceLoss.coefficient(0, "Explicitly declared no surface loss")
+    if sl.kind == "api_case":
+        return core.SurfaceLoss.api_case(sl.case)
+    return core.SurfaceLoss.coefficient(sl.coefficient, sl.source)
+
+
 def make_geometry(scenario):
     import borethm as core
     from borethm.hydraulic_losses import LossModel
 
     d = scenario.definition
-    layers = lambda items: tuple(
-        core.Layer(x.r_in_m, x.r_out_m, x.conductivity_W_m_K) for x in items
-    )
-    segments = []
-    for segment in d.well.string:
-        p, j, local, tool = (
-            segment.pipe,
-            segment.pipe.hydraulic_joint,
-            segment.local_loss,
-            segment.tool_loss,
-        )
-        joint = (
-            None
-            if j is None
-            else core.HydraulicJoint(
-                j.outer_diameter_m,
-                j.bore_diameter_m,
-                j.restriction_length_m,
-                j.spacing_m,
-                j.transition,
-                j.source,
-                taper_angle_deg=j.taper_angle_deg,
-                kind=j.kind,
-            )
-        )
-        ll = (
-            None
-            if local is None
-            else core.LocalLoss(
-                local.bore_coefficient,
-                local.annulus_coefficient,
-                local.bore_reference_area_m2,
-                local.annulus_reference_area_m2,
-                local.source,
-            )
-        )
-        tl = (
-            None
-            if tool is None
-            else core.ReferenceToolLoss(
-                tool.reference_pressure_Pa,
-                tool.reference_flow_m3_s,
-                tool.reference_density_kg_m3,
-                tool.basis,
-                tool.span_segments,
-                tool.source,
-                tool.flow_range_m3_s,
-                tool.temperature_max_C,
-                tool.include_boundary_changes,
-                tool.unresolved,
-            )
-        )
-        pipe = core.PipeType(
-            p.name, layers(p.layers), p.thermal_joint_fraction, p.source, joint
-        )
-        from borethm.hydraulic_losses import DownholeTool
-
-        tools = (
-            ()
-            if segment.tool_class is None or tl is not None
-            else (
-                DownholeTool(
-                    segment.tool_class,
-                    segment.collar_in,
-                    basis=segment.tool_basis,
-                    span_segments=segment.tool_span_segments,
-                ),
-            )
-        )
-        segments.append(core.StringSegment(segment.length_m, pipe, ll, tl, tools))
+    segments = [core_segment(segment) for segment in d.well.string]
     from .trajectories import core_survey
 
     geometry = core.WellGeometry(
         segments,
-        [
-            core.HoleInterval(h.md_top_m, h.md_bottom_m, h.r_wall_m, layers(h.layers))
-            for h in d.well.hole
-        ],
+        [core_hole(h) for h in d.well.hole],
         survey=core_survey(d.well.survey, d.well.bit_md_m),
     )
     LossModel(geometry, **loss_settings(scenario))  # stricter joint/tool span checks
@@ -366,13 +387,7 @@ def make_settings(scenario):
         source = lambda z: np.interp(z, points_heat[:, 0], points_heat[:, 1])
         source.knots = points_heat[:, 0].copy()
         breaks.extend(points_heat[1:-1, 0])
-    sl = d.hydraulics.surface_loss
-    if sl.kind == "none":
-        surface = core.SurfaceLoss.coefficient(0, "Explicitly declared no surface loss")
-    elif sl.kind == "api_case":
-        surface = core.SurfaceLoss.api_case(sl.case)
-    else:
-        surface = core.SurfaceLoss.coefficient(sl.coefficient, sl.source)
+    surface = core_surface(d.hydraulics.surface_loss)
     return dict(
         T_inj=d.operating.inlet_temperature_C,
         G=0.035,

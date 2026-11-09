@@ -96,6 +96,26 @@ QUANTITIES = {
             "oilfield": ("Btu/(h ft °F)", BTU_J / HOUR_S / (FOOT_M * 5.0 / 9.0), 0.0),
         },
     ),
+    "velocity": (
+        "Velocity",
+        "m/s",
+        {"SI": ("m/s", 1.0, 0.0), "oilfield": ("ft/min", FOOT_M / 60.0, 0.0)},
+    ),
+    "rate_of_penetration": (
+        "Rate of penetration",
+        "m/h",
+        {"SI": ("m/h", 1.0, 0.0), "oilfield": ("ft/h", FOOT_M, 0.0)},
+    ),
+    "minutes": (
+        "Duration in minutes",
+        "min",
+        {"SI": ("min", 1.0, 0.0), "oilfield": ("min", 1.0, 0.0)},
+    ),
+    "hours": (
+        "Duration in hours",
+        "h",
+        {"SI": ("h", 1.0, 0.0), "oilfield": ("h", 1.0, 0.0)},
+    ),
     "power": (
         "Power",
         "W",
@@ -200,4 +220,12 @@ DEFAULT_DECIMALS = {
     ("conductivity", "oilfield"): 3,
     ("power", "SI"): 1,
     ("power", "oilfield"): 1,
+    ("velocity", "SI"): 3,
+    ("velocity", "oilfield"): 1,
+    ("rate_of_penetration", "SI"): 2,
+    ("rate_of_penetration", "oilfield"): 1,
+    ("minutes", "SI"): 2,
+    ("minutes", "oilfield"): 2,
+    ("hours", "SI"): 2,
+    ("hours", "oilfield"): 2,
 }

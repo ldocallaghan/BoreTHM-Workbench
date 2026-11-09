@@ -42,6 +42,39 @@ def load_frozen_site(scenario):
         return load_site(path)
 
 
+def stated_programme(scenario, site):
+    """The model's HydraulicProgramme for the scenario's programme, or None.
+
+    Raises CalculationError where the installed model does not accept a
+    stated programme or the programme does not fit the site.
+    """
+    from . import programme
+
+    definition = scenario.definition.programme
+    if definition is None:
+        return None
+    if not programme.interface_available():
+        raise CalculationError("CAPABILITY_UNSUPPORTED", programme.UNAVAILABLE)
+    operations = getattr(site, "operations", None)
+    if definition.kind == "custom" and operations is not None and operations.pipes is not None:
+        raise CalculationError(
+            "SCHEMA_INVALID",
+            "Programme: a custom string fixes the pipe, so the operations cannot also state pipe candidates.",
+        )
+    try:
+        built = programme.build(definition)
+        programme.geometry(site, built)
+    except (ValueError, TypeError) as error:
+        message = str(error)
+        if "sum to the circulation depth" in message:
+            message = (
+                "the string section lengths must add up to the target depth, "
+                f"{site.target():.2f} m"
+            )
+        raise CalculationError("SCHEMA_INVALID", "Programme: " + message) from error
+    return built
+
+
 def validate_assessment(scenario):
     from borethm import validate_site
 
@@ -52,6 +85,7 @@ def validate_assessment(scenario):
         raise CalculationError(
             "SCHEMA_INVALID", "Site definition: " + str(error)
         ) from error
+    stated_programme(scenario, site)
     return [
         warning("SITE_INPUT_QUALIFICATION", str(message), "/definition/site/content")
         for message in messages
@@ -128,6 +162,7 @@ def run_assessment(scenario, stage=lambda *_: None):
     if not cache["ready"]:
         raise CalculationError("PROPERTY_CACHE_UNAVAILABLE", cache["reason"])
     site = load_frozen_site(scenario)
+    programme = stated_programme(scenario, site)
     options = scenario.definition.options
     coupled = {"evaluator_default": None, "coupled": True, "uncoupled": False}[
         options.coupling
@@ -145,7 +180,7 @@ def run_assessment(scenario, stage=lambda *_: None):
         thermal=True,
         circulation=options.calculation_mode,
         coupled=coupled,
-        programme=None,
+        programme=programme,
         physics=scenario.model.physics,
         surface=None,
     )

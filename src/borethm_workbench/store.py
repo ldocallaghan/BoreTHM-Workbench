@@ -64,6 +64,10 @@ class Store:
                     idempotency_key TEXT UNIQUE,definition TEXT);
                 CREATE TABLE IF NOT EXISTS sweep_cases(sweep_id TEXT,case_index INTEGER,run_id TEXT UNIQUE,coordinates TEXT,
                     PRIMARY KEY(sweep_id,case_index),FOREIGN KEY(sweep_id) REFERENCES sweeps(id),FOREIGN KEY(run_id) REFERENCES runs(id));
+                CREATE TABLE IF NOT EXISTS studies(id TEXT PRIMARY KEY,created_at TEXT,request_hash TEXT,
+                    idempotency_key TEXT UNIQUE,definition TEXT);
+                CREATE TABLE IF NOT EXISTS study_cases(study_id TEXT,case_index INTEGER,run_id TEXT UNIQUE,coordinates TEXT,
+                    PRIMARY KEY(study_id,case_index),FOREIGN KEY(study_id) REFERENCES studies(id),FOREIGN KEY(run_id) REFERENCES runs(id));
             """)
             # Existing databases keep their revisions/results and event identities.
             columns = {r[1] for r in conn.execute("PRAGMA table_info(runs)")}
@@ -316,7 +320,7 @@ class Store:
     def claim(self):
         with self.connection() as conn:
             row = conn.execute(
-                "SELECT * FROM runs WHERE state='queued' ORDER BY created_at LIMIT 1"
+                "SELECT * FROM runs WHERE state='queued' ORDER BY created_at, rowid LIMIT 1"
             ).fetchone()
             if not row:
                 return None

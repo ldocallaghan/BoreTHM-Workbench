@@ -1,0 +1,34 @@
+.programme-page, .levers-page { display: grid; gap: 16px; }
+.programme-actions, .lever-exports { display: flex; flex-wrap: wrap; gap: 8px; }
+.choice-row { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 4px 0 10px; }
+.choice { display: inline-flex; align-items: center; gap: 6px; }
+.programme-options { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: flex-end; margin: 6px 0 12px; }
+.programme-drawing { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 16px; align-items: start; margin-top: 10px; }
+.programme-string td { vertical-align: top; }
+.programme-string input[type="number"] { width: 110px; }
+.layer-table .number-row { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; margin-top: 4px; }
+.row-actions { white-space: nowrap; }
+.split-row { display: inline-flex; gap: 6px; align-items: center; }
+.operations-table th[scope="row"] { width: 18%; }
+.operations-table td:nth-child(2) { width: 36%; }
+.operations-table td:nth-child(2) .small { margin: 2px 0 0; }
+.operations-table tr.stated th { color: #1d5f58; }
+.operations-table input[type="number"], .operations-table input:not([type]) { width: 140px; }
+.basis-row { display: grid; gap: 4px; }
+.pipe-order { display: grid; gap: 2px; }
+.field-warning { color: #7a5408; margin: 2px 0; font-size: 12px; }
+.lever-values { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; }
+.lever-value { display: inline-flex; gap: 4px; align-items: center; }
+.lever-value input { width: 110px; }
+.lever-plan { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+.lever-progress { display: flex; gap: 12px; align-items: center; margin: 8px 0; }
+.lever-progress progress { width: 260px; }
+.tornado-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr)); gap: 12px; }
+.lever-grid td.grid-cell { min-width: 150px; vertical-align: top; }
+.lever-grid td.grid-cell small { display: block; margin-top: 4px; }
+.lever-grid td.go, .lever-table td.go { background: #dff1ea; }
+.lever-grid td.conditional, .lever-table td.conditional { background: #fbf0d9; }
+.lever-grid td.no-go, .lever-table td.no-go { background: #f8e0dc; }
+.stated-constraint { font-weight: 600; }
+.interface-note { margin: 4px 0 8px; }
+@media (max-width: 900px) { .programme-drawing { grid-template-columns: 1fr; } }

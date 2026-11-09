@@ -109,8 +109,9 @@ def _assessment_inputs(summary, manifest, system):
         ("Evidence tier", _t(site.get("tier"))),
         ("Stress cases", _t(len(site.get("stress_cases") or []))),
         ("Strength cases", _t(len(site.get("strength_cases") or []))),
-        ("Pipe chosen by the model", _t(programme.get("pipe"))),
-        ("Flow chosen by the model", _t(_fmt(programme.get("mass_flow_kg_s"), "mass_flow", system))),
+        ("Pipe", _t(programme.get("pipe"))),
+        ("Flow", _t(f"{programme.get('flow'):g} {programme.get('flow_unit')}" if programme.get("flow") is not None else None)),
+        ("Mass flow", _t(_fmt(programme.get("mass_flow_kg_s"), "mass_flow", system))),
         ("Physics", _t(manifest.get("physics"))),
     ]
     basis = site.get("data_basis") or {}
@@ -159,7 +160,7 @@ def _windows(summary, system):
             f"<td>{'Open' if fluid['open'] else 'Closed'}</td>"
             f"<td class=n>{_t(_fmt(fluid['lower_kg_m3'], 'density', system))}<br>{_t(_fmt(fluid['lower_kg_m3'], 'specific_gravity', system))}</td>"
             f"<td class=n>{_t(_fmt(fluid['upper_kg_m3'], 'density', system))}<br>{_t(_fmt(fluid['upper_kg_m3'], 'specific_gravity', system))}</td>"
-            f"<td class=n>{_t(_fmt(fluid['width_kg_m3'], 'density', system))}</td>"
+            f"<td class=n>{_t(_fmt(fluid['width_kg_m3'], 'density', system) if fluid['width_kg_m3'] is not None else ('no upper bound' if fluid.get('upper_unbounded') else results_page.NOT_RETURNED))}</td>"
             f"<td>{_t(by(fluid['lower_by']))}</td><td>{_t(by(fluid['upper_by']))}</td>"
             f"<td class=n>{_t(_fmt(fluid['chosen_kg_m3'], 'density', system))}</td>"
             "</tr>"
@@ -168,8 +169,35 @@ def _windows(summary, system):
         "<table><tr><th>Fluid</th><th>Window</th><th>Lower bound</th><th>Upper bound</th>"
         "<th>Width</th><th>Lower bound set by</th><th>Upper bound set by</th><th>Fluid chosen</th></tr>"
         + "".join(rows)
-        + "</table><p class=meta>Surface densities at 20 °C. Width is the upper bound minus the lower bound. "
-        "The model returns each bound and its binding depth; it does not return the bounds as profiles against depth.</p>"
+        + "</table><p class=meta>Surface densities at 20 °C. "
+        + ("Widths and the bounds against depth are the model's results."
+           if summary["windows"]["profiles_returned"] else
+           "The installed BoreTHM returns each bound and its binding depth; it does not return the widths or the bounds against depth.")
+        + "</p>"
+    )
+
+
+def _window_table(summary, system):
+    profile = summary["windows"]["profile"]
+    if not profile:
+        return ""
+
+    def by(entry):
+        return "-" if not entry else f"{entry.get('state')}, {entry.get('case')}: {entry.get('mechanism')}"
+
+    rows = []
+    for i, depth in enumerate(profile["depths_m"]):
+        cells = [f"<td class=n>{_t(_fmt(depth, 'length', system))}</td>"]
+        for key in ("drilling_fluid", "trip_fluid"):
+            c = profile["common"][key]
+            cells.append(f"<td class=n>{_t(_fmt(c['lower_kg_m3'][i], 'density', system))}</td><td>{_t(by(c['lower_by'][i]))}</td>"
+                         f"<td class=n>{_t(_fmt(c['upper_kg_m3'][i], 'density', system))}</td><td>{_t(by(c['upper_by'][i]))}</td>")
+        rows.append("<tr>" + "".join(cells) + "</tr>")
+    return (
+        "<h3>Common windows at each evaluated depth</h3><table><tr><th>Measured depth</th>"
+        "<th>Drilling fluid lower</th><th>Set by</th><th>Drilling fluid upper</th><th>Set by</th>"
+        "<th>Trip fluid lower</th><th>Set by</th><th>Trip fluid upper</th><th>Set by</th></tr>"
+        + "".join(rows) + "</table><p class=meta>A lower bound below water's density means that water keeps the breakout within its limit at that depth.</p>"
     )
 
 
@@ -191,7 +219,11 @@ def _tools(summary, system):
         f"<p>Tool check: {_t(summary['tools']['status'])}. Coating ({_t(coating['pipe'])}): {_t(coating['status'])}.</p>"
         "<table><tr><th>Item</th><th>Peak</th><th>Rating</th><th>Margin</th><th>Check</th></tr>"
         + "".join(rows)
-        + "</table><p class=meta>Margin is the rating minus the peak.</p>"
+        + "</table><p class=meta>"
+        + ("Limits, margins and pass flags are the model's results."
+           if summary["tools"]["margins_returned"] else
+           "The installed BoreTHM does not return margins or a pass flag for the unstaged run-in.")
+        + "</p>"
     )
 
 
@@ -212,14 +244,64 @@ def _stability(summary):
 
 def _pressure(summary, system):
     pressure = summary["pressure"]
+    if pressure.get("returned"):
+        rows = []
+        for key, label in (("drilling", "Drilling"), ("trip", "Trip")):
+            p = pressure[key]
+            rows.append(
+                f"<tr><td>{label}</td><td class=n>{_t(_fmt(p['standpipe_Pa'], 'pressure', system))}</td>"
+                f"<td class=n>{_t(_fmt(pressure['pump_limit_Pa'], 'pressure', system))}</td>"
+                f"<td class=n>{_t(_fmt(p['margin_Pa'], 'pressure', system))}</td>"
+                f"<td>{'Pass' if p['ok'] else 'Fail'}</td><td>{'Yes' if p['within_rig'] else 'No'}</td></tr>"
+            )
+        return (
+            f"<p>Pump pressure limit {_t(_fmt(pressure['pump_limit_Pa'], 'pressure', system))}; {_t(pressure['pumps'])} rig pumps.</p>"
+            "<table><tr><th>State</th><th>Standpipe pressure</th><th>Limit</th><th>Margin</th><th>Check</th><th>Within the rig's pumps</th></tr>"
+            + "".join(rows) + "</table>"
+        )
     within = pressure.get("within_rig_pumps")
     pairs = [
         ("Standpipe pressure (drilling)", _t(_fmt(pressure.get("standpipe_Pa"), "pressure", system))),
         ("Standpipe pressure (trip)", _t(_fmt(pressure.get("trip_standpipe_Pa"), "pressure", system))),
         ("Within the rig's pumps", "not returned" if within is None else ("Yes" if within else "No")),
-        ("Pump pressure limit", "not returned by the model"),
+        ("Pump pressure limit", results_page.NOT_RETURNED),
     ]
     return "<table>" + _rows(pairs) + "</table>"
+
+
+def _stated(summary, system):
+    stated = summary["stated"]
+    if not stated["returned"]:
+        return "<p>The installed BoreTHM chose every operating value; it does not accept stated ones.</p>"
+    programme = {"reference": "the model's reference programme with stated options",
+                 "custom": "a stated custom string"}.get(stated["programme"], "the site file's programme, or the model's reference programme")
+    html = [f"<p>Hydraulic programme: {_t(programme)}.</p>"]
+    if stated["items"]:
+        rows = "".join(
+            f"<tr><td>{_t(i['label'])}</td><td>{_t(_value(i, system))}</td><td>{_t(i.get('basis'))}</td><td>{_t(i.get('source'))}</td></tr>"
+            for i in stated["items"]
+        )
+        html.append("<table><tr><th>Operating choice</th><th>Stated value</th><th>Basis</th><th>Source</th></tr>" + rows + "</table>")
+    else:
+        html.append("<p>No operating value is stated; the model chose each one.</p>")
+    html.append(
+        f"<p>In the model's wording: {_t(stated['controlling_sentence'])}</p>" if stated["sets_controlling_constraint"]
+        else "<p>No stated value is used in the check behind the controlling constraint.</p>"
+    )
+    return "".join(html)
+
+
+def _value(item, system):
+    value, unit, quantity = item["value"], item.get("unit"), item.get("quantity")
+    if quantity and isinstance(value, (int, float)):
+        return _fmt(value, quantity, system)
+    if quantity and isinstance(value, dict):
+        return "; ".join(f"{k} {_fmt(v, quantity, system)}" for k, v in value.items()) or "no pipe rated"
+    if isinstance(value, list):
+        return ", ".join(str(v) for v in value) + (f" {unit}" if unit else "")
+    if isinstance(value, dict):
+        return "; ".join(f"{k} {v} {unit or ''}".strip() for k, v in value.items()) or "none"
+    return f"{value} {unit or ''}".strip()
 
 
 def _circulation_figures(summary, system):
@@ -286,14 +368,19 @@ def report_html(record, system="SI"):
             _assessment_inputs(summary, manifest, system),
             "<h2>Mud-weight window</h2>",
             _windows(summary, system),
-            f"<figure>{page['figures']['window']}<figcaption>Bounds for each state and stress and strength case. Dark marker: fluid chosen.</figcaption></figure>",
+            (f"<figure>{page['figures']['window_depth']}<figcaption>Bounds against depth for each state and case (thin), the common windows (bold) and the fluids chosen (dashed).</figcaption></figure>"
+             if page["figures"].get("window_depth") else
+             f"<figure>{page['figures']['window']}<figcaption>Bounds for each state and stress and strength case. Dark marker: fluid chosen.</figcaption></figure>"),
+            _window_table(summary, system),
             "<h2>Tools and equipment</h2>",
             _tools(summary, system),
             f"<figure>{page['figures']['tools']}</figure>",
             "<h2>Stability at the target</h2>",
             _stability(summary),
-            "<h2>Pressure</h2>",
+            "<h2>Pumps</h2>",
             _pressure(summary, system),
+            "<h2>Stated values</h2>",
+            _stated(summary, system),
             "<h2>Circulating temperatures</h2>",
             f"<figure>{page['figures']['temperature']}</figure>",
             "<h2>Input warnings</h2>",

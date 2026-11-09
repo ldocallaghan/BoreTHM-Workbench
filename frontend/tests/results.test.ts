@@ -6,8 +6,8 @@ import {renderToStaticMarkup} from 'react-dom/server';
 import {FlagsPanel, ResultsPage, type ResultsPayload} from '../src/ResultsPage.ts';
 
 const fixture = (name: string) => JSON.parse(readFileSync(new URL(`../../tests/fixtures/results/${name}`, import.meta.url), 'utf8'));
-const render = (name: string, system: 'SI' | 'oilfield' = 'SI') => {
-  const payload = fixture(`assessment-${name}.results.json`) as ResultsPayload;
+const render = (name: string, system: 'SI' | 'oilfield' = 'SI', prefix = 'assessment') => {
+  const payload = fixture(`${prefix}-${name}.results.json`) as ResultsPayload;
   return {payload, html: renderToStaticMarkup(createElement(ResultsPage, {payload, system, onDetails: () => undefined, reportHref: '/report'}))};
 };
 
@@ -19,14 +19,51 @@ for (const [name, status] of [['go', 'GO'], ['conditional', 'CONDITIONAL'], ['no
     assert.match(html, new RegExp(`data-status="${status}"`));
     assert.match(html, new RegExp(`<div class="verdict-badge">${status}</div>`));
     assert.ok(html.includes(escape(manifest.assessment.reading.controlling_constraint)));
-    for (const heading of ['Mud-weight window', 'Tools and equipment', 'Stability at the target', 'Pressure', 'Field-tested range and qualifications']) assert.ok(html.includes(`>${heading}</h2>`), heading);
+    for (const heading of ['Mud-weight window', 'Tools and equipment', 'Stability at the target', 'Pumps', 'Stated values', 'Field-tested range and qualifications']) assert.ok(html.includes(`>${heading}</h2>`), heading);
     for (const reason of manifest.assessment.status.reasons) assert.ok(html.includes(escape(reason)), reason);
     for (const flag of payload.flags!.outside) assert.ok(html.includes(escape(flag.message)));
     assert.equal((html.match(/Show details/g) || []).length, 6);
     assert.ok(html.includes('<svg'));
-    assert.ok(html.includes('Not returned by the model'));
+    // A result from BoreTHM 1.8.0 has no widths, margins or pump limit; nothing is computed in their place.
+    assert.ok(html.includes('Not returned by the installed BoreTHM'));
+    assert.ok(html.includes('it does not accept stated ones'));
   });
 }
+
+const escapeText = (text: string) => text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#x27;');
+
+for (const [name, status] of [['go', 'GO'], ['conditional', 'CONDITIONAL'], ['stated', 'NO-GO']] as const) {
+  test(`results page shows the model's widths, margins and pumps for a ${name} assessment`, () => {
+    const {html} = render(name, 'SI', 'interface');
+    const report = fixture(`interface-${name}.json`).manifest.assessment;
+    assert.equal(report.status.label, status);
+    assert.ok(!html.includes('Not returned by the installed BoreTHM'));
+    for (const key of ['drilling_fluid', 'trip_fluid']) {
+      const width = report.window_width[key].width_kg_m3;
+      if (typeof width === 'number') assert.ok(html.includes(escapeText(`${Math.round(width).toLocaleString('en-GB')} kg/m³`)), key);
+    }
+    const limit = report.pump_check.limit_Pa / 1e6;
+    assert.ok(html.includes(`Pump pressure limit ${limit.toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2})} MPa; ${report.pump_check.pumps} rig pumps.`));
+    const margin = report.tool_check.run_in_unstaged.margin_C;
+    assert.ok(html.includes(`${margin.toLocaleString('en-GB', {minimumFractionDigits: 1, maximumFractionDigits: 1})} °C`), 'unstaged margin');
+    assert.ok(html.includes('Tool on run-in without staging'));
+    assert.ok(html.includes('Mud-weight window against depth'));
+    assert.ok(html.includes('<title>'), 'hover text for each bound');
+    assert.ok(html.includes('Common windows at each evaluated depth'));
+    assert.ok(html.includes('breakout width') || html.includes('pore pressure'));
+  });
+}
+
+test('stated values and the constraint they set are shown', () => {
+  const {html} = render('stated', 'oilfield', 'interface');
+  assert.ok(html.includes('Hydraulic programme: a stated custom string.'));
+  assert.ok(html.includes('<td>Tool temperature limit</td><td>194.0 °F</td><td>assumed</td>'));
+  assert.ok(html.includes('<td>Flow</td><td>20 kg/s</td>'));
+  assert.ok(html.includes('A stated value is used in the check behind the controlling constraint. In the model&#x27;s wording: Stated operations used in this check: tool limit 90 C; flow 20 kg/s.'));
+  const go = render('go', 'SI', 'interface').html;
+  assert.ok(go.includes('No operating value is stated; the model chose each one.'));
+  assert.ok(go.includes('No stated value is used in the check behind the controlling constraint.'));
+});
 
 test('qualifications show plain sentences and the verdict text is labelled as the model\'s', () => {
   const {payload, html} = render('go');

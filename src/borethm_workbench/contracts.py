@@ -522,9 +522,54 @@ class AssessmentOptions(Data):
     coupling: Literal["evaluator_default", "coupled", "uncoupled"] = "evaluator_default"
 
 
+class BhaTool(Data):
+    tool_class: Literal[
+        "mwd_pulser", "rotary_steerable", "mud_motor", "filter_sub", "float_sub"
+    ]
+    collar_in: Positive
+
+
+class ProgrammeDefinition(Data):
+    """A hydraulic programme for an assessment.
+
+    reference: the model's reference string and casing scenario with the
+    stated options. custom: the stated string from surface to bit, whose
+    lengths must reach the target depth, with optional hole and casing
+    intervals (none keeps the reference casing scenario).
+    """
+
+    kind: Literal["reference", "custom"]
+    string: Annotated[list[Segment], Field(max_length=500)] = []
+    hole: Annotated[list[Hole], Field(max_length=500)] = []
+    transitions: Literal["abrupt", "gradual"] = "abrupt"
+    surface_loss: Annotated[
+        NoSurfaceLoss | APISurfaceLoss | CoefficientSurfaceLoss,
+        Field(discriminator="kind"),
+    ] = APISurfaceLoss(kind="api_case", case=5)
+    joints: bool = True
+    tools: bool = True
+    bha_tools: Annotated[list[BhaTool], Field(max_length=20)] = []
+
+    @model_validator(mode="after")
+    def complete(self):
+        if self.kind == "custom" and not self.string:
+            raise ValueError("A custom programme needs at least one string section")
+        if self.kind == "reference" and (self.string or self.hole):
+            raise ValueError(
+                "The reference programme keeps its own string and hole; choose custom to state them"
+            )
+        return self
+
+
 class AssessmentDefinition(Data):
     site: SiteSource
     options: AssessmentOptions
+    # None keeps the site file's programme, or the model's reference programme.
+    # Left out of the serialised scenario when None, so earlier scenarios keep
+    # their hashes.
+    programme: ProgrammeDefinition | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
 
 
 class AssessmentNumerics(Data):

@@ -104,7 +104,7 @@ def depth_chart(series, x_label, y_label, title, points=(), bands=(), width=640,
         return "".join(parts)
     xt = nice_ticks(min(xs), max(xs))
     yt = nice_ticks(min(0.0, min(ys)), max(ys))
-    legend_rows = len(series) + len(points) + len(bands)
+    legend_rows = sum(s.get("legend", True) for s in series) + sum(p.get("legend", True) for p in points) + len(bands)
     left, right, top, bottom = 70, 20, 24 + 16 * legend_rows, 48
     plot_w, plot_h = width - left - right, height - top - bottom
 
@@ -151,19 +151,24 @@ def depth_chart(series, x_label, y_label, title, points=(), bands=(), width=640,
         dash = s.get("dash")
         dashes = f' stroke-dasharray="{dash}"' if dash else ""
         if coordinates:
+            tip = f"<title>{escape(s['title'])}</title>" if s.get("title") else ""
             parts.append(
-                f'<polyline fill="none" stroke="{colour}" stroke-width="{s.get("width", 2)}"{dashes} points="{" ".join(coordinates)}"/>'
+                f'<polyline fill="none" stroke="{colour}" stroke-width="{s.get("width", 2)}"{dashes} points="{" ".join(coordinates)}">{tip}</polyline>'
             )
-        legend.append((s["name"], colour, dash))
+        if s.get("legend", True):
+            legend.append((s["name"], colour, dash))
     for index, p in enumerate(points):
         colour = p.get("colour") or PALETTE[(len(series) + index) % len(PALETTE)]
-        for x, y in zip(p["x"], p["y"]):
+        titles = p.get("titles") or [None] * len(p["x"])
+        for x, y, title in zip(p["x"], p["y"], titles):
             if x is None or y is None:
                 continue
+            tip = f"<title>{escape(title)}</title>" if title else ""
             parts.append(
-                f'<circle cx="{_n(px(x))}" cy="{_n(py(y))}" r="2.6" fill="{colour}" fill-opacity="0.85"/>'
+                f'<circle cx="{_n(px(x))}" cy="{_n(py(y))}" r="{p.get("radius", 2.6)}" fill="{colour}" fill-opacity="0.85">{tip}</circle>'
             )
-        legend.append((p["name"], colour, "point"))
+        if p.get("legend", True):
+            legend.append((p["name"], colour, "point"))
     for band in bands:
         legend.append((band["name"], band.get("colour", "#e9eef0"), None))
     _legend(parts, legend, left, 14)
