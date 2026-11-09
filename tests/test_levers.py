@@ -222,6 +222,8 @@ def test_table_and_tornado_use_saved_values_only(store):
     assert study["grid"] is None
     svg = L.tornado_svg(study["tornado"]["tool_margin_C"], "oilfield")
     assert "°F" in svg and "Tool margin" in svg
+    assert "Flow, as a mass flow: 33.1 lb/s to 55.1 lb/s" in svg
+    assert "Flow, as a mass flow: 15.0 kg/s to 25.0 kg/s" in L.tornado_svg(study["tornado"]["tool_margin_C"], "SI")
 
 
 def test_grid_cells_carry_verdict_and_constraint(store):

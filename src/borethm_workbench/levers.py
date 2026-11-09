@@ -441,12 +441,14 @@ def tornado(definition, cases):
     for key, label, quantity in METRICS:
         rows = []
         for item in definition["levers"]:
-            changes = [c["change_from_base"].get(key) for c in cases
-                       if item["lever"] in c["levers"] and c["change_from_base"].get(key) is not None]
+            computed = [c for c in cases
+                        if item["lever"] in c["levers"] and c["change_from_base"].get(key) is not None]
+            changes = [c["change_from_base"][key] for c in computed]
             rows.append(dict(lever=item["lever"], label=item["label"],
                              low=min(changes) if changes else None,
                              high=max(changes) if changes else None,
-                             computed=len(changes)))
+                             computed=len(changes),
+                             values=[c["levers"][item["lever"]] for c in computed]))
         charts[key] = dict(label=label, quantity=quantity, rows=rows)
     return charts
 
@@ -492,17 +494,29 @@ def _metric(value, quantity, system):
     return "Not returned" if value is None else units.fmt(value, quantity, system)
 
 
+def _bar_label(row, system):
+    """The lever's name with the range of its computed values, in the
+    chosen units."""
+    values = row.get("values") or []
+    if not values or LEVERS[row["lever"]][2] == "pipe":
+        return row["label"]
+    low, high = min(values), max(values)
+    if low == high:
+        return f"{row['label']}: {_label_value(row['lever'], low, system)}"
+    return f"{row['label']}: {_label_value(row['lever'], low, system)} to {_label_value(row['lever'], high, system)}"
+
+
 def tornado_svg(chart, system):
     from . import svg
 
     convert = lambda v: None if v is None else units.from_si(v, chart["quantity"], system)
     rows = [
-        dict(label=row["label"], low=convert(row["low"]), high=convert(row["high"]), reference=0.0,
+        dict(label=_bar_label(row, system), low=convert(row["low"]), high=convert(row["high"]), reference=0.0,
              status="fail" if row["low"] is not None and row["low"] < 0 else "ok")
         for row in chart["rows"]
     ]
     return svg.interval_chart(rows, f"Change from the base run ({units.symbol(chart['quantity'], system)})",
-                              f"{chart['label']}: change from the base run", width=720, label_width=300)
+                              f"{chart['label']}: change from the base run", width=760, label_width=360)
 
 
 def report_html(study, system="SI"):
