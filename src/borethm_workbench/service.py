@@ -233,7 +233,9 @@ def create_app(data_dir=None, start_jobs=True, deadline=30, policy=None):
             fluids=["iapws_water", "barite_mud", "constant_properties"],
             programme_interface=programme_capability(),
             deployment="local_single_user",
-            release_status="Local application; results have not been compared with field measurements",
+            release_status=("Local application. The model's circulating temperatures are compared with "
+                            "measured downhole temperatures on the Field comparisons page, for the "
+                            "conditions that page lists"),
             enabled={
                 "comparison": True,
                 "sweeps": True,

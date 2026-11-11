@@ -76,3 +76,9 @@ def test_other_archive_versions_are_rejected():
         )
     with pytest.raises(ValueError, match="other application versions"):
         inspect_bundle(stream.getvalue())
+
+
+def test_release_status_agrees_with_the_field_comparisons(tmp_path):
+    with TestClient(create_app(tmp_path, start_jobs=False)) as client:
+        status = client.get("/api/v1/capabilities").json()["release_status"]
+    assert "Field comparisons page" in status and "not been compared" not in status
