@@ -172,17 +172,29 @@ def test_operation_fields_come_from_operation_defaults():
 
 def test_the_application_reads_no_internal_model_constants():
     """Defaults come from operation_defaults; the application names none of
-    the model's internal constants."""
+    the model's internal constants, and only the compatibility module
+    imports the model's internal modules."""
     import ast
+    import pkgutil
+
+    import borethm
 
     banned = {"SITE_FLOWS", "SITE_PIPES", "COATING_RATINGS", "RIG_PUMPS", "BHA_SURVIVAL_TEMP",
               "PUMP_LIMIT", "HOLE_CLEANING_V", "forge_timings"}
+    modules = {m.name for m in pkgutil.iter_modules(borethm.__path__)}
     found = []
     for path in sorted((ROOT / "src/borethm_workbench").rglob("*.py")):
+        compat = path.name == "model_compat.py"
         for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
             name = node.attr if isinstance(node, ast.Attribute) else node.id if isinstance(node, ast.Name) else None
             if isinstance(node, ast.ImportFrom):
                 found += [(path.name, a.name) for a in node.names if a.name in banned]
+                if not compat and node.module and node.module.startswith("borethm."):
+                    found.append((path.name, node.module))
+                if not compat and node.module == "borethm":
+                    found += [(path.name, "borethm." + a.name) for a in node.names if a.name in modules]
+            if isinstance(node, ast.Import) and not compat:
+                found += [(path.name, a.name) for a in node.names if a.name.startswith("borethm.")]
             if name in banned:
                 found.append((path.name, name))
     assert found == []

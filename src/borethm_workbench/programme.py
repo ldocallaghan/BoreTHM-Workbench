@@ -68,9 +68,9 @@ def _layers(pipe):
 
 def named_pipes():
     """The model's named pipe types, as the site file's pipe key names them."""
-    from borethm.programme import NAMED_PIPES
+    from borethm import named_pipes as model_pipe_types
 
-    return NAMED_PIPES
+    return model_pipe_types()
 
 
 def model_pipes():
@@ -179,7 +179,7 @@ def check_operations(table):
     Returns errors and warnings, each with the field the model names.
     Errors never raise.
     """
-    from borethm.operations import operations_from_dict, validate_operations
+    from borethm import operations_from_dict, validate_operations
 
     result = {"errors": [], "warnings": [], "stated": []}
     try:
@@ -202,7 +202,7 @@ def check_operations(table):
 def build(definition):
     """The model's HydraulicProgramme for a programme definition."""
     from borethm import HydraulicProgramme
-    from borethm.hydraulic_losses import DownholeTool
+    from borethm import DownholeTool
 
     surface = core_surface(definition.surface_loss)
     if definition.kind == "reference":
@@ -227,14 +227,14 @@ def build(definition):
 def geometry(site, programme):
     """The well the model builds at the site's target for a programme, with
     the first candidate pipe where the model chooses the pipe."""
-    from borethm import site_evaluation as se
+    from borethm import site_well
 
     operations = getattr(site, "operations", None)
     if operations is not None and operations.pipes:
         pipe = operations.pipes[0]
     else:
         pipe = named_pipes()[defaults(site)["pipes"]["value"][0]]
-    return se.site_well(site.target(), pipe, programme)
+    return site_well(site.target(), pipe, programme)
 
 
 def _joint_dict(j):
@@ -493,7 +493,7 @@ def from_site(programme):
     Returns (definition, notes). Physics settings in the table are not part
     of the definition; the notes name any that the definition leaves out.
     """
-    from borethm.hydraulic_losses import SurfaceLoss
+    from borethm import SurfaceLoss
 
     notes = []
     for name in ("physics", "annulus_model", "friction", "roughness", "joint_transition",

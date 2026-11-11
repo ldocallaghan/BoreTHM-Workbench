@@ -11,7 +11,7 @@ DISPLAY_TRANSFORMS = {
 
 
 def core_survey(survey, length):
-    from borethm.well_geometry import Survey
+    from borethm import Survey
 
     if survey.kind == "vertical":
         return Survey.vertical()
@@ -31,7 +31,7 @@ def core_survey(survey, length):
 
 def station_coordinates(survey, length):
     if survey.kind == "vertical":
-        from borethm.well_geometry import Survey
+        from borethm import Survey
 
         return Survey([0.0, length], [0.0, length]), np.zeros(2), np.zeros(2)
     core = core_survey(survey, length)

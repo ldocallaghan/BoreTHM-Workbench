@@ -9,7 +9,7 @@ import zipfile
 
 def tool_allowances():
     from dataclasses import asdict
-    from borethm.tool_losses import defaults
+    from .model_compat import tool_loss_defaults as defaults
 
     return [asdict(value) for value in defaults().values()]
 

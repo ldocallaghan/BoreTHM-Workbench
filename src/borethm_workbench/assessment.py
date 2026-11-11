@@ -149,8 +149,8 @@ def finite_data(value, path="", qualifications=None):
 
 def run_assessment(scenario, stage=lambda *_: None):
     import borethm as core
-    from borethm import model1_coupled as m1
-    from borethm.pressure import column
+
+    from .model_compat import hydrostatic_pressure, pressure_column as column
 
     warnings = loading_warnings(scenario) + validate_assessment(scenario)
     identity, cache = engine_identity(), cache_status()
@@ -213,7 +213,7 @@ def run_assessment(scenario, stage=lambda *_: None):
     accepted_t = main["sol"].sol(main["sol"].x)
     bp = float(raw["circ"].get("backpressure", 0.0))
     absolute_surface = bp + 1e5
-    property_p = m1.P_of_z(tvd, absolute_surface)
+    property_p = hydrostatic_pressure(tvd, absolute_surface)
     if (
         accepted_t.min() < 1
         or accepted_t.max() > 479

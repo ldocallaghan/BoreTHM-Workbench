@@ -84,7 +84,7 @@ def validate_history(scenario):
 
 
 def wall_states(scenario, column):
-    from borethm.wall_thermal import State
+    from borethm import WallState as State
 
     result = []
     for original in scenario.definition.states:
@@ -150,11 +150,11 @@ def snapshots(dataset):
 
 
 def wall_dataset(scenario, column, stored_grid=None):
-    from borethm import wall_thermal as core
+    import borethm as core
 
     frames = []
     n = scenario.numerics
-    raw = core.run(
+    raw = core.wall_temperatures(
         wall_states(scenario, column),
         column.far_field_temperature_C,
         column.wall_radius_m,
@@ -300,12 +300,14 @@ def wall_dataset(scenario, column, stored_grid=None):
 
 
 def tool_dataset(scenario):
-    from borethm import tool_thermal as core
+    import borethm as core
+
+    from . import model_compat as compat
 
     d = scenario.definition
     n = scenario.numerics
     l = d.lump
-    lump = core.Lump(
+    lump = core.ToolLump(
         l.steel_capacity_J_m_K,
         l.fluid_capacity_J_m_K,
         l.inner_perimeter_m,
@@ -326,7 +328,7 @@ def tool_dataset(scenario):
         if stage
         else None
     )
-    raw, md = core.trip_in(
+    raw, md = core.tool_trip_in(
         lump,
         column,
         d.bottom_md_m,
@@ -385,10 +387,10 @@ def tool_dataset(scenario):
                 end_s=t + stop.duration_s,
             )
         )
-        hist = core.run(
+        hist = compat.tool_temperatures(
             lump,
             [
-                core.Segment(
+                compat.ToolSegment(
                     stop.duration_s,
                     stop.outside_temperature_C,
                     stop.outside_film_W_m2_K,
@@ -416,7 +418,7 @@ def tool_dataset(scenario):
         )
         for time in times
     ]
-    full = core.History(
+    full = compat.ToolHistory(
         np.asarray(times),
         np.asarray(steel),
         np.asarray(fluid),

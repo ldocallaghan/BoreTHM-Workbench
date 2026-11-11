@@ -58,13 +58,13 @@ BARE_KEY = re.compile(r"^[A-Za-z0-9_-]+$")
 
 
 def bases():
-    from borethm.site_evaluation import BASES
+    from .model_compat import data_bases
 
-    return list(BASES)
+    return list(data_bases())
 
 
 def template_text(key):
-    from borethm.site_files import site_text
+    from .model_compat import site_text
 
     return site_text(key)
 

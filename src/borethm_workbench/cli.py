@@ -59,14 +59,14 @@ def main():
             )
         )
     elif args.command == "prepare":
-        from borethm import water_table
         from .adapter import cache_status
+        from .model_compat import prepare_water_table
 
         print(
             "Preparing the IAPWS-95 water table; this can take several minutes.",
             flush=True,
         )
-        water_table._interpolators()
+        prepare_water_table()
         status = cache_status()
         print(json.dumps(status, indent=2))
         if not status["ready"]:

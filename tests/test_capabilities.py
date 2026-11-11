@@ -9,18 +9,18 @@ from borethm_workbench.service import create_app
 
 
 def test_history_features_follow_function_signatures(monkeypatch):
-    from borethm import wall_thermal, tool_thermal
+    import borethm
 
-    monkeypatch.setattr(wall_thermal, "run", lambda: None)
-    monkeypatch.setattr(tool_thermal, "trip_in", lambda: None)
+    monkeypatch.setattr(borethm, "wall_temperatures", lambda: None)
+    monkeypatch.setattr(borethm, "tool_trip_in", lambda: None)
     assert not any(history_capabilities().values())
 
 
 def test_missing_history_does_not_disable_standard_modes(tmp_path, monkeypatch):
-    from borethm import wall_thermal, tool_thermal
+    import borethm
 
-    monkeypatch.setattr(wall_thermal, "run", lambda: None)
-    monkeypatch.setattr(tool_thermal, "trip_in", lambda: None)
+    monkeypatch.setattr(borethm, "wall_temperatures", lambda: None)
+    monkeypatch.setattr(borethm, "tool_trip_in", lambda: None)
     with TestClient(create_app(tmp_path, start_jobs=False)) as client:
         result = client.get("/api/v1/capabilities").json()
         assert result["modes"] == ["circulation_state", "site_assessment"]

@@ -53,48 +53,51 @@ def sha256_file(path):
 
 
 def cache_status():
-    from borethm import water_table as wt
+    from . import model_compat as compat
     from .cache_reference import fingerprints
 
-    if not wt._CACHE.is_file():
+    table_info = compat.water_table_info()
+    if not table_info["exists"]:
         return {
             "ready": False,
             "reason": "Prepare the water-property cache with borethm-workbench prepare.",
         }
     try:
-        with np.load(wt._CACHE, allow_pickle=False) as table:
-            if not np.array_equal(table["T"], wt.T_GRID) or not np.array_equal(
-                table["P"], wt.P_GRID
+        with np.load(table_info["path"], allow_pickle=False) as table:
+            if not np.array_equal(table["T"], table_info["temperatures_C"]) or not np.array_equal(
+                table["P"], table_info["pressures_Pa"]
             ):
                 raise ValueError("Property grid differs from the installed generator")
             for key in ("rho", "cp", "mu", "k"):
                 if (
-                    table[key].shape != (len(wt.T_GRID), len(wt.P_GRID))
+                    table[key].shape != (len(table_info["temperatures_C"]), len(table_info["pressures_Pa"]))
                     or not np.all(np.isfinite(table[key]))
                     or np.any(table[key] <= 0)
                 ):
                     raise ValueError(f"Invalid {key} property array")
-        arrays = fingerprints(wt._CACHE)
+        arrays = fingerprints(table_info["path"])
         return {
             "ready": True,
             "sha256": digest(arrays),
             "arrays": arrays,
             "identity_kind": "array_fingerprints",
-            "shape": [len(wt.T_GRID), len(wt.P_GRID)],
+            "shape": [len(table_info["temperatures_C"]), len(table_info["pressures_Pa"])],
         }
     except (ValueError, OSError, KeyError) as error:
         return {"ready": False, "reason": str(error)}
 
 
 def history_capabilities():
-    from borethm import wall_thermal, tool_thermal
+    import borethm as core
+
+    from . import model_compat as compat
 
     wall = {"observe", "radius_m", "carry_static_node"} <= set(
-        inspect.signature(wall_thermal.run).parameters
+        inspect.signature(core.wall_temperatures).parameters
     )
-    wall = wall and "radius_m" in inspect.signature(wall_thermal.Grid.build).parameters
+    wall = wall and "radius_m" in inspect.signature(compat.WallGrid.build).parameters
     tool = {"retain_stage_samples", "T_s0", "T_f0"} <= set(
-        inspect.signature(tool_thermal.trip_in).parameters
+        inspect.signature(core.tool_trip_in).parameters
     )
     return {
         "wall_history": wall,
@@ -151,7 +154,7 @@ def core_layers(items):
 def core_segment(segment):
     """The model's StringSegment for a contract Segment."""
     import borethm as core
-    from borethm.hydraulic_losses import DownholeTool
+    from borethm import DownholeTool
 
     p, j, local, tool = (
         segment.pipe,
@@ -237,7 +240,8 @@ def core_surface(sl):
 
 def make_geometry(scenario):
     import borethm as core
-    from borethm.hydraulic_losses import LossModel
+
+    from .model_compat import LossModel
 
     d = scenario.definition
     segments = [core_segment(segment) for segment in d.well.string]
@@ -262,9 +266,9 @@ def loading_warnings(scenario):
 
 
 def loss_settings(scenario):
-    from borethm.physics import resolve
+    from .model_compat import resolve_physics
 
-    settings = resolve(scenario.model.physics)
+    settings = resolve_physics(scenario.model.physics)
     current = settings["annulus_model"] == "herschel-bulkley-erge"
     return dict(
         physics=scenario.model.physics,
@@ -278,7 +282,8 @@ def loss_settings(scenario):
 
 def physics_record(scenario, result=None, geometry=None, reported=None):
     from dataclasses import asdict
-    from borethm.physics import resolve
+
+    from .model_compat import resolve_physics as resolve
 
     settings = dict(
         reported
@@ -335,7 +340,7 @@ def make_fluid(definition):
     if definition.kind == "iapws_water":
         return None
     if definition.kind == "barite_mud":
-        from borethm.fluids import Mud
+        from .model_compat import Mud
 
         return Mud(
             definition.surface_density_kg_m3,
@@ -416,7 +421,7 @@ def make_settings(scenario):
 
 
 def mass_rate(scenario, fluid):
-    from borethm.model1_coupled import fluid_props
+    from .model_compat import fluid_props
 
     f = scenario.definition.operating.flow
     if f.kind == "mass":
@@ -518,9 +523,9 @@ NOT_CONVERGED = "The circulation calculation did not converge for these inputs."
 
 
 def validate_thermal(scenario, geometry, result, settings):
-    from borethm import model1_coupled as m1
-    from borethm.hydraulic_losses import LossModel
+    from . import model_compat as compat
 
+    LossModel = compat.LossModel
     sol = result["sol"]
     if not sol.success:
         raise CalculationError("SOLVER_NOT_CONVERGED", str(sol.message))
@@ -534,7 +539,7 @@ def validate_thermal(scenario, geometry, result, settings):
         raise CalculationError(
             "RESULT_NONFINITE", "Accepted thermal output contains non-finite values."
         )
-    raw_p = m1.P_of_z(geometry.survey.tvd(audit_z), settings["P_surface"])
+    raw_p = compat.hydrostatic_pressure(geometry.survey.tvd(audit_z), settings["P_surface"])
     ranges = {
         "temperature_range_C": [float(audit_t.min()), float(audit_t.max())],
         "pressure_range_absolute_Pa": [float(raw_p.min()), float(raw_p.max())],
@@ -576,9 +581,10 @@ def run_circulation(
     seed_provider=None,
 ):
     import borethm as core
-    from borethm import model1_coupled as m1
-    from borethm.hydraulic_losses import LossModel
-    from borethm.pressure import column
+
+    from . import model_compat as compat
+
+    LossModel, column = compat.LossModel, compat.pressure_column
 
     warnings = validate(scenario)
     identity = engine_identity()
@@ -638,7 +644,7 @@ def run_circulation(
             "Accepted thermal output contains non-finite values.",
             {"attempts": attempts},
         )
-    raw_p = m1.P_of_z(geometry.survey.tvd(audit_z), settings["P_surface"])
+    raw_p = compat.hydrostatic_pressure(geometry.survey.tvd(audit_z), settings["P_surface"])
     uses_table = d.fluid.kind != "constant_properties"
     outside = uses_table and (
         audit_t.min() < 1
@@ -742,7 +748,7 @@ def run_circulation(
         annulus_wall_pressure_gauge_Pa=(wall_column + annulus_friction).tolist(),
         annulus_hydrostatic_pressure_difference_Pa=(wall_column - wellhead).tolist(),
         annulus_friction_Pa=annulus_friction.tolist(),
-        property_pressure_absolute_Pa=m1.P_of_z(tvd, settings["P_surface"]).tolist(),
+        property_pressure_absolute_Pa=compat.hydrostatic_pressure(tvd, settings["P_surface"]).tolist(),
         component_id=[d.well.string[int(i)].id for i in geometry.segment_index(md)],
         hole_interval_id=[d.well.hole[int(i)].id for i in geometry.hole_index(md)],
     )
@@ -764,9 +770,10 @@ def run_circulation(
     exposure = d.operating.exposure
     resolved_exposure = {
         "kind": exposure.kind,
-        "seconds_per_year": m1.SECONDS_PER_YEAR,
+        # The model's year: its exposure for one year without an exposure profile.
+        "seconds_per_year": float(compat.exposure_seconds(np.zeros(1), 1.0, None)[0]),
         "requested": exposure.model_dump(),
-        "effective_seconds_at_display_depths": m1.exposure_seconds(
+        "effective_seconds_at_display_depths": compat.exposure_seconds(
             md, settings["t_years"], settings["exposure"]
         ).tolist(),
     }
@@ -813,23 +820,23 @@ def run_circulation(
         values = np.asarray(values, dtype=float)
         return [float(values.min()), float(values.max())]
 
-    from borethm import water_table as wt
-
+    table_info = compat.water_table_info()
+    table_t, table_p = table_info["temperatures_C"], table_info["pressures_Pa"]
     property_audit = dict(
         coverage="Accepted adaptive nodes, returned/display samples, physical/source breakpoints and hydraulic integration points",
         internal_trial_lookups_instrumented=False,
         wall_column_intermediate_passes_instrumented=False,
-        table_temperature_C=[float(wt.T_GRID[0]), float(wt.T_GRID[-1])],
-        table_pressure_absolute_Pa=[float(wt.P_GRID[0]), float(wt.P_GRID[-1])],
+        table_temperature_C=[float(table_t[0]), float(table_t[-1])],
+        table_pressure_absolute_Pa=[float(table_p[0]), float(table_p[-1])],
         paths={
             "thermal_fluid_props": dict(
                 raw_temperature_C=bounds(audit_t),
                 raw_pressure_absolute_Pa=bounds(raw_p),
                 effective_table_temperature_C=bounds(
-                    np.clip(audit_t, wt.T_GRID[0], wt.T_GRID[-1])
+                    np.clip(audit_t, table_t[0], table_t[-1])
                 ),
                 effective_table_pressure_absolute_Pa=bounds(
-                    np.clip(raw_p, wt.P_GRID[0], wt.P_GRID[-1])
+                    np.clip(raw_p, table_p[0], table_p[-1])
                 ),
                 behaviour="water_table.props clips to actual table bounds; constant fluid bypasses table",
             ),
@@ -840,11 +847,11 @@ def run_circulation(
             ),
             "hydraulic_liquid_properties": dict(
                 raw_pressure_absolute_Pa=bounds(
-                    m1.P_of_z(geometry.survey.tvd(hz), settings["P_surface"])
+                    compat.hydrostatic_pressure(geometry.survey.tvd(hz), settings["P_surface"])
                 ),
                 effective_guarded_pressure_absolute_Pa=bounds(
                     np.maximum(
-                        m1.P_of_z(geometry.survey.tvd(hz), settings["P_surface"]), 5e6
+                        compat.hydrostatic_pressure(geometry.survey.tvd(hz), settings["P_surface"]), 5e6
                     )
                 ),
                 behaviour="LossModel clips temperature to 1–480 C and floors pressure at 5 MPa before fluid_props/table guards",

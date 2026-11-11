@@ -85,19 +85,11 @@ def assessment_inputs(manifest):
     """Inputs of a completed site assessment, from the evaluator's result."""
     report = manifest["assessment"]
     site, programme = report["site"], report["programme"]
-    from borethm import well_geometry as wg
+    from .model_compat import named_pipes
 
-    pipes = {
-        p.name: p
-        for p in (
-            wg.TK_DRAKON,
-            wg.INTERNALLY_COATED,
-            wg.EXTERNALLY_COATED,
-            wg.CONVENTIONAL,
-            getattr(wg, "DUAL_WALL", None),
-        )
-        if p is not None
-    }
+    # The drill pipes the field comparisons describe; vacuum-insulated tubing
+    # is a sensitivity and is not classed.
+    pipes = {name: p for name, p in named_pipes().items() if not name.startswith("vacuum-insulated")}
     pipe = pipes.get(programme.get("pipe"))
     kind = (
         "mass" if programme.get("flow_unit") == "kg/s" else "volume"
