@@ -44,16 +44,18 @@ def nice_ticks(low, high, count=6):
 
 
 def _label(value):
+    from .units import unsigned_zero
+
     if value == 0:
         return "0"
     magnitude = abs(value)
     if magnitude >= 1000:
-        return f"{value:,.0f}"
+        return unsigned_zero(f"{value:,.0f}")
     if magnitude >= 10:
         return f"{value:.0f}" if float(value).is_integer() else f"{value:.1f}"
     if magnitude >= 1:
         return f"{value:.1f}".rstrip("0").rstrip(".")
-    return f"{value:.3f}".rstrip("0").rstrip(".")
+    return unsigned_zero(f"{value:.3f}".rstrip("0").rstrip("."))
 
 
 def _frame(width, height, title):

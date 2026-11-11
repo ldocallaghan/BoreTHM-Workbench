@@ -1,4 +1,5 @@
 import {api} from './apiClient';
+import {unsignedZero} from './units';
 import {PhysicsChoice, PhysicsRecord} from './PhysicsChoice';
 import {formatApiError} from './apiErrors';
 import React,{useEffect,useRef,useState,lazy,Suspense} from 'react';
@@ -23,7 +24,7 @@ export type HistoryImport={scenario:Scenario;manifest?:Manifest;datasets?:Datase
 type Difference={time_s:number[];state_id:string[];fields:Record<string,(number|null)[]>;qualification:string};
 const DRAFT='borethm-history-draft-v1',ACTIVE='borethm-history-active-v1';
 const terminal=new Set(['completed','failed','cancelled','timed_out']);
-const fmt=(value:number|undefined|null,places=2)=>value==null?'Unavailable':value.toLocaleString('en-GB',{maximumFractionDigits:places});
+const fmt=(value:number|undefined|null,places=2)=>value==null?'Unavailable':unsignedZero(value.toLocaleString('en-GB',{maximumFractionDigits:places}));
 function save(name:string,value:unknown){const url=URL.createObjectURL(new Blob([JSON.stringify(value,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 
 function Plot({dataset,index,radial,baseline,difference}:{dataset:Dataset;index:number;radial?:boolean;baseline?:Dataset;difference?:Difference|null}){

@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {api} from './apiClient';
 import {NumberInput, UnitInput, useFormat} from './UnitsContext';
-import type {Quantity} from './units';
+import {signed, type Quantity} from './units';
 
 type Lever = {key: string; label: string; quantity: string | null; kind: 'number' | 'pipe'; value: number | string | null; pipe?: string | null; available: boolean; reason: string | null};
 type Options = {levers: Lever[]; interpretation: string; max_cases: number; base_duration_s: number | null};
@@ -48,7 +48,7 @@ function StudyView({study, levers, onOpen, refresh}: {study: Study; levers: Leve
   };
   const change = (c: Case, key: string, q: Quantity) => {
     const v = c.change_from_base[key];
-    return v == null ? null : <small className={v < 0 ? 'fail' : ''}> ({v >= 0 ? '+' : ''}{format(v, q)})</small>;
+    return v == null ? null : <small className={v < 0 ? 'fail' : ''}> ({signed(v, q, system)})</small>;
   };
   return <section className="result-section lever-study" aria-labelledby={`study-${study.id}`}>
     <div className="section-heading"><h2 id={`study-${study.id}`}>{study.title}</h2>

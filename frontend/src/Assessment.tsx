@@ -13,7 +13,7 @@ import {ResultsPage, type AssessmentSummary, type DetailSection, type ResultsPay
 import {ProgrammePage} from './ProgrammePage';
 import {LeversPage} from './LeversPage';
 import {useFormat} from './UnitsContext';
-import {series, number as numberUnit} from './units';
+import {series, number as numberUnit, unsignedZero} from './units';
 
 type AssessmentScenario = components['schemas']['AssessmentScenario'];
 type Warning = { code: string; message: string; path: string };
@@ -25,7 +25,7 @@ type Job = { id: string; mode?: string; state: string; scenario_id: string; scen
 type View = 'site' | 'programme' | 'results' | 'details' | 'levers';
 type Interface = {available: boolean; message: string | null};
 const finished = new Set(['completed', 'failed', 'cancelled', 'timed_out']);
-const fmt = (n: number | null | undefined, decimals = 2) => n == null ? 'Unavailable' : n.toLocaleString('en-GB', { maximumFractionDigits: decimals, minimumFractionDigits: decimals });
+const fmt = (n: number | null | undefined, decimals = 2) => n == null ? 'Unavailable' : unsignedZero(n.toLocaleString('en-GB', { maximumFractionDigits: decimals, minimumFractionDigits: decimals }));
 
 const identity = (value: unknown): string => {
   const normal = (x: unknown): unknown => Array.isArray(x) ? x.map(normal) : x && typeof x === 'object' ? Object.fromEntries(Object.entries(x).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => [k, normal(v)])) : x;

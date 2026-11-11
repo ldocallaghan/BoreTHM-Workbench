@@ -58,3 +58,11 @@ test('formatting in each system', () => {
   assert.equal(format(1e6, 'pressure', 'SI'), '1.00 MPa');
   assert.equal(number(null, 'pressure', 'SI'), 'Unavailable');
 });
+
+test('a value that rounds to zero prints without a sign', async () => {
+  const {format, signed} = await import('../src/units.ts');
+  assert.equal(format(-0.01, 'temperature_difference', 'oilfield'), '0.0 °F');
+  assert.equal(signed(0.01, 'temperature_difference', 'oilfield'), '0.0 °F');
+  assert.equal(signed(1, 'temperature_difference', 'SI'), '+1.0 °C');
+  assert.equal(signed(-1, 'temperature_difference', 'SI'), '-1.0 °C');
+});

@@ -183,14 +183,23 @@ def units_table():
     }
 
 
+def unsigned_zero(text):
+    """Number text without the minus sign of a value that rounds to zero,
+    such as "-0.0"."""
+    if text.startswith("-") and not any(c in "123456789" for c in text):
+        return text[1:]
+    return text
+
+
 def fmt(value, quantity, system, decimals=None):
-    """Format an SI value in a system's display unit with its symbol."""
+    """Format an SI value in a system's display unit with its symbol. A value
+    that rounds to zero prints without a sign."""
     if value is None or not math.isfinite(value):
         return "unavailable"
     shown = from_si(value, quantity, system)
     if decimals is None:
         decimals = DEFAULT_DECIMALS.get((quantity, system), 2)
-    return f"{shown:,.{decimals}f} {symbol(quantity, system)}"
+    return f"{unsigned_zero(f'{shown:,.{decimals}f}')} {symbol(quantity, system)}"
 
 
 DEFAULT_DECIMALS = {

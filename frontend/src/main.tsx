@@ -22,7 +22,7 @@ import {UnitsProvider, UnitToggle, UnitField, UnitInput, useUnits} from './Units
 import {GeothermEditor} from './GeothermEditor';
 import {FieldComparisons} from './FieldComparisons';
 import {FlagsPanel, type ResultsPayload} from './ResultsPage';
-import {format as formatUnit, number as numberUnit, series, symbol as unitSymbol, fromSI, inputValue, toSI, type Quantity, type UnitSystem} from './units';
+import {format as formatUnit, number as numberUnit, signed as signedUnit, unsignedZero, series, symbol as unitSymbol, fromSI, inputValue, toSI, type Quantity, type UnitSystem} from './units';
 import './results.css';
 
 type Scenario = components['schemas']['Scenario'];
@@ -39,7 +39,7 @@ type Tab = 'temperature' | 'pressure' | 'budget' | 'compare' | 'data' | 'provena
 const terminal = new Set(['completed', 'failed', 'cancelled', 'timed_out']);
 const DRAFT = 'borethm-workbench-draft-v1';
 const ACTIVE = 'borethm-workbench-active-v1';
-const fmt = (value: number | undefined, decimals = 2) => value == null || !Number.isFinite(value) ? 'Unavailable' : value.toLocaleString('en-GB', { maximumFractionDigits: decimals, minimumFractionDigits: decimals });
+const fmt = (value: number | undefined, decimals = 2) => value == null || !Number.isFinite(value) ? 'Unavailable' : unsignedZero(value.toLocaleString('en-GB', { maximumFractionDigits: decimals, minimumFractionDigits: decimals }));
 
 
 function NumericInput({ label, value, min, max, step, invalid, change, onInvalid }: { label: string; value: number; min?: number; max?: number; step?: number; invalid?: boolean; change: (next: number) => void; onInvalid: (invalid: boolean) => void }) {
@@ -412,7 +412,7 @@ function App() {
     const old = baseline?.summary[key]?.value;
     const delta = value != null && old != null && baseline?.run_id !== manifest?.run_id ? value - old : undefined;
     const deltaQuantity: Quantity = quantity === 'temperature' ? 'temperature_difference' : quantity;
-    return <div className="metric"><div className="metric-label">{label}{icon}</div><div className="metric-value">{numberUnit(value, quantity, system)} <span>{unitSymbol(quantity, system)}</span></div><div className="metric-foot">{delta == null ? (value == null ? 'No result yet' : key === 'spp' ? 'Pump pressure at surface' : 'Fluid temperature') : <><span className="delta">{delta >= 0 ? '+' : ''}{formatUnit(delta, deltaQuantity, system)}</span> <span>vs baseline</span></>}</div></div>;
+    return <div className="metric"><div className="metric-label">{label}{icon}</div><div className="metric-value">{numberUnit(value, quantity, system)} <span>{unitSymbol(quantity, system)}</span></div><div className="metric-foot">{delta == null ? (value == null ? 'No result yet' : key === 'spp' ? 'Pump pressure at surface' : 'Fluid temperature') : <><span className="delta">{signedUnit(delta, deltaQuantity, system)}</span> <span>vs baseline</span></>}</div></div>;
   };
 
   return <div className={`app-shell ${reduceMotion ? 'reduce-motion' : ''}`}>

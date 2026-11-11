@@ -168,3 +168,14 @@ def test_scenario_hash_does_not_depend_on_the_unit_choice(client):
             scenario.model_dump()
         )
     assert hashes == [expected] * 3
+
+
+def test_a_value_that_rounds_to_zero_prints_without_a_sign():
+    from borethm_workbench import svg
+
+    # A change of -0.01 K is -0.018 F, shown to one decimal.
+    assert units.fmt(-0.01, "temperature_difference", "oilfield") == "0.0 °F"
+    assert units.fmt(-0.05, "temperature_difference", "oilfield") == "-0.1 °F"
+    assert units.fmt(-1e-9, "pressure", "SI") == "0.00 MPa"
+    assert svg._label(-1e-11) == "0" and svg._label(-0.25) == "-0.25"
+    assert units.unsigned_zero("-0") == "0" and units.unsigned_zero("-0,000.00") == "0,000.00"

@@ -48,15 +48,26 @@ export function decimals(quantity: Quantity, system: UnitSystem): number {
   return unit(quantity, system).decimals;
 }
 
+// Number text without the minus sign of a value that rounds to zero, such as "-0.0".
+export function unsignedZero(text: string): string {
+  return text.startsWith('-') && !/[1-9]/.test(text) ? text.slice(1) : text;
+}
+
 export function number(value: number | null | undefined, quantity: Quantity, system: UnitSystem, places?: number): string {
   if (value == null || !Number.isFinite(value)) return 'Unavailable';
   const digits = places ?? decimals(quantity, system);
-  return fromSI(value, quantity, system).toLocaleString('en-GB', {maximumFractionDigits: digits, minimumFractionDigits: digits});
+  return unsignedZero(fromSI(value, quantity, system).toLocaleString('en-GB', {maximumFractionDigits: digits, minimumFractionDigits: digits}));
 }
 
 export function format(value: number | null | undefined, quantity: Quantity, system: UnitSystem, places?: number): string {
   const text = number(value, quantity, system, places);
   return text === 'Unavailable' ? text : `${text} ${symbol(quantity, system)}`;
+}
+
+// A change with its sign: "+" only where the value does not round to zero.
+export function signed(value: number, quantity: Quantity, system: UnitSystem, places?: number): string {
+  const text = format(value, quantity, system, places);
+  return value > 0 && /[1-9]/.test(number(value, quantity, system, places)) ? `+${text}` : text;
 }
 
 // Converts a series for plotting or tables.
