@@ -1,4 +1,6 @@
-.programme-page, .levers-page { display: grid; gap: 16px; }
+.programme-page, .levers-page { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+/* Grid items keep to the column, so wide tables scroll inside their own container. */
+.programme-page > *, .levers-page > * { min-width: 0; }
 .programme-actions, .lever-exports { display: flex; flex-wrap: wrap; gap: 8px; }
 .choice-row { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 4px 0 10px; }
 .choice { display: inline-flex; align-items: center; gap: 6px; }
@@ -11,6 +13,9 @@
 .split-row { display: inline-flex; gap: 6px; align-items: center; }
 .operations-table th[scope="row"] { width: 18%; }
 .operations-table td:nth-child(2) { width: 36%; }
+/* Rules and sources wrap, so the stated value stays in view at narrow widths. */
+.operations-table th, .operations-table td { white-space: normal; }
+.operations-table td:nth-child(2) { min-width: 240px; }
 .operations-table td:nth-child(2) .small { margin: 2px 0 0; }
 .operations-table tr.stated th { color: #1d5f58; }
 .operations-table input[type="number"], .operations-table input:not([type]) { width: 140px; }
