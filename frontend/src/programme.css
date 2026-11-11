@@ -37,3 +37,5 @@
 .stated-constraint { font-weight: 600; }
 .interface-note { margin: 4px 0 8px; }
 @media (max-width: 900px) { .programme-drawing { grid-template-columns: 1fr; } }
+/* The lever table's labels and reasons wrap, so it fits at narrow widths. */
+.lever-choices th, .lever-choices td { white-space: normal; }
