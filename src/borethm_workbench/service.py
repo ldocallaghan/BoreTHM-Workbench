@@ -905,6 +905,7 @@ def create_app(data_dir=None, start_jobs=True, deadline=30, policy=None):
         mode: Literal["one_at_a_time", "grid"]
         levers: list[LeverChoice] = Field(min_length=1, max_length=len(lever_studies.LEVERS))
         title: str | None = Field(default=None, max_length=200)
+        units: Literal["SI", "oilfield"] = "SI"
 
     def lever_base(rid):
         programme_interface()

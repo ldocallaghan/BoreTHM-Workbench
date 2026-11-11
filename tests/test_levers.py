@@ -292,3 +292,14 @@ def test_string_levers_change_a_programme_held_in_the_site_file():
     assert segments[0] == {"length": 1000.0, "pipe": "conventional"}
     assert "programme" not in case["definition"]
 
+
+
+def test_case_titles_use_the_chosen_units_and_keep_the_labels():
+    base = fixture("stated")
+    levers = (("drilling_fluid", [1050.0, 1100.0]), ("inlet_temperature", [20.0, 30.0]))
+    oilfield = L.plan({**request("grid", *levers), "units": "oilfield"}, base)
+    title = oilfield["cases"][0]["scenario"]["title"]
+    assert title.endswith("Drilling fluid density at 20 °C: 8.76 ppg; Pump inlet temperature: 68.0 °F")
+    si = L.plan(request("grid", *levers), base)
+    assert si["cases"][0]["scenario"]["title"].endswith(
+        "Drilling fluid density at 20 °C: 1,050 kg/m³; Pump inlet temperature: 20.0 °C")

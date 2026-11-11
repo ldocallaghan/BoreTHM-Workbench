@@ -101,7 +101,7 @@ export function LeversPage({base, onOpen}: {base: {run_id: string; wall_clock_du
     return () => clearInterval(timer);
   }, [study?.id, study?.state]);
   useEffect(() => { if (study) void load(study.id); }, [system]);
-  const request = {base_run_id: base.run_id, mode, levers: choices.map(c => ({lever: c.lever, values: c.values}))};
+  const request = {base_run_id: base.run_id, mode, units: system, levers: choices.map(c => ({lever: c.lever, values: c.values}))};
   const complete = choices.length > 0 && choices.every(c => c.values.length >= 2 && c.values.every(v => v != null && v !== '')) && (mode === 'one_at_a_time' || choices.length === 2);
   useEffect(() => {
     setPlan(null);

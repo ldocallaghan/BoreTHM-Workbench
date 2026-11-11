@@ -237,6 +237,7 @@ def plan(request, base_manifest):
     if len(combos) > MAX_CASES:
         raise CalculationError("LEVER_INVALID", f"{len(combos)} cases exceed the limit of {MAX_CASES}")
     base_scenario = base_manifest["resolved_scenario"]
+    system = request.get("units") or "SI"
     title = request.get("title") or f"{base_scenario['title']} · design levers"
     cases = []
     for index, combo in enumerate(combos):
@@ -244,8 +245,9 @@ def plan(request, base_manifest):
         for lever, value in combo:
             raw = _apply(raw, lever, value)
         raw = copy.deepcopy(raw)
-        raw["title"] = (f"{title} · " + ", ".join(
-            f"{LEVERS[k][0].lower()} {_label_value(k, v)}" for k, v in combo))[:200]
+        # Each lever's label and value, in the units the user chose.
+        raw["title"] = (f"{title} · " + "; ".join(
+            f"{LEVERS[k][0]}: {_label_value(k, v, system)}" for k, v in combo))[:200]
         try:
             scenario = AssessmentScenario.model_validate(raw)
             warnings = validate_assessment(scenario)
