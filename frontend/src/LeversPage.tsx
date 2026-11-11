@@ -140,6 +140,7 @@ export function LeversPage({base, onOpen}: {base: {run_id: string; wall_clock_du
       {error && <p className="field-error" role="alert">{error}</p>}
       {plan && <div className="lever-plan">
         <p><strong>{plan.case_count} assessments</strong>, run one at a time. Estimate: about {minutes(plan.estimate.total_s)}, from the base run's {minutes(plan.estimate.base_duration_s)}. {plan.estimate.note}</p>
+        <details className="lever-case-titles"><summary>Case titles</summary><ol>{plan.cases.map(c => <li key={c.index}>{c.title}</li>)}</ol></details>
         <button className="run-button" onClick={() => void start()}>Start the study</button></div>}
       {!plan && choices.length > 0 && !error && <p className="small muted">Give each chosen lever at least two values{mode === 'grid' ? ', and choose exactly two levers for a grid' : ''}.</p>}
     </section>
