@@ -284,10 +284,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Operation Fields */
-        get: operations["operation_fields_api_v1_operations_fields_get"];
+        get?: never;
         put?: never;
-        post?: never;
+        /** Operation Fields */
+        post: operations["operation_fields_api_v1_operations_fields_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1930,6 +1930,12 @@ export interface components {
             mode: "one_at_a_time" | "grid";
             /** Title */
             title?: string | null;
+            /**
+             * Units
+             * @default SI
+             * @enum {string}
+             */
+            units: "SI" | "oilfield";
         };
         /** LocalLoss */
         LocalLoss: {
@@ -2058,6 +2064,12 @@ export interface components {
             /** Inlet Temperature C */
             inlet_temperature_C: number;
             surface_pressure: components["schemas"]["SurfacePressure"];
+        };
+        /** OperationFields */
+        OperationFields: {
+            programme?: components["schemas"]["ProgrammeDefinition"] | null;
+            /** Site Toml */
+            site_toml?: string | null;
         };
         /** OperationsCheck */
         OperationsCheck: {
@@ -4401,14 +4413,18 @@ export interface operations {
             };
         };
     };
-    operation_fields_api_v1_operations_fields_get: {
+    operation_fields_api_v1_operations_fields_post: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperationFields"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
