@@ -309,7 +309,7 @@ def _value(item, system):
 
 def _circulation_figures(summary, system):
     pairs = [
-        ("Bit bore delivery temperature", _t(_fmt(summary["bit_bore_C"], "temperature", system))),
+        ("Fluid at the bit", _t(_fmt(summary["bit_bore_C"], "temperature", system))),
         ("Annulus temperature above the bit", _t(_fmt(summary["bit_annulus_C"], "temperature", system))),
         ("Surface return temperature", _t(_fmt(summary["return_C"], "temperature", system))),
         ("Standpipe pressure", _t(_fmt(summary["standpipe_Pa"], "pressure", system))),

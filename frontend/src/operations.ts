@@ -9,3 +9,13 @@ export function initial(row: FieldRow): unknown {
   return row.restates_default ? row.default : null;
 }
 
+// The programme heading: the model's choice only when nothing is stated,
+// neither a programme nor an operating value.
+export function programmeHeading(statedProgramme: boolean, statedValues: number): string {
+  return statedProgramme || statedValues > 0 ? 'Programme: stated values and model choices' : 'Programme chosen by the model';
+}
+
+// Operating values stated in a site document's [operations] table.
+export function statedCount(operations: Record<string, unknown> | null | undefined): number {
+  return Object.keys(operations ?? {}).filter(name => name !== 'sources').length;
+}
