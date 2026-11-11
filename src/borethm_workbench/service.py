@@ -842,6 +842,11 @@ def create_app(data_dir=None, start_jobs=True, deadline=30, policy=None):
         programme: ProgrammeDefinition
         site_toml: str = Field(min_length=1, max_length=5 * 1024 * 1024)
 
+    class OperationFields(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        site_toml: str | None = Field(default=None, max_length=5 * 1024 * 1024)
+        programme: ProgrammeDefinition | None = None
+
     class OperationsCheck(BaseModel):
         model_config = ConfigDict(extra="forbid")
         operations: dict
@@ -877,10 +882,10 @@ def create_app(data_dir=None, start_jobs=True, deadline=30, policy=None):
             "operations": document.get("operations"),
         }
 
-    @app.get("/api/v1/operations/fields")
-    def operation_fields():
+    @app.post("/api/v1/operations/fields")
+    def operation_fields(request: OperationFields):
         programme_interface()
-        return programmes.operation_fields()
+        return programmes.operation_fields(request.site_toml, request.programme)
 
     @app.post("/api/v1/operations/check")
     def operations_check(request: OperationsCheck):

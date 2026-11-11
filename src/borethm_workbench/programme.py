@@ -50,11 +50,12 @@ def capability():
     }
 
 
-def defaults(site=None):
-    """operation_defaults of the installed model, for a site where given."""
+def defaults(site=None, programme=None):
+    """operation_defaults of the installed model, for a site and a
+    programme (HydraulicProgramme) where given."""
     from borethm import operation_defaults
 
-    return operation_defaults(site)
+    return operation_defaults(site, programme)
 
 
 # ---------------------------------------------------------------- model pipes
@@ -126,10 +127,30 @@ def _sentence(rule):
     return rule[:1].upper() + rule[1:].rstrip(".") + "."
 
 
-def operation_fields(site=None):
+def operation_fields(site_toml=None, definition=None):
     """One row per operating choice: name, label, quantity, and the model's
-    default value, rule and source from operation_defaults."""
-    d = defaults(site)
+    default value, rule, source and restates_default from operation_defaults,
+    for the site in site_toml and the stated programme (a definition) where
+    given. A site or programme the model cannot load gives the defaults
+    without it."""
+    from .sites import document_from_toml, document_to_toml, load_text
+
+    site = programme = None
+    if site_toml:
+        try:
+            # The defaults do not depend on the stated operations, so a value
+            # being edited in that table does not hide them.
+            document = document_from_toml(site_toml)
+            document.pop("operations", None)
+            site = load_text(document_to_toml(document))
+        except (ValueError, TypeError, KeyError):
+            site = None
+    if definition is not None and definition.kind == "custom":
+        try:
+            programme = build(definition)
+        except (ValueError, TypeError):
+            programme = None
+    d = defaults(site, programme)
     rows = []
     for name, quantity, label in FIELDS:
         entry = d[name]
@@ -142,6 +163,7 @@ def operation_fields(site=None):
                 "rule": _sentence(entry["rule"]),
                 "source": entry["source"],
                 "default": entry["value"],
+                "restates_default": entry["restates_default"],
             }
         )
     return {

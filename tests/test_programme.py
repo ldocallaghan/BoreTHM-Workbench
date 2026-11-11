@@ -90,8 +90,8 @@ def test_an_earlier_interface_counts_as_unavailable(monkeypatch):
 
 @without_interface
 def test_without_the_interface_the_new_features_are_refused(client):
-    for path in ("/api/v1/programme/pipes", "/api/v1/operations/fields"):
-        response = client.get(path)
+    for response in (client.get("/api/v1/programme/pipes"),
+                     client.post("/api/v1/operations/fields", json={})):
         assert response.status_code == 422
         assert response.json()["detail"][0]["code"] == "CAPABILITY_UNSUPPORTED"
     data = preset()
@@ -128,6 +128,28 @@ def test_a_site_without_the_new_tables_gives_the_earlier_assessment(label):
 
 # ---------------------------------------------------------------- operations
 @needs_interface
+def test_operation_fields_take_the_site_and_the_programme(client):
+    from borethm import find_site, operation_defaults
+
+    from borethm_workbench.sites import template_text
+
+    trip = lambda fields: next(r for r in fields["fields"] if r["name"] == "trip_hours")
+    pipes = lambda fields: next(r for r in fields["fields"] if r["name"] == "pipes")
+    without = client.post("/api/v1/operations/fields", json={}).json()
+    assert trip(without)["default"] is None and trip(without)["restates_default"] is False
+    newberry = template_text("newberry")
+    fields = client.post("/api/v1/operations/fields", json={"site_toml": newberry}).json()
+    expected = operation_defaults(find_site("newberry"))["trip_hours"]["value"]
+    assert trip(fields)["default"] == pytest.approx(17.459, abs=5e-4)
+    assert trip(fields)["default"] == expected and trip(fields)["restates_default"] is True
+    string, hole = named_string()
+    custom = {"kind": "custom", "string": string, "hole": hole}
+    fields = client.post("/api/v1/operations/fields", json={"site_toml": site_toml(), "programme": custom}).json()
+    assert pipes(fields)["default"] == [string[0]["pipe"]["name"]]
+    assert pipes(fields)["restates_default"] is False
+
+
+@needs_interface
 def test_operation_fields_come_from_operation_defaults():
     from borethm import operation_defaults
 
@@ -138,6 +160,9 @@ def test_operation_fields_come_from_operation_defaults():
     for row in fields["fields"]:
         entry = model[row["name"]]
         assert row["default"] == entry["value"] and row["source"] == entry["source"] and row["unit"] == entry["unit"]
+        assert row["restates_default"] == entry["restates_default"]
+        # The page shows each rule and source; neither names a module or constant.
+        assert "_" not in row["source"] + row["rule"] and "data/" not in row["source"], row["name"]
         assert row["rule"].rstrip(".").lower() == entry["rule"].rstrip(".").lower()
     assert fields["groups"] == {"flow": ("mass_flow_kg_s", "volume_flow_L_s"),
                                 "flows": ("mass_flows_kg_s", "volume_flows_L_s")}

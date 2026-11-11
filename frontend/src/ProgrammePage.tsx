@@ -1,3 +1,4 @@
+import {initial, type FieldRow} from './operations';
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 import type {components} from './api.generated';
 import {api} from './apiClient';
@@ -13,7 +14,6 @@ type Segment = components['schemas']['Segment'];
 type Hole = components['schemas']['Hole'];
 type Layer = components['schemas']['Layer'];
 type Issue = {field: string; message: string};
-export type FieldRow = {name: string; label: string; quantity: string; unit: string | null; rule: string; source: string; default: unknown};
 type Fields = {fields: FieldRow[]; groups: Record<string, string[]>; pipe_names: string[]};
 type ModelPipe = {name: string; layers: Layer[]; thermal_joint_fraction: number; source: string; commercial: boolean; coating_rating_C: number | null};
 type Drawing = {bit_md_m: number; string: Segment[]; hole: Hole[]};
@@ -182,21 +182,18 @@ function OperationInput({row, value, change, pipeNames}: {row: FieldRow; value: 
   }
   if (row.name.endsWith('_flows_kg_s') || row.name.endsWith('_flows_L_s')) return <GridInput row={row} value={value as number[] | null} change={change} />;
   if (row.name === 'coating_ratings_C') {
-    const ratings = (value as Record<string, number>) ?? {};
-    return <div>{pipeNames.map(name => <div key={name} className="number-row small"><label className="choice"><input type="checkbox" checked={name in ratings} onChange={e => { const next = {...ratings}; if (e.target.checked) next[name] = 204; else delete next[name]; change(next); }} />{name}</label>
+    // A pipe ticked here takes the model's rating where it has one, and is
+    // otherwise left for the user to enter.
+    const ratings = (value as Record<string, number | null>) ?? {};
+    const modelRating = (name: string) => (row.default as Record<string, number> | null)?.[name] ?? null;
+    return <div>{pipeNames.map(name => <div key={name} className="number-row small"><label className="choice"><input type="checkbox" checked={name in ratings} onChange={e => { const next = {...ratings}; if (e.target.checked) next[name] = modelRating(name); else delete next[name]; change(next); }} />{name}</label>
       {name in ratings && <UnitInput label={`Coating rating for ${name}`} value={ratings[name]} quantity="temperature" change={v => change({...ratings, [name]: v})} />}</div>)}<small>Pipes not ticked have no rating. {Object.keys(ratings).length ? '' : 'None ticked: no pipe has a rating.'}</small></div>;
   }
   if (row.quantity in UNIT_TABLE_QUANTITIES) return <UnitInput label={row.label} value={value == null ? null : toQuantity(row.name, value as number)} quantity={row.quantity as Quantity} change={v => change(fromQuantity(row.name, v))} />;
   return <NumberInput ariaLabel={row.label} step={row.quantity === 'count' ? 1 : 'any'} integer={row.quantity === 'count'} value={value as number | null} change={change} />;
 }
 
-// The value a row takes when it is first stated: the model's default, or a
-// starting value where the model searches.
-function initial(row: FieldRow): unknown {
-  if (row.default != null) return row.default;
-  const start: Record<string, unknown> = {mass_flow_kg_s: 30, volume_flow_L_s: 30, trip_hours: 20, rop_m_h: 5, drilling_fluid_kg_m3: 1050, trip_fluid_kg_m3: 1050};
-  return start[row.name] ?? null;
-}
+
 
 function defaultText(row: FieldRow, system: UnitSystem): string {
   const v = row.default;
@@ -268,7 +265,8 @@ function OperationsTable({site, editSite, siteCheck, bases, fields}: {site: Site
             write(next);
           }} />Model chooses</label><p className="small muted">{row.rule}{shown ? ` Default: ${shown}.` : ''}</p><p className="small muted">Source: {row.source}</p></td>
           <td>{stated ? <OperationInput row={row} value={operations[row.name]} pipeNames={fields.pipe_names} change={v => write({...operations, [row.name]: v})} /> : <span className="muted">Not stated</span>}
-            <Messages kind="error" items={msgs.errors} /><Messages kind="warning" items={msgs.warnings} /></td>
+            {stated && operations[row.name] == null ? <p className="small">Enter a value, or tick Model chooses.</p>
+              : <><Messages kind="error" items={msgs.errors} /><Messages kind="warning" items={msgs.warnings} /></>}</td>
           <td>{stated && <div className="basis-row">
             <select aria-label={`${label} basis`} value={pair[0]} onChange={e => write({...operations, sources: {...sources, [row.name]: [e.target.value, pair[1]]}})}>{bases.map(b => <option key={b} value={b}>{b}</option>)}</select>
             <input aria-label={`${label} source`} placeholder="Source" value={pair[1]} onChange={e => write({...operations, sources: {...sources, [row.name]: [pair[0], e.target.value]}})} />
@@ -292,7 +290,6 @@ export function ProgrammePage({scenario, draft, site, editSite, siteCheck}: {sce
   const [form, setForm] = useState<Programme | null | undefined>(undefined);
   const written = useRef('');
   const upload = useRef<HTMLInputElement>(null);
-  useEffect(() => { void api<Fields>('/operations/fields').then(setFields).catch(e => setError((e as Error).message)); }, []);
   useEffect(() => {
     void api<{pipes: ModelPipe[]}>('/programme/pipes').then(v => setPipes(v.pipes)).catch(e => setError((e as Error).message));
     void api<{bases: string[]}>('/sites/templates').then(v => setBases(v.bases)).catch(() => undefined);
@@ -309,6 +306,14 @@ export function ProgrammePage({scenario, draft, site, editSite, siteCheck}: {sce
       .catch(e => setError((e as Error).message));
   }, [siteTable]);
   const request = useMemo(() => JSON.stringify({programme: form ?? defaultReference(), site_toml: content}), [form, content]);
+  // The operation defaults for this site and the stated string.
+  const fieldsRequest = useMemo(() => JSON.stringify({site_toml: content, programme: form?.kind === 'custom' ? form : null}), [form, content]);
+  useEffect(() => {
+    if (form === undefined) return;
+    const controller = new AbortController();
+    const timer = setTimeout(() => { void api<Fields>('/operations/fields', {method: 'POST', body: fieldsRequest, signal: controller.signal}).then(setFields).catch(e => { if ((e as Error).name !== 'AbortError') setError((e as Error).message); }); }, 300);
+    return () => { clearTimeout(timer); controller.abort(); };
+  }, [fieldsRequest, form === undefined]);
   useEffect(() => {
     if (form === undefined) return;
     const controller = new AbortController();
