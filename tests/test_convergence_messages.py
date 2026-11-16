@@ -68,8 +68,25 @@ def test_superhot_formation_with_cold_circulation_reaches_the_solver(physics, mo
 
 
 @pytest.mark.parametrize("physics", ["v1.8.0", "v1.7.0"])
-def test_superhot_formation_that_does_not_converge_reports_non_convergence(physics):
+def test_a_model_result_without_success_is_reported_as_non_convergence(physics, monkeypatch):
+    """The model's own success flag decides, whatever the solver's convergence boundary."""
+    import borethm
+
+    calls = []
+    original = borethm.circulating_temperatures
+
+    def unsuccessful(*args, **kwargs):
+        calls.append(1)
+        return {**original(*args, **kwargs), "success": False}
+
+    monkeypatch.setattr(borethm, "circulating_temperatures", unsuccessful)
     with pytest.raises(CalculationError) as caught:
-        run_circulation(superhot(physics, 60.0))
-    assert caught.value.code == "SOLVER_NOT_CONVERGED"
-    assert str(caught.value) == NOT_CONVERGED
+        run_circulation(parse_scenario(preset("synthetic-water", physics)))
+    error = caught.value
+    assert calls == [1]
+    assert error.code == "SOLVER_NOT_CONVERGED"
+    assert str(error) == NOT_CONVERGED
+    assert error.diagnostics["model_success"] is False
+    [attempt] = error.diagnostics["attempts"]
+    assert attempt["outcome"] == "rejected"
+    assert attempt["failure_code"] == "SOLVER_NOT_CONVERGED"
