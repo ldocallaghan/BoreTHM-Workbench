@@ -1,10 +1,9 @@
 """Hydraulic programmes and operating choices for site assessments.
 
-BoreTHM 1.8.0 evaluates a site with its own pipe, flow, limits, timings and
-fluids. A later BoreTHM accepts an ``Operations`` record and a site file's
-``[operations]`` table, which state those choices, and describes each
-choice's default with ``operation_defaults``. This module detects that
-interface, lists the model's named pipes and builds the model's
+BoreTHM accepts an ``Operations`` record and a site file's
+``[operations]`` table, which state the pipe, flow, limits, timings and
+fluids, and describes each choice's default with ``operation_defaults``.
+This module lists the model's named pipes and builds the model's
 ``HydraulicProgramme`` from an assessment's programme definition. Defaults,
 rules and sources come from ``operation_defaults``; validation messages
 come from ``validate_operations`` with their field names. Nothing here
@@ -13,41 +12,8 @@ calculates a physical value.
 
 from .adapter import core_hole, core_segment, core_surface
 
-UNAVAILABLE = (
-    "The installed BoreTHM does not accept a drilling programme or operating "
-    "choices. Install a BoreTHM release with Operations and operation_defaults "
-    "to state them."
-)
-# Operations fields of the settled interface; an earlier interface lacks them.
-REQUIRED_FIELDS = ("mass_flow_kg_s", "volume_flow_L_s", "mass_flows_kg_s", "volume_flows_L_s")
-
-
-def interface_available():
-    """True when the installed BoreTHM provides the settled operations
-    interface: Operations with mass and volume flows, operation_defaults,
-    validation records and evaluate's operations argument."""
-    try:
-        import inspect
-
-        import borethm
-
-        fields = getattr(getattr(borethm, "Operations", None), "__dataclass_fields__", {})
-        return (
-            hasattr(borethm, "operation_defaults")
-            and hasattr(borethm, "validate_operations")
-            and all(name in fields for name in REQUIRED_FIELDS)
-            and "operations" in inspect.signature(borethm.evaluate).parameters
-        )
-    except (ImportError, AttributeError, ValueError, TypeError):
-        return False
-
-
 def capability():
-    available = interface_available()
-    return {
-        "available": available,
-        "message": None if available else UNAVAILABLE,
-    }
+    return {"available": True, "message": None}
 
 
 def defaults(site=None, programme=None):

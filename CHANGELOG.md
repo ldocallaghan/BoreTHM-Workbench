@@ -2,6 +2,8 @@
 
 ## 0.3.0.dev0
 
+The application requires BoreTHM 1.9.0 or later, which provides the operations interface.
+
 On the Programme page, the operation defaults are the current site's, and a field starts at its default when "Model chooses" is unticked only where the model marks that default as restating its result; other fields, such as the flow grids and the run-in staging, start empty with the default and the rule shown. Sources name papers, data sets and the model's rules. The Operations table stays within the page at 1,280 px. Headings say "Programme: stated values and model choices" when anything is stated, and the bit temperature is "Fluid at the bit" everywhere. Lever case titles use the chosen units and the labels as written. A value that rounds to zero prints without a sign. With the interface present the application uses only BoreTHM's public names; the names BoreTHM 1.8.0 lacks come from one compatibility module. The capabilities' release status refers to the Field comparisons page.
 
 The Programme page, results page and Design levers page use BoreTHM's settled operations interface, and the application requires it. A flow is stated as a mass flow or a volume flow at surface and is converted to lb/s or US gal/min with oilfield units; the flow levers show their unit with every value. Defaults, rules and sources come from `operation_defaults`, and validation messages attach to the fields the model's records name. A programme with the model's named pipes is written to the site file's `[programme]` table with the `pipe` key. Pump flows are the model's L/s values, and rows the model marks as not setting the status are labelled as comparisons.

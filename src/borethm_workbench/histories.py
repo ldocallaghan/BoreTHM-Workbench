@@ -302,8 +302,6 @@ def wall_dataset(scenario, column, stored_grid=None):
 def tool_dataset(scenario):
     import borethm as core
 
-    from . import model_compat as compat
-
     d = scenario.definition
     n = scenario.numerics
     l = d.lump
@@ -387,10 +385,10 @@ def tool_dataset(scenario):
                 end_s=t + stop.duration_s,
             )
         )
-        hist = compat.tool_temperatures(
+        hist = core.tool_temperatures(
             lump,
             [
-                compat.ToolSegment(
+                core.ToolSegment(
                     stop.duration_s,
                     stop.outside_temperature_C,
                     stop.outside_film_W_m2_K,
@@ -418,7 +416,7 @@ def tool_dataset(scenario):
         )
         for time in times
     ]
-    full = compat.ToolHistory(
+    full = core.ToolHistory(
         np.asarray(times),
         np.asarray(steel),
         np.asarray(fluid),

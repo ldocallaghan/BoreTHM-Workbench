@@ -11,7 +11,7 @@ license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE"]
 requires-python = ">=3.11,<3.15"
 authors = [{name = "Liam O'Callaghan"}]
-dependencies = ["borethm>=1.8.0,<2", "fastapi>=0.162.0", "uvicorn>=0.54.0", "pydantic>=2.14.2"]
+dependencies = ["borethm>=1.9.0,<2", "fastapi>=0.162.0", "uvicorn>=0.54.0", "pydantic>=2.14.2"]
 
 [project.scripts]
 borethm-workbench = "borethm_workbench.cli:main"

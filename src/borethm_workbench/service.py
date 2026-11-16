@@ -9,7 +9,7 @@ import zipfile
 
 def tool_allowances():
     from dataclasses import asdict
-    from .model_compat import tool_loss_defaults as defaults
+    from borethm import tool_loss_defaults as defaults
 
     return [asdict(value) for value in defaults().values()]
 
@@ -853,23 +853,16 @@ def create_app(data_dir=None, start_jobs=True, deadline=30, policy=None):
         model_config = ConfigDict(extra="forbid")
         operations: dict
 
-    def programme_interface():
-        if not programmes.interface_available():
-            raise CalculationError("CAPABILITY_UNSUPPORTED", programmes.UNAVAILABLE)
-
     @app.get("/api/v1/programme/pipes")
     def programme_pipes():
-        programme_interface()
         return {"pipes": programmes.model_pipes()}
 
     @app.post("/api/v1/programme/check")
     def programme_check(request: ProgrammeCheck):
-        programme_interface()
         return programmes.check(request.programme, request.site_toml)
 
     @app.post("/api/v1/programme/import")
     def programme_import(request: SiteText):
-        programme_interface()
         try:
             site = site_files.load_text(request.toml)
             document = site_files.document_from_toml(request.toml)
@@ -886,12 +879,10 @@ def create_app(data_dir=None, start_jobs=True, deadline=30, policy=None):
 
     @app.post("/api/v1/operations/fields")
     def operation_fields(request: OperationFields):
-        programme_interface()
         return programmes.operation_fields(request.site_toml, request.programme)
 
     @app.post("/api/v1/operations/check")
     def operations_check(request: OperationsCheck):
-        programme_interface()
         return programmes.check_operations(request.operations)
 
     from . import levers as lever_studies
@@ -910,7 +901,6 @@ def create_app(data_dir=None, start_jobs=True, deadline=30, policy=None):
         units: Literal["SI", "oilfield"] = "SI"
 
     def lever_base(rid):
-        programme_interface()
         record = store.get(rid)
         if record["state"] != "completed" or not record.get("manifest"):
             raise HTTPException(409, "Design levers need a completed assessment")

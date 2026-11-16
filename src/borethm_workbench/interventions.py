@@ -91,7 +91,7 @@ def capacity(scenario, column):
 
 
 def validate_checkpoint(scenario, cp, require_future=True):
-    from .model_compat import WallGrid as Grid
+    from borethm import WallGrid as Grid
 
     if not isinstance(cp, dict) or cp.get("schema_version") != "wall-checkpoint-1":
         fail("unsupported checkpoint schema")
@@ -214,7 +214,7 @@ def validate_checkpoint(scenario, cp, require_future=True):
 
 
 def validate_intervention(scenario):
-    from .model_compat import wall_grid_radius as r_max_for
+    from borethm import wall_grid_radius as r_max_for
 
     p = scenario.intervention
     states = scenario.definition.states
@@ -285,8 +285,6 @@ def schedule_identity(scenario):
 
 def run_intervention(scenario, identity, notify=lambda *_: None, stored_grids=None):
     import borethm as core
-
-    from . import model_compat as compat
     from .histories import snapshots, wall_states
 
     p, n = scenario.intervention, scenario.numerics
@@ -313,7 +311,7 @@ def run_intervention(scenario, identity, notify=lambda *_: None, stored_grids=No
             if cp
             else (stored_grids or {}).get(col.id)
         )
-        r, _, _ = compat.WallGrid(
+        r, _, _ = core.WallGrid(
             col.wall_radius_m, col.outer_radius_m, n.radial_nodes
         ).build(authoritative)
         reference = (
@@ -417,7 +415,7 @@ def run_intervention(scenario, identity, notify=lambda *_: None, stored_grids=No
                 observe=frames.append,
                 radius_m=mem["radius_m"],
             )
-            _, _, volumes = compat.WallGrid(
+            _, _, volumes = core.WallGrid(
                 col.wall_radius_m, col.outer_radius_m, n.radial_nodes
             ).build(mem["radius_m"])
             caps = col.volumetric_heat_capacity_J_m3_K * volumes

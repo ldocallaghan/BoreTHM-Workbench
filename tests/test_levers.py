@@ -13,12 +13,10 @@ import pytest
 from borethm_workbench import levers as L
 from borethm_workbench.adapter import CalculationError
 from borethm_workbench.contracts import canonical_bytes, parse_scenario
-from borethm_workbench.programme import interface_available
 from borethm_workbench.store import Store, new_id, now
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "tests/fixtures/results"
-pytestmark = pytest.mark.skipif(not interface_available(), reason="needs a BoreTHM with Operations")
 
 
 def fixture(label):

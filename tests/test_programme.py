@@ -1,5 +1,5 @@
-"""Programme and operating choices: detection of the BoreTHM interface,
-model defaults, validation messages, site-file round trips and the earlier
+"""Programme and operating choices: the capability report, model defaults,
+validation messages, site-file round trips and the earlier
 assessment for a site without the new tables."""
 
 import json
@@ -19,9 +19,6 @@ from borethm_workbench.contracts import (
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "tests/fixtures/results"
-AVAILABLE = P.interface_available()
-needs_interface = pytest.mark.skipif(not AVAILABLE, reason="needs a BoreTHM with Operations")
-without_interface = pytest.mark.skipif(AVAILABLE, reason="needs BoreTHM 1.8.0 without Operations")
 # physical_hash of the Newberry assessment preset before the programme field existed.
 EARLIER_HASH = "48d330040011d1c37ebfea1c82bd95b7f00c58cadb3d83fc03f03f2a3e0afb48"
 
@@ -44,61 +41,12 @@ def client(tmp_path):
     return TestClient(create_app(tmp_path / "data", start_jobs=False))
 
 
-# ---------------------------------------------------------------- detection
+# ---------------------------------------------------------------- capability
 def test_capabilities_report_the_interface(client):
     capabilities = client.get("/api/v1/capabilities").json()
-    assert capabilities["programme_interface"]["available"] is AVAILABLE
+    assert capabilities["programme_interface"] == {"available": True, "message": None}
     for name in ("programme", "operations", "design_levers"):
-        assert capabilities["enabled"][name] is AVAILABLE
-    if not AVAILABLE:
-        assert capabilities["programme_interface"]["message"] == P.UNAVAILABLE
-
-
-def test_an_earlier_interface_counts_as_unavailable(monkeypatch):
-    """The interface before flow units were explicit had Operations.flow and
-    Operations.flows and no operation_defaults; the application treats it as
-    unavailable. The settled fields with operation_defaults are accepted."""
-    import dataclasses
-
-    import borethm
-
-    @dataclasses.dataclass
-    class Earlier:
-        flow: float | None = None
-        flows: tuple | None = None
-
-    @dataclasses.dataclass
-    class Settled:
-        mass_flow_kg_s: float | None = None
-        volume_flow_L_s: float | None = None
-        mass_flows_kg_s: tuple | None = None
-        volume_flows_L_s: tuple | None = None
-
-    def evaluate(site, operations=None):
-        return None
-
-    monkeypatch.setattr(borethm, "evaluate", evaluate, raising=False)
-    monkeypatch.setattr(borethm, "validate_operations", lambda operations: [], raising=False)
-    monkeypatch.setattr(borethm, "Operations", Earlier, raising=False)
-    monkeypatch.delattr(borethm, "operation_defaults", raising=False)
-    assert P.interface_available() is False
-    monkeypatch.setattr(borethm, "operation_defaults", lambda site=None, programme=None: {}, raising=False)
-    assert P.interface_available() is False
-    monkeypatch.setattr(borethm, "Operations", Settled)
-    assert P.interface_available() is True
-
-
-@without_interface
-def test_without_the_interface_the_new_features_are_refused(client):
-    for response in (client.get("/api/v1/programme/pipes"),
-                     client.post("/api/v1/operations/fields", json={})):
-        assert response.status_code == 422
-        assert response.json()["detail"][0]["code"] == "CAPABILITY_UNSUPPORTED"
-    data = preset()
-    data["definition"]["programme"] = {"kind": "reference"}
-    response = client.post("/api/v1/scenarios/validate", json=data)
-    assert response.status_code == 422
-    assert P.UNAVAILABLE in response.text
+        assert capabilities["enabled"][name] is True
 
 
 def test_a_scenario_without_a_programme_keeps_its_earlier_hash():
@@ -111,7 +59,6 @@ def test_a_scenario_without_a_programme_keeps_its_earlier_hash():
     assert physical_hash(parse_scenario(with_programme)) != EARLIER_HASH
 
 
-@needs_interface
 @pytest.mark.parametrize("label", ["go", "conditional"])
 def test_a_site_without_the_new_tables_gives_the_earlier_assessment(label):
     """Saved runs of the same site, one with BoreTHM 1.8.0 and one
@@ -127,7 +74,6 @@ def test_a_site_without_the_new_tables_gives_the_earlier_assessment(label):
 
 
 # ---------------------------------------------------------------- operations
-@needs_interface
 def test_operation_fields_take_the_site_and_the_programme(client):
     from borethm import find_site, operation_defaults
 
@@ -149,7 +95,6 @@ def test_operation_fields_take_the_site_and_the_programme(client):
     assert pipes(fields)["restates_default"] is False
 
 
-@needs_interface
 def test_operation_fields_come_from_operation_defaults():
     from borethm import operation_defaults
 
@@ -172,8 +117,7 @@ def test_operation_fields_come_from_operation_defaults():
 
 def test_the_application_reads_no_internal_model_constants():
     """Defaults come from operation_defaults; the application names none of
-    the model's internal constants, and only the compatibility module
-    imports the model's internal modules."""
+    the model's internal constants or imports its internal modules."""
     import ast
     import pkgutil
 
@@ -184,23 +128,21 @@ def test_the_application_reads_no_internal_model_constants():
     modules = {m.name for m in pkgutil.iter_modules(borethm.__path__)}
     found = []
     for path in sorted((ROOT / "src/borethm_workbench").rglob("*.py")):
-        compat = path.name == "model_compat.py"
         for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
             name = node.attr if isinstance(node, ast.Attribute) else node.id if isinstance(node, ast.Name) else None
             if isinstance(node, ast.ImportFrom):
                 found += [(path.name, a.name) for a in node.names if a.name in banned]
-                if not compat and node.module and node.module.startswith("borethm."):
+                if node.module and node.module.startswith("borethm."):
                     found.append((path.name, node.module))
-                if not compat and node.module == "borethm":
+                if node.module == "borethm":
                     found += [(path.name, "borethm." + a.name) for a in node.names if a.name in modules]
-            if isinstance(node, ast.Import) and not compat:
+            if isinstance(node, ast.Import):
                 found += [(path.name, a.name) for a in node.names if a.name.startswith("borethm.")]
             if name in banned:
                 found.append((path.name, name))
     assert found == []
 
 
-@needs_interface
 @pytest.mark.parametrize(
     "table,kind,field",
     [
@@ -221,7 +163,6 @@ def test_operation_messages_carry_the_models_field_names(table, kind, field):
     assert result[kind][0]["field"] == field
 
 
-@needs_interface
 def test_site_check_attaches_operation_messages():
     document = sites.document_from_toml(site_toml())
     document["operations"] = {"tool_limit_C": 175.0, "mass_flow_kg_s": 20.0, "sources": {"mass_flow_kg_s": ["assumed", "pump sheet"]}}
@@ -238,7 +179,6 @@ def test_site_check_attaches_operation_messages():
     assert result["errors"] == [{"field": "operations", "message": "tool_limit: unknown key"}]
 
 
-@needs_interface
 def test_operations_round_trip_through_the_site_file():
     from borethm.operations import operations_from_dict
 
@@ -289,7 +229,6 @@ def custom_definition(**changes):
     return ProgrammeDefinition.model_validate(data)
 
 
-@needs_interface
 @pytest.mark.parametrize("definition", [
     ProgrammeDefinition(kind="reference"),
     ProgrammeDefinition(kind="reference", transitions="gradual", joints=False, tools=True,
@@ -321,7 +260,6 @@ def named_string(top_length=1000.0):
     return [insulated, {**top, "length_m": top["length_m"] - top_length}, *reference["string"][1:]], reference["hole"]
 
 
-@needs_interface
 def test_a_string_of_named_pipes_round_trips_through_the_site_file():
     """The walkthrough's vacuum-insulated and TK-Drakon sections are written
     with the pipe key and read back as the model's named pipes."""
@@ -344,7 +282,6 @@ def test_a_string_of_named_pipes_round_trips_through_the_site_file():
     assert result["valid"] and result["toml_table"] == table and result["toml_note"] is None
 
 
-@needs_interface
 def test_the_reference_pulser_keeps_the_walkthrough_string_in_the_scenario():
     """The reference assembly's MWD pulser is declared over two sections with
     the total-internal basis, which a site file's tools entry cannot state."""
@@ -357,7 +294,6 @@ def test_the_reference_pulser_keeps_the_walkthrough_string_in_the_scenario():
     assert result["toml_note"].startswith("Section 5 names")
 
 
-@needs_interface
 def test_user_layers_cannot_be_written_to_the_site_file():
     two = custom_definition()
     two.string[1].pipe.layers.append(two.string[1].pipe.layers[0].model_copy(
@@ -367,7 +303,6 @@ def test_user_layers_cannot_be_written_to_the_site_file():
     assert "steel has 2 user layers" in result["toml_note"]
 
 
-@needs_interface
 def test_programme_check_reports_the_string_length_and_draws_the_well():
     result = P.check(custom_definition(), site_toml())
     assert result["valid"], result["errors"]
@@ -380,7 +315,6 @@ def test_programme_check_reports_the_string_length_and_draws_the_well():
     assert result["errors"] == ["The string section lengths must add up to the target depth, 10700.00 m."]
 
 
-@needs_interface
 def test_a_custom_string_cannot_also_state_pipe_candidates():
     from borethm_workbench.adapter import CalculationError
     from borethm_workbench.assessment import validate_assessment
@@ -394,7 +328,6 @@ def test_a_custom_string_cannot_also_state_pipe_candidates():
     assert validate_assessment(parse_scenario(data)) is not None
 
 
-@needs_interface
 def test_programme_routes(client):
     pipes = client.get("/api/v1/programme/pipes").json()["pipes"]
     assert [p["name"] for p in pipes][:4] == ["TK-Drakon coated", "internally coated", "externally coated", "conventional"]

@@ -9,7 +9,7 @@ anyio==4.16.0
     #   httpx
     #   httpx2
     #   starlette
-borethm==1.8.0
+borethm==1.9.0
     # via borethm-workbench (pyproject.toml)
 build==1.6.1
     # via borethm-workbench (pyproject.toml)

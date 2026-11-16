@@ -45,16 +45,13 @@ def load_frozen_site(scenario):
 def stated_programme(scenario, site):
     """The model's HydraulicProgramme for the scenario's programme, or None.
 
-    Raises CalculationError where the installed model does not accept a
-    stated programme or the programme does not fit the site.
+    Raises CalculationError where the programme does not fit the site.
     """
     from . import programme
 
     definition = scenario.definition.programme
     if definition is None:
         return None
-    if not programme.interface_available():
-        raise CalculationError("CAPABILITY_UNSUPPORTED", programme.UNAVAILABLE)
     operations = getattr(site, "operations", None)
     if definition.kind == "custom" and operations is not None and operations.pipes is not None:
         raise CalculationError(
@@ -150,7 +147,7 @@ def finite_data(value, path="", qualifications=None):
 def run_assessment(scenario, stage=lambda *_: None):
     import borethm as core
 
-    from .model_compat import hydrostatic_pressure, pressure_column as column
+    from borethm import hydrostatic_pressure, pressure_column as column
 
     warnings = loading_warnings(scenario) + validate_assessment(scenario)
     identity, cache = engine_identity(), cache_status()

@@ -60,7 +60,7 @@ def main():
         )
     elif args.command == "prepare":
         from .adapter import cache_status
-        from .model_compat import prepare_water_table
+        from borethm import prepare_water_table
 
         print(
             "Preparing the IAPWS-95 water table; this can take several minutes.",

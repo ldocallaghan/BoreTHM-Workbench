@@ -85,7 +85,7 @@ def assessment_inputs(manifest):
     """Inputs of a completed site assessment, from the evaluator's result."""
     report = manifest["assessment"]
     site, programme = report["site"], report["programme"]
-    from .model_compat import named_pipes
+    from borethm import named_pipes
 
     # The drill pipes the field comparisons describe; vacuum-insulated tubing
     # is a sensitivity and is not classed.

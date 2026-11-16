@@ -209,7 +209,7 @@ def compare_results(original, current):
             failures.append("profile." + key)
 
     if original.get("mode") == "site_assessment":
-        from .model_compat import release_reference_row as reference_row
+        from borethm import release_reference_row as reference_row
 
         reference, actual = original["assessment"], current["assessment"]
         identities["assessment_status_and_selection"] = reference["status"][

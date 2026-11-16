@@ -53,10 +53,10 @@ def sha256_file(path):
 
 
 def cache_status():
-    from . import model_compat as compat
+    import borethm as core
     from .cache_reference import fingerprints
 
-    table_info = compat.water_table_info()
+    table_info = core.water_table_info()
     if not table_info["exists"]:
         return {
             "ready": False,
@@ -90,12 +90,10 @@ def cache_status():
 def history_capabilities():
     import borethm as core
 
-    from . import model_compat as compat
-
     wall = {"observe", "radius_m", "carry_static_node"} <= set(
         inspect.signature(core.wall_temperatures).parameters
     )
-    wall = wall and "radius_m" in inspect.signature(compat.WallGrid.build).parameters
+    wall = wall and "radius_m" in inspect.signature(core.WallGrid.build).parameters
     tool = {"retain_stage_samples", "T_s0", "T_f0"} <= set(
         inspect.signature(core.tool_trip_in).parameters
     )
@@ -241,7 +239,7 @@ def core_surface(sl):
 def make_geometry(scenario):
     import borethm as core
 
-    from .model_compat import LossModel
+    from borethm import LossModel
 
     d = scenario.definition
     segments = [core_segment(segment) for segment in d.well.string]
@@ -266,7 +264,7 @@ def loading_warnings(scenario):
 
 
 def loss_settings(scenario):
-    from .model_compat import resolve_physics
+    from borethm import resolve_physics
 
     settings = resolve_physics(scenario.model.physics)
     current = settings["annulus_model"] == "herschel-bulkley-erge"
@@ -283,7 +281,7 @@ def loss_settings(scenario):
 def physics_record(scenario, result=None, geometry=None, reported=None):
     from dataclasses import asdict
 
-    from .model_compat import resolve_physics as resolve
+    from borethm import resolve_physics as resolve
 
     settings = dict(
         reported
@@ -340,7 +338,7 @@ def make_fluid(definition):
     if definition.kind == "iapws_water":
         return None
     if definition.kind == "barite_mud":
-        from .model_compat import Mud
+        from borethm import Mud
 
         return Mud(
             definition.surface_density_kg_m3,
@@ -421,7 +419,7 @@ def make_settings(scenario):
 
 
 def mass_rate(scenario, fluid):
-    from .model_compat import fluid_props
+    from borethm import fluid_props
 
     f = scenario.definition.operating.flow
     if f.kind == "mass":
@@ -523,9 +521,9 @@ NOT_CONVERGED = "The circulation calculation did not converge for these inputs."
 
 
 def validate_thermal(scenario, geometry, result, settings):
-    from . import model_compat as compat
+    import borethm as core
 
-    LossModel = compat.LossModel
+    LossModel = core.LossModel
     sol = result["sol"]
     if not sol.success:
         raise CalculationError("SOLVER_NOT_CONVERGED", str(sol.message))
@@ -539,7 +537,7 @@ def validate_thermal(scenario, geometry, result, settings):
         raise CalculationError(
             "RESULT_NONFINITE", "Accepted thermal output contains non-finite values."
         )
-    raw_p = compat.hydrostatic_pressure(geometry.survey.tvd(audit_z), settings["P_surface"])
+    raw_p = core.hydrostatic_pressure(geometry.survey.tvd(audit_z), settings["P_surface"])
     ranges = {
         "temperature_range_C": [float(audit_t.min()), float(audit_t.max())],
         "pressure_range_absolute_Pa": [float(raw_p.min()), float(raw_p.max())],
@@ -582,9 +580,7 @@ def run_circulation(
 ):
     import borethm as core
 
-    from . import model_compat as compat
-
-    LossModel, column = compat.LossModel, compat.pressure_column
+    LossModel, column = core.LossModel, core.pressure_column
 
     warnings = validate(scenario)
     identity = engine_identity()
@@ -644,7 +640,7 @@ def run_circulation(
             "Accepted thermal output contains non-finite values.",
             {"attempts": attempts},
         )
-    raw_p = compat.hydrostatic_pressure(geometry.survey.tvd(audit_z), settings["P_surface"])
+    raw_p = core.hydrostatic_pressure(geometry.survey.tvd(audit_z), settings["P_surface"])
     uses_table = d.fluid.kind != "constant_properties"
     outside = uses_table and (
         audit_t.min() < 1
@@ -748,7 +744,7 @@ def run_circulation(
         annulus_wall_pressure_gauge_Pa=(wall_column + annulus_friction).tolist(),
         annulus_hydrostatic_pressure_difference_Pa=(wall_column - wellhead).tolist(),
         annulus_friction_Pa=annulus_friction.tolist(),
-        property_pressure_absolute_Pa=compat.hydrostatic_pressure(tvd, settings["P_surface"]).tolist(),
+        property_pressure_absolute_Pa=core.hydrostatic_pressure(tvd, settings["P_surface"]).tolist(),
         component_id=[d.well.string[int(i)].id for i in geometry.segment_index(md)],
         hole_interval_id=[d.well.hole[int(i)].id for i in geometry.hole_index(md)],
     )
@@ -771,9 +767,9 @@ def run_circulation(
     resolved_exposure = {
         "kind": exposure.kind,
         # The model's year: its exposure for one year without an exposure profile.
-        "seconds_per_year": float(compat.exposure_seconds(np.zeros(1), 1.0, None)[0]),
+        "seconds_per_year": float(core.exposure_seconds(np.zeros(1), 1.0, None)[0]),
         "requested": exposure.model_dump(),
-        "effective_seconds_at_display_depths": compat.exposure_seconds(
+        "effective_seconds_at_display_depths": core.exposure_seconds(
             md, settings["t_years"], settings["exposure"]
         ).tolist(),
     }
@@ -820,7 +816,7 @@ def run_circulation(
         values = np.asarray(values, dtype=float)
         return [float(values.min()), float(values.max())]
 
-    table_info = compat.water_table_info()
+    table_info = core.water_table_info()
     table_t, table_p = table_info["temperatures_C"], table_info["pressures_Pa"]
     property_audit = dict(
         coverage="Accepted adaptive nodes, returned/display samples, physical/source breakpoints and hydraulic integration points",
@@ -847,11 +843,11 @@ def run_circulation(
             ),
             "hydraulic_liquid_properties": dict(
                 raw_pressure_absolute_Pa=bounds(
-                    compat.hydrostatic_pressure(geometry.survey.tvd(hz), settings["P_surface"])
+                    core.hydrostatic_pressure(geometry.survey.tvd(hz), settings["P_surface"])
                 ),
                 effective_guarded_pressure_absolute_Pa=bounds(
                     np.maximum(
-                        compat.hydrostatic_pressure(geometry.survey.tvd(hz), settings["P_surface"]), 5e6
+                        core.hydrostatic_pressure(geometry.survey.tvd(hz), settings["P_surface"]), 5e6
                     )
                 ),
                 behaviour="LossModel clips temperature to 1–480 C and floors pressure at 5 MPa before fluid_props/table guards",
