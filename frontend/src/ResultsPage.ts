@@ -114,7 +114,7 @@ export function ResultsPage({payload, system, onDetails, reportHref}: {payload: 
     h(Section, {id: 'results-range', title: 'Field-tested range and qualifications', detail: 'qualifications', onDetails},
       h(FlagsPanel, {flags: payload.flags, qualifications: payload.qualifications, inputWarnings: s.input_warnings})),
     h(Section, {id: 'results-window', title: 'Mud-weight window', detail: 'windows', onDetails},
-      h('div', {className: 'table-scroll'}, h('table', {className: 'result-table'},
+      h('div', {className: 'table-scroll'}, h('table', {className: 'result-table window-table'},
         h('thead', null, h('tr', null, ['Fluid', 'Window', 'Lower bound', 'Upper bound', 'Width', 'Lower bound set by', 'Upper bound set by', 'Fluid chosen'].map(t => h('th', {key: t}, t)))),
         h('tbody', null, fluids.map(f => h('tr', {key: f.label},
           h('td', null, f.label),

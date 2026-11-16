@@ -68,6 +68,10 @@
 .result-table td.ok,.result-table td.go{color:#155c43}
 .result-table td.fail,.result-table td.no-go{color:#8b2a1d;font-weight:600}
 .result-table td.conditional{color:#7a5408}
+/* The results page keeps to its column, and the mud-weight table's "set by" text wraps, so the table fits its card. */
+.results-page>*{min-width:0}
+.window-table th,.window-table td{white-space:normal}
+.window-table td:nth-child(6),.window-table td:nth-child(7){min-width:180px}
 .result-list{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:0}
 .result-list dt{color:#5b6873}
 .result-list dd{margin:0;font-weight:600}
