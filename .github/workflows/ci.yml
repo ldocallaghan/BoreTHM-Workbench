@@ -60,8 +60,10 @@ jobs:
     env:
       OPENBLAS_NUM_THREADS: '1'
       OMP_NUM_THREADS: '1'
-      BORETHM_CACHE_DIR: ${{ runner.temp }}/water-cache
     steps:
+      - name: Select the water-table cache
+        shell: bash
+        run: echo "BORETHM_CACHE_DIR=$RUNNER_TEMP/water-cache" >> "$GITHUB_ENV"
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
